@@ -1,3 +1,5 @@
+![Architecture Diagram](./docs/architecture.png)
+
 
 
 
