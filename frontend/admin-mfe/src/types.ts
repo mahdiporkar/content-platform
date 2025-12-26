@@ -46,3 +46,10 @@ export type Video = {
   updatedAt: string;
   presignedUrl?: string | null;
 };
+
+export type MediaUploadResponse = {
+  objectKey: string;
+  contentType: string;
+  sizeBytes: number;
+  url: string;
+};

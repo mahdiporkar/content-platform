@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, Post } from "../../types";
+import { ContentEditor } from "../../components/ContentEditor";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
@@ -82,7 +81,7 @@ export const PostEditorPage = ({ mode }: { mode: EditorMode }) => {
         </div>
         <div className="input">
           <label>Content</label>
-          <ReactQuill theme="snow" value={content} onChange={setContent} />
+          <ContentEditor applicationId={applicationId} value={content} onChange={setContent} />
         </div>
       </div>
     </div>

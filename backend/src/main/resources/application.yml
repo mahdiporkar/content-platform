@@ -19,6 +19,7 @@ app:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
   storage:
     presign-expiry-seconds: ${PRESIGN_EXPIRY_SECONDS:900}
+    public-url: ${MINIO_PUBLIC_URL:${MINIO_URL:http://localhost:9000}}
 
 minio:
   url: ${MINIO_URL:http://localhost:9000}

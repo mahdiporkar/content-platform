@@ -6,6 +6,7 @@ import { AuthController } from './controllers/auth.controller';
 import { AdminPostController } from './controllers/admin-post.controller';
 import { AdminArticleController } from './controllers/admin-article.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
+import { AdminMediaController } from './controllers/admin-media.controller';
 import { PublicContentController } from './controllers/public-content.controller';
 import { AuthService } from './services/auth.service';
 import { AdminPostService } from './services/admin-post.service';
@@ -70,6 +71,7 @@ import { parseJdbcUrl } from './common/jdbc-url';
     AdminPostController,
     AdminArticleController,
     AdminVideoController,
+    AdminMediaController,
     PublicContentController,
   ],
   providers: [
