@@ -12,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2024-07-13T01-46-15Z
     container_name: content-platform-minio
     command: server /data --console-address ":9001"
     environment:
@@ -25,7 +25,7 @@ services:
       - minio_data:/data
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:RELEASE.2024-01-13T10-42-31Z
     depends_on:
       - minio
     entrypoint: >

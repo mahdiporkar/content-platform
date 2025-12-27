@@ -3,8 +3,8 @@ import { ContentStatus } from '../../common/content-status.enum';
 
 export class ChangeStatusRequestDto {
   @IsNotEmpty()
-  applicationId: string;
+  applicationId!: string;
 
   @IsEnum(ContentStatus)
-  status: ContentStatus;
+  status!: ContentStatus;
 }

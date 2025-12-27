@@ -3,17 +3,17 @@ import { ContentStatus } from '../../common/content-status.enum';
 
 export class PostUpsertRequestDto {
   @IsNotEmpty()
-  applicationId: string;
+  applicationId!: string;
 
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsNotEmpty()
-  slug: string;
+  slug!: string;
 
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @IsEnum(ContentStatus)
-  status: ContentStatus;
+  status!: ContentStatus;
 }
