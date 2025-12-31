@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -17,6 +17,73 @@ import { uploadMedia } from "../api/media";
 import type { MediaKind } from "../api/media";
 import type { MediaUploadResponse } from "../types";
 
+type MediaNodeViewProps = {
+  node: { attrs: { src: string; width?: string; align?: string; float?: string } };
+  updateAttributes: (attrs: Record<string, string>) => void;
+  selected: boolean;
+  editor: { view: { dom: HTMLElement } };
+};
+
+const clampWidth = (value: number) => Math.min(100, Math.max(20, value));
+
+const ImageNodeView = ({ node, updateAttributes, selected, editor }: MediaNodeViewProps) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const startResize = (event: React.MouseEvent<HTMLButtonElement>, direction: "left" | "right") => {
+    event.preventDefault();
+    event.stopPropagation();
+    const wrapper = wrapperRef.current;
+    const container = editor.view.dom;
+    if (!wrapper || !container) {
+      return;
+    }
+    const startX = event.clientX;
+    const startWidth = wrapper.getBoundingClientRect().width;
+    const containerWidth = container.getBoundingClientRect().width;
+
+    const handleMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const nextWidth = direction === "right" ? startWidth + delta : startWidth - delta;
+      const nextPercent = clampWidth((nextWidth / containerWidth) * 100);
+      updateAttributes({ width: `${nextPercent}%` });
+    };
+
+    const stopResize = () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", stopResize);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", stopResize);
+  };
+
+  return (
+    <NodeViewWrapper
+      ref={wrapperRef}
+      className={`media-node ${selected ? "selected" : ""}`}
+      data-align={node.attrs.align ?? "center"}
+      data-float={node.attrs.float ?? "none"}
+      style={{ width: node.attrs.width ?? "100%" }}
+    >
+      <img src={node.attrs.src} alt="" className="media-node__content" />
+      <div className="media-node__handles">
+        <button
+          className="media-node__handle left"
+          type="button"
+          onMouseDown={(event) => startResize(event, "left")}
+          aria-label="Resize image"
+        />
+        <button
+          className="media-node__handle right"
+          type="button"
+          onMouseDown={(event) => startResize(event, "right")}
+          aria-label="Resize image"
+        />
+      </div>
+    </NodeViewWrapper>
+  );
+};
+
 const ResizableImage = Image.extend({
   addAttributes() {
     return {
@@ -25,10 +92,81 @@ const ResizableImage = Image.extend({
         default: "100%",
         parseHTML: (element) => element.style.width || element.getAttribute("width") || "100%",
         renderHTML: (attributes) => ({ style: `width: ${attributes.width};` })
+      },
+      align: {
+        default: "center",
+        parseHTML: (element) => element.getAttribute("data-align") || "center",
+        renderHTML: (attributes) => ({ "data-align": attributes.align })
+      },
+      float: {
+        default: "none",
+        parseHTML: (element) => element.getAttribute("data-float") || "none",
+        renderHTML: (attributes) => ({ "data-float": attributes.float })
       }
     };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
   }
 });
+
+const VideoNodeView = ({ node, updateAttributes, selected, editor }: MediaNodeViewProps) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const startResize = (event: React.MouseEvent<HTMLButtonElement>, direction: "left" | "right") => {
+    event.preventDefault();
+    event.stopPropagation();
+    const wrapper = wrapperRef.current;
+    const container = editor.view.dom;
+    if (!wrapper || !container) {
+      return;
+    }
+    const startX = event.clientX;
+    const startWidth = wrapper.getBoundingClientRect().width;
+    const containerWidth = container.getBoundingClientRect().width;
+
+    const handleMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const nextWidth = direction === "right" ? startWidth + delta : startWidth - delta;
+      const nextPercent = clampWidth((nextWidth / containerWidth) * 100);
+      updateAttributes({ width: `${nextPercent}%` });
+    };
+
+    const stopResize = () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", stopResize);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", stopResize);
+  };
+
+  return (
+    <NodeViewWrapper
+      ref={wrapperRef}
+      className={`media-node ${selected ? "selected" : ""}`}
+      data-align={node.attrs.align ?? "center"}
+      data-float={node.attrs.float ?? "none"}
+      style={{ width: node.attrs.width ?? "100%" }}
+    >
+      <video src={node.attrs.src} controls className="media-node__content" />
+      <div className="media-node__handles">
+        <button
+          className="media-node__handle left"
+          type="button"
+          onMouseDown={(event) => startResize(event, "left")}
+          aria-label="Resize video"
+        />
+        <button
+          className="media-node__handle right"
+          type="button"
+          onMouseDown={(event) => startResize(event, "right")}
+          aria-label="Resize video"
+        />
+      </div>
+    </NodeViewWrapper>
+  );
+};
 
 const Video = Node.create({
   name: "video",
@@ -39,7 +177,9 @@ const Video = Node.create({
     return {
       src: { default: null },
       controls: { default: true },
-      width: { default: "100%" }
+      width: { default: "100%" },
+      align: { default: "center" },
+      float: { default: "none" }
     };
   },
   parseHTML() {
@@ -48,8 +188,15 @@ const Video = Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       "video",
-      mergeAttributes(HTMLAttributes, { controls: HTMLAttributes.controls ? "controls" : null })
+      mergeAttributes(HTMLAttributes, {
+        controls: HTMLAttributes.controls ? "controls" : null,
+        "data-align": HTMLAttributes.align,
+        "data-float": HTMLAttributes.float
+      })
     ];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(VideoNodeView);
   }
 });
 
@@ -110,6 +257,7 @@ type Props = {
 export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageWidthValue, setImageWidthValue] = useState(100);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +279,19 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       Video
     ],
     content: value,
-    onUpdate: ({ editor: tiptap }) => onChange(tiptap.getHTML())
+    onUpdate: ({ editor: tiptap }) => onChange(tiptap.getHTML()),
+    onSelectionUpdate: ({ editor: tiptap }) => {
+      if (!tiptap.isActive("image")) {
+        return;
+      }
+      const width = tiptap.getAttributes("image")?.width;
+      if (typeof width === "string") {
+        const numeric = Number(width.replace("%", ""));
+        if (!Number.isNaN(numeric)) {
+          setImageWidthValue(Math.min(100, Math.max(20, numeric)));
+        }
+      }
+    }
   });
 
   const canUpload = Boolean(applicationId);
@@ -146,9 +306,20 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
     try {
       const response: MediaUploadResponse = await uploadMedia(file, applicationId, kind);
       if (kind === "image") {
-        editor.chain().focus().setImage({ src: response.url, alt: file.name, width: "100%" }).run();
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: response.url, alt: file.name, width: "100%", align: "center", float: "none" })
+          .run();
       } else if (kind === "video") {
-        editor.chain().focus().insertContent({ type: "video", attrs: { src: response.url } }).run();
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "video",
+            attrs: { src: response.url, width: "100%", align: "center", float: "none" }
+          })
+          .run();
       } else {
         editor
           .chain()
@@ -208,6 +379,40 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   if (!editor) {
     return <div className="muted">Loading editor...</div>;
   }
+
+  const handleImageResize = (value: number) => {
+    const clamped = Math.min(100, Math.max(20, value));
+    setImageWidthValue(clamped);
+    editor.chain().focus().updateAttributes("image", { width: `${clamped}%` }).run();
+  };
+
+  const setImageAlign = (align: "left" | "center" | "right") => {
+    if (!editor.isActive("image")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("image", { align, float: "none" }).run();
+  };
+
+  const setImageFloat = (float: "left" | "right" | "none") => {
+    if (!editor.isActive("image")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("image", { float, align: "center" }).run();
+  };
+
+  const setVideoAlign = (align: "left" | "center" | "right") => {
+    if (!editor.isActive("video")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("video", { align, float: "none" }).run();
+  };
+
+  const setVideoFloat = (float: "left" | "right" | "none") => {
+    if (!editor.isActive("video")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("video", { float, align: "center" }).run();
+  };
 
   return (
     <div className="editor-shell">
@@ -425,6 +630,159 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className="editor-group">{imageSizeButtons}</div>
+        <div className={`editor-group editor-resize ${editor.isActive("image") ? "" : "disabled"}`}>
+          <span className="editor-label">Image size</span>
+          <input
+            className="editor-slider"
+            type="range"
+            min={20}
+            max={100}
+            value={imageWidthValue}
+            onChange={(event) => handleImageResize(Number(event.target.value))}
+            disabled={!editor.isActive("image")}
+          />
+          <span className="editor-value">{imageWidthValue}%</span>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => handleImageResize(100)}
+            disabled={!editor.isActive("image")}
+          >
+            Reset
+          </button>
+        </div>
+        <div className={`editor-group editor-align ${editor.isActive("image") ? "" : "disabled"}`}>
+          <span className="editor-label">Image align</span>
+          <IconButton
+            label="Align image left"
+            active={editor.isActive("image") && editor.getAttributes("image").align === "left"}
+            onClick={() => setImageAlign("left")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M4 7h10v2H4V7zm0 4h14v2H4v-2zm0 4h10v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Align image center"
+            active={editor.isActive("image") && editor.getAttributes("image").align === "center"}
+            onClick={() => setImageAlign("center")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M7 7h10v2H7V7zm-2 4h14v2H5v-2zm2 4h10v2H7v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Align image right"
+            active={editor.isActive("image") && editor.getAttributes("image").align === "right"}
+            onClick={() => setImageAlign("right")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M10 7h10v2H10V7zm-4 4h14v2H6v-2zm4 4h10v2H10v-2z" />
+            </Icon>
+          </IconButton>
+        </div>
+        <div className={`editor-group editor-float ${editor.isActive("image") ? "" : "disabled"}`}>
+          <span className="editor-label">Wrap text</span>
+          <IconButton
+            label="Float image left"
+            active={editor.isActive("image") && editor.getAttributes("image").float === "left"}
+            onClick={() => setImageFloat("left")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M4 7h8v6H4V7zm10 0h6v2h-6V7zm0 4h6v2h-6v-2zm-10 6h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Float image right"
+            active={editor.isActive("image") && editor.getAttributes("image").float === "right"}
+            onClick={() => setImageFloat("right")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M12 7h8v6h-8V7zM4 7h6v2H4V7zm0 4h6v2H4v-2zm0 6h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Clear float"
+            active={editor.isActive("image") && editor.getAttributes("image").float === "none"}
+            onClick={() => setImageFloat("none")}
+            disabled={!editor.isActive("image")}
+          >
+            <Icon>
+              <path d="M4 7h16v2H4V7zm0 4h16v2H4v-2zm0 4h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+        </div>
+        <div className={`editor-group editor-align ${editor.isActive("video") ? "" : "disabled"}`}>
+          <span className="editor-label">Video align</span>
+          <IconButton
+            label="Align video left"
+            active={editor.isActive("video") && editor.getAttributes("video").align === "left"}
+            onClick={() => setVideoAlign("left")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M4 7h10v2H4V7zm0 4h14v2H4v-2zm0 4h10v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Align video center"
+            active={editor.isActive("video") && editor.getAttributes("video").align === "center"}
+            onClick={() => setVideoAlign("center")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M7 7h10v2H7V7zm-2 4h14v2H5v-2zm2 4h10v2H7v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Align video right"
+            active={editor.isActive("video") && editor.getAttributes("video").align === "right"}
+            onClick={() => setVideoAlign("right")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M10 7h10v2H10V7zm-4 4h14v2H6v-2zm4 4h10v2H10v-2z" />
+            </Icon>
+          </IconButton>
+        </div>
+        <div className={`editor-group editor-float ${editor.isActive("video") ? "" : "disabled"}`}>
+          <span className="editor-label">Wrap video</span>
+          <IconButton
+            label="Float video left"
+            active={editor.isActive("video") && editor.getAttributes("video").float === "left"}
+            onClick={() => setVideoFloat("left")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M4 7h8v6H4V7zm10 0h6v2h-6V7zm0 4h6v2h-6v-2zm-10 6h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Float video right"
+            active={editor.isActive("video") && editor.getAttributes("video").float === "right"}
+            onClick={() => setVideoFloat("right")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M12 7h8v6h-8V7zM4 7h6v2H4V7zm0 4h6v2H4v-2zm0 6h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Clear video float"
+            active={editor.isActive("video") && editor.getAttributes("video").float === "none"}
+            onClick={() => setVideoFloat("none")}
+            disabled={!editor.isActive("video")}
+          >
+            <Icon>
+              <path d="M4 7h16v2H4V7zm0 4h16v2H4v-2zm0 4h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+        </div>
         <div className="editor-group">
           <IconButton
             label="Undo"
