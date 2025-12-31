@@ -7,6 +7,7 @@ export class PostResponseDto {
     public title: string,
     public slug: string,
     public content: string,
+    public bannerUrl: string | null,
     public status: ContentStatus,
     public publishedAt: string | null,
     public createdAt: string,

@@ -18,6 +18,9 @@ export class ArticleEntity {
   @Column({ type: 'text' })
   content!: string;
 
+  @Column({ name: 'banner_url', type: 'text', nullable: true })
+  bannerUrl!: string | null;
+
   @Column({ type: 'enum', enum: ContentStatus })
   status!: ContentStatus;
 

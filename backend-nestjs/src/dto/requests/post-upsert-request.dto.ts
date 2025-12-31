@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ContentStatus } from '../../common/content-status.enum';
 
 export class PostUpsertRequestDto {
@@ -13,6 +13,10 @@ export class PostUpsertRequestDto {
 
   @IsNotEmpty()
   content!: string;
+
+  @IsOptional()
+  @IsString()
+  bannerUrl?: string;
 
   @IsEnum(ContentStatus)
   status!: ContentStatus;

@@ -11,42 +11,48 @@ export class PublicContentController {
   constructor(private readonly publicContent: PublicContentService) {}
 
   @Get(':applicationId/posts')
-  listPosts(
+  async listPosts(
     @Param('applicationId') applicationId: string,
     @Query('status') status: ContentStatus = ContentStatus.PUBLISHED,
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): PageResponseDto<PostResponseDto> {
-    return this.publicContent.listPosts(applicationId, status, Number(page), Number(size));
+  ): Promise<PageResponseDto<PostResponseDto>> {
+    return await this.publicContent.listPosts(applicationId, status, Number(page), Number(size));
   }
 
   @Get(':applicationId/posts/:slug')
-  getPost(@Param('applicationId') applicationId: string, @Param('slug') slug: string): PostResponseDto {
-    return this.publicContent.getPost(applicationId, slug);
+  async getPost(
+    @Param('applicationId') applicationId: string,
+    @Param('slug') slug: string,
+  ): Promise<PostResponseDto> {
+    return await this.publicContent.getPost(applicationId, slug);
   }
 
   @Get(':applicationId/articles')
-  listArticles(
+  async listArticles(
     @Param('applicationId') applicationId: string,
     @Query('status') status: ContentStatus = ContentStatus.PUBLISHED,
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): PageResponseDto<ArticleResponseDto> {
-    return this.publicContent.listArticles(applicationId, status, Number(page), Number(size));
+  ): Promise<PageResponseDto<ArticleResponseDto>> {
+    return await this.publicContent.listArticles(applicationId, status, Number(page), Number(size));
   }
 
   @Get(':applicationId/articles/:slug')
-  getArticle(@Param('applicationId') applicationId: string, @Param('slug') slug: string): ArticleResponseDto {
-    return this.publicContent.getArticle(applicationId, slug);
+  async getArticle(
+    @Param('applicationId') applicationId: string,
+    @Param('slug') slug: string,
+  ): Promise<ArticleResponseDto> {
+    return await this.publicContent.getArticle(applicationId, slug);
   }
 
   @Get(':applicationId/videos')
-  listVideos(
+  async listVideos(
     @Param('applicationId') applicationId: string,
     @Query('status') status: ContentStatus = ContentStatus.PUBLISHED,
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): PageResponseDto<VideoResponseDto> {
-    return this.publicContent.listVideos(applicationId, status, Number(page), Number(size));
+  ): Promise<PageResponseDto<VideoResponseDto>> {
+    return await this.publicContent.listVideos(applicationId, status, Number(page), Number(size));
   }
 }

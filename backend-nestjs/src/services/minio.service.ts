@@ -32,6 +32,10 @@ export class MinioService {
     this.publicUrl = (this.config.get<string>('MINIO_PUBLIC_URL') || url).replace(/\/$/, '');
   }
 
+  getPublicUrl(objectKey: string): string {
+    return `${this.publicUrl}/${this.bucket}/${objectKey}`;
+  }
+
   async upload(applicationId: string, kind: string | undefined, file: Express.Multer.File): Promise<UploadResult> {
     if (!applicationId) {
       throw new BadRequestException('Application ID is required.');
@@ -47,7 +51,7 @@ export class MinioService {
       objectKey,
       contentType: file.mimetype || 'application/octet-stream',
       sizeBytes: file.size,
-      url: `${this.publicUrl}/${this.bucket}/${objectKey}`,
+      url: this.getPublicUrl(objectKey),
     };
   }
 

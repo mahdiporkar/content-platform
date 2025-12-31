@@ -11,27 +11,27 @@ export class AdminPostController {
   constructor(private readonly postService: AdminPostService) {}
 
   @Post()
-  create(@Body() request: PostUpsertRequestDto): PostResponseDto {
-    return this.postService.create(request);
+  async create(@Body() request: PostUpsertRequestDto): Promise<PostResponseDto> {
+    return await this.postService.create(request);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() request: PostUpsertRequestDto): PostResponseDto {
-    return this.postService.update(id, request);
+  async update(@Param('id') id: string, @Body() request: PostUpsertRequestDto): Promise<PostResponseDto> {
+    return await this.postService.update(id, request);
   }
 
   @Patch(':id/status')
-  changeStatus(@Param('id') id: string, @Body() request: ChangeStatusRequestDto): PostResponseDto {
-    return this.postService.changeStatus(id, request);
+  async changeStatus(@Param('id') id: string, @Body() request: ChangeStatusRequestDto): Promise<PostResponseDto> {
+    return await this.postService.changeStatus(id, request);
   }
 
   @Get()
-  list(
+  async list(
     @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): PageResponseDto<PostResponseDto> {
-    return this.postService.list(applicationId, status, Number(page), Number(size));
+  ): Promise<PageResponseDto<PostResponseDto>> {
+    return await this.postService.list(applicationId, status, Number(page), Number(size));
   }
 }

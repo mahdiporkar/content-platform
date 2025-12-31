@@ -11,27 +11,33 @@ export class AdminArticleController {
   constructor(private readonly articleService: AdminArticleService) {}
 
   @Post()
-  create(@Body() request: ArticleUpsertRequestDto): ArticleResponseDto {
-    return this.articleService.create(request);
+  async create(@Body() request: ArticleUpsertRequestDto): Promise<ArticleResponseDto> {
+    return await this.articleService.create(request);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() request: ArticleUpsertRequestDto): ArticleResponseDto {
-    return this.articleService.update(id, request);
+  async update(
+    @Param('id') id: string,
+    @Body() request: ArticleUpsertRequestDto,
+  ): Promise<ArticleResponseDto> {
+    return await this.articleService.update(id, request);
   }
 
   @Patch(':id/status')
-  changeStatus(@Param('id') id: string, @Body() request: ChangeStatusRequestDto): ArticleResponseDto {
-    return this.articleService.changeStatus(id, request);
+  async changeStatus(
+    @Param('id') id: string,
+    @Body() request: ChangeStatusRequestDto,
+  ): Promise<ArticleResponseDto> {
+    return await this.articleService.changeStatus(id, request);
   }
 
   @Get()
-  list(
+  async list(
     @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): PageResponseDto<ArticleResponseDto> {
-    return this.articleService.list(applicationId, status, Number(page), Number(size));
+  ): Promise<PageResponseDto<ArticleResponseDto>> {
+    return await this.articleService.list(applicationId, status, Number(page), Number(size));
   }
 }
