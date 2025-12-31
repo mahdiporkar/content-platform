@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import client from "../../api/client";
+import { uploadMedia } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import { Article, ContentStatus } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
@@ -21,9 +22,38 @@ export const ArticleEditorPage = ({ mode }: { mode: EditorMode }) => {
   const [title, setTitle] = useState(existingArticle?.title ?? "");
   const [slug, setSlug] = useState(existingArticle?.slug ?? "");
   const [content, setContent] = useState(existingArticle?.content ?? "");
+  const [bannerUrl, setBannerUrl] = useState(existingArticle?.bannerUrl ?? "");
   const [status, setStatus] = useState<ContentStatus>(existingArticle?.status ?? "DRAFT");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBannerUpload = async (file: File) => {
+    if (!applicationId) {
+      setBannerError("Application ID is required before uploading media.");
+      return;
+    }
+    setBannerUploading(true);
+    setBannerError(null);
+    try {
+      const response = await uploadMedia(file, applicationId, "image");
+      setBannerUrl(response.url);
+    } catch (uploadError) {
+      setBannerError("Banner upload failed. Try again.");
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
+  const handleBannerInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      void handleBannerUpload(file);
+    }
+    event.target.value = "";
+  };
 
   const handleSave = async () => {
     if (!applicationId) {
@@ -32,7 +62,7 @@ export const ArticleEditorPage = ({ mode }: { mode: EditorMode }) => {
     }
     setSaving(true);
     setError(null);
-    const payload = { applicationId, title, slug, content, status };
+    const payload = { applicationId, title, slug, content, status, bannerUrl };
     try {
       if (mode === "create") {
         await client.post("/api/v1/admin/articles", payload);
@@ -78,6 +108,61 @@ export const ArticleEditorPage = ({ mode }: { mode: EditorMode }) => {
               </option>
             ))}
           </select>
+        </div>
+        <div className="input">
+          <label>Banner image</label>
+          <div className="banner-card">
+            <div className="banner-header">
+              <div>
+                <div className="banner-title">Cover for listings</div>
+                <div className="muted">Upload a wide image for the article banner.</div>
+              </div>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={!applicationId || bannerUploading}
+              >
+                {bannerUploading ? "Uploading..." : "Upload banner"}
+              </button>
+            </div>
+            {bannerUrl ? (
+              <div className="banner-preview">
+                <img src={bannerUrl} alt="Article banner preview" />
+                <div className="banner-actions">
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={!applicationId || bannerUploading}
+                  >
+                    Replace
+                  </button>
+                  <button type="button" className="button ghost" onClick={() => setBannerUrl("")}>
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="banner-empty">No banner yet. Upload an image to set the tone.</div>
+            )}
+            {bannerError && <div className="muted">{bannerError}</div>}
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleBannerInputChange}
+            />
+            <div className="banner-url">
+              <label>Or paste image URL</label>
+              <input
+                placeholder="https://..."
+                value={bannerUrl}
+                onChange={(event) => setBannerUrl(event.target.value)}
+              />
+            </div>
+          </div>
         </div>
         <div className="input">
           <label>Content</label>

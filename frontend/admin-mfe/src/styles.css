@@ -179,9 +179,9 @@ textarea {
 .editor-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   padding: 12px;
-  background: var(--bg-accent);
+  background: linear-gradient(135deg, rgba(31, 111, 139, 0.08), rgba(31, 111, 139, 0.02));
   border-bottom: 1px solid var(--border);
 }
 
@@ -200,6 +200,25 @@ textarea {
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
+}
+
+.editor-button.icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.editor-text {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .editor-button.active {
@@ -237,6 +256,48 @@ textarea {
   font-size: 12px;
 }
 
+.editor-asset-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px dashed var(--border);
+  background: #faf7f2;
+}
+
+.asset-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.asset-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.asset-button {
+  border: 1px solid var(--primary);
+  background: #fff;
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.asset-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.asset-status {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .editor-content {
   padding: 18px;
   min-height: 320px;
@@ -245,6 +306,7 @@ textarea {
 .editor-content .ProseMirror {
   outline: none;
   min-height: 260px;
+  line-height: 1.65;
 }
 
 .editor-content .ProseMirror h1 {
@@ -280,6 +342,70 @@ textarea {
   overflow: auto;
 }
 
+.banner-card {
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: #fbfaf8;
+  display: grid;
+  gap: 14px;
+}
+
+.banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.banner-title {
+  font-weight: 600;
+}
+
+.banner-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.banner-preview img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.banner-empty {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.banner-url {
+  display: grid;
+  gap: 8px;
+}
+
+.banner-url label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
 .editor-content .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
@@ -301,5 +427,14 @@ textarea {
     position: sticky;
     top: 0;
     z-index: 10;
+  }
+
+  .editor-asset-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .banner-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

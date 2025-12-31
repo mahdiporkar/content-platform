@@ -14,6 +14,7 @@ export type Post = {
   title: string;
   slug: string;
   content: string;
+  bannerUrl?: string | null;
   status: ContentStatus;
   publishedAt?: string | null;
   createdAt: string;
@@ -26,6 +27,7 @@ export type Article = {
   title: string;
   slug: string;
   content: string;
+  bannerUrl?: string | null;
   status: ContentStatus;
   publishedAt?: string | null;
   createdAt: string;
