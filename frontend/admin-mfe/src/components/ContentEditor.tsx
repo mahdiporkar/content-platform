@@ -68,13 +68,25 @@ const ImageNodeView = ({ node, updateAttributes, selected, editor }: MediaNodeVi
       <img src={node.attrs.src} alt="" className="media-node__content" />
       <div className="media-node__handles">
         <button
-          className="media-node__handle left"
+          className="media-node__handle top-left"
           type="button"
           onMouseDown={(event) => startResize(event, "left")}
           aria-label="Resize image"
         />
         <button
-          className="media-node__handle right"
+          className="media-node__handle top-right"
+          type="button"
+          onMouseDown={(event) => startResize(event, "right")}
+          aria-label="Resize image"
+        />
+        <button
+          className="media-node__handle bottom-left"
+          type="button"
+          onMouseDown={(event) => startResize(event, "left")}
+          aria-label="Resize image"
+        />
+        <button
+          className="media-node__handle bottom-right"
           type="button"
           onMouseDown={(event) => startResize(event, "right")}
           aria-label="Resize image"
@@ -152,13 +164,25 @@ const VideoNodeView = ({ node, updateAttributes, selected, editor }: MediaNodeVi
       <video src={node.attrs.src} controls className="media-node__content" />
       <div className="media-node__handles">
         <button
-          className="media-node__handle left"
+          className="media-node__handle top-left"
           type="button"
           onMouseDown={(event) => startResize(event, "left")}
           aria-label="Resize video"
         />
         <button
-          className="media-node__handle right"
+          className="media-node__handle top-right"
+          type="button"
+          onMouseDown={(event) => startResize(event, "right")}
+          aria-label="Resize video"
+        />
+        <button
+          className="media-node__handle bottom-left"
+          type="button"
+          onMouseDown={(event) => startResize(event, "left")}
+          aria-label="Resize video"
+        />
+        <button
+          className="media-node__handle bottom-right"
           type="button"
           onMouseDown={(event) => startResize(event, "right")}
           aria-label="Resize video"
@@ -258,6 +282,8 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageWidthValue, setImageWidthValue] = useState(100);
+  const [showTablePicker, setShowTablePicker] = useState(false);
+  const [tablePreview, setTablePreview] = useState({ rows: 0, cols: 0 });
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -358,6 +384,20 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       return;
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  };
+
+  const insertTable = (rows: number, cols: number) => {
+    if (!editor) {
+      return;
+    }
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    setShowTablePicker(false);
+    setTablePreview({ rows: 0, cols: 0 });
+  };
+
+  const closeTablePicker = () => {
+    setShowTablePicker(false);
+    setTablePreview({ rows: 0, cols: 0 });
   };
 
   const imageSizeButtons = useMemo(
@@ -584,19 +624,88 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
               <path d="M4 4l16 16" />
             </Icon>
           </IconButton>
-          <IconButton
-            label="Insert table"
-            onClick={() =>
-              editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-            }
-          >
-            <Icon>
-              <path d="M4 5h16v14H4V5zm2 2v4h5V7H6zm7 0v4h5V7h-5zm-7 6v4h5v-4H6zm7 0v4h5v-4h-5z" />
-            </Icon>
-          </IconButton>
+          <div className="table-picker">
+            <IconButton label="Insert table" onClick={() => setShowTablePicker((prev) => !prev)}>
+              <Icon>
+                <path d="M4 5h16v14H4V5zm2 2v4h5V7H6zm7 0v4h5V7h-5zm-7 6v4h5v-4H6zm7 0v4h5v-4h-5z" />
+              </Icon>
+            </IconButton>
+            {showTablePicker && (
+              <div className="table-picker__panel" onMouseLeave={closeTablePicker}>
+                <div className="table-picker__grid">
+                  {Array.from({ length: 30 }).map((_, index) => {
+                    const row = Math.floor(index / 6) + 1;
+                    const col = (index % 6) + 1;
+                    const active = row <= tablePreview.rows && col <= tablePreview.cols;
+                    return (
+                      <button
+                        key={`${row}-${col}`}
+                        type="button"
+                        className={`table-picker__cell ${active ? "active" : ""}`}
+                        onMouseEnter={() => setTablePreview({ rows: row, cols: col })}
+                        onClick={() => insertTable(row, col)}
+                        aria-label={`Insert ${row} by ${col} table`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="table-picker__label">
+                  {tablePreview.rows > 0 ? `${tablePreview.rows} x ${tablePreview.cols}` : "Select size"}
+                </div>
+              </div>
+            )}
+          </div>
           <IconButton label="Insert divider" onClick={() => editor.chain().focus().toggleHorizontalRule().run()}>
             <Icon>
               <path d="M4 11h16v2H4v-2z" />
+            </Icon>
+          </IconButton>
+        </div>
+        <div className={`editor-group ${editor.isActive("table") ? "" : "disabled"}`}>
+          <span className="editor-label">Table</span>
+          <IconButton
+            label="Add row after"
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            disabled={!editor.isActive("table")}
+          >
+            <Icon>
+              <path d="M4 5h16v6H4V5zm0 8h10v6H4v-6zm12 0h4v6h-4v-6z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Add column after"
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            disabled={!editor.isActive("table")}
+          >
+            <Icon>
+              <path d="M4 5h10v14H4V5zm12 0h4v14h-4V5z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Delete row"
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            disabled={!editor.isActive("table")}
+          >
+            <Icon>
+              <path d="M4 5h16v6H4V5zm2 8h12v2H6v-2zm0 4h12v2H6v-2z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Delete column"
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            disabled={!editor.isActive("table")}
+          >
+            <Icon>
+              <path d="M4 5h12v14H4V5zm14 0h2v14h-2V5z" />
+            </Icon>
+          </IconButton>
+          <IconButton
+            label="Delete table"
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            disabled={!editor.isActive("table")}
+          >
+            <Icon>
+              <path d="M4 5h16v14H4V5zm2 2v10h12V7H6zm2 2 8 8M16 9l-8 8" />
             </Icon>
           </IconButton>
         </div>
