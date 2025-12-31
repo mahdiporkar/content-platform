@@ -1,0 +1,11 @@
+{
+  "name": "content-platform",
+  "private": true,
+  "scripts": {
+    "dev:all": "concurrently -k -n backend,admin,demo \"cross-env PORT=3001 npm --prefix backend-nestjs run start:dev\" \"npm --prefix frontend/admin-mfe run dev -- --port 3002\" \"npm --prefix frontend/demo-next run dev -- --port 3003\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  }
+}
