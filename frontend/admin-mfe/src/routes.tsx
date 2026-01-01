@@ -9,6 +9,8 @@ import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
+import { ApplicationsListPage } from "./features/applications/ApplicationsListPage";
+import { ApplicationEditorPage } from "./features/applications/ApplicationEditorPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -29,6 +31,9 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <Navigate to="/posts" replace /> },
+      { path: "applications", element: <ApplicationsListPage /> },
+      { path: "applications/new", element: <ApplicationEditorPage mode="create" /> },
+      { path: "applications/:id", element: <ApplicationEditorPage mode="edit" /> },
       { path: "posts", element: <PostsListPage /> },
       { path: "posts/new", element: <PostEditorPage mode="create" /> },
       { path: "posts/:id", element: <PostEditorPage mode="edit" /> },

@@ -16,6 +16,9 @@ export const AppLayout = () => {
       <aside className="sidebar">
         <h1>Content Platform</h1>
         <nav>
+          <NavLink className="nav-link" to="/applications">
+            Applications
+          </NavLink>
           <NavLink className="nav-link" to="/posts">
             Posts
           </NavLink>

@@ -7,4 +7,7 @@ export class ApplicationEntity {
 
   @Column({ type: 'varchar' })
   name!: string;
+
+  @Column({ name: 'website_url', type: 'varchar', nullable: true })
+  websiteUrl?: string | null;
 }

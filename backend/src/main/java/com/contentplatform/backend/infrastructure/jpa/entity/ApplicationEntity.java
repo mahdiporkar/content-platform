@@ -15,12 +15,16 @@ public class ApplicationEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "website_url")
+    private String websiteUrl;
+
     protected ApplicationEntity() {
     }
 
-    public ApplicationEntity(String id, String name) {
+    public ApplicationEntity(String id, String name, String websiteUrl) {
         this.id = id;
         this.name = name;
+        this.websiteUrl = websiteUrl;
     }
 
     public String getId() {
@@ -29,5 +33,9 @@ public class ApplicationEntity {
 
     public String getName() {
         return name;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
     }
 }

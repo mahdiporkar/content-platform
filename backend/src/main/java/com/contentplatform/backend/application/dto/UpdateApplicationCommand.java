@@ -1,15 +1,13 @@
-package com.contentplatform.backend.domain.model;
+package com.contentplatform.backend.application.dto;
 
-import java.util.Objects;
-
-public class Application {
+public class UpdateApplicationCommand {
     private final String id;
     private final String name;
     private final String websiteUrl;
 
-    public Application(String id, String name, String websiteUrl) {
-        this.id = Objects.requireNonNull(id, "id must not be null");
-        this.name = Objects.requireNonNull(name, "name must not be null");
+    public UpdateApplicationCommand(String id, String name, String websiteUrl) {
+        this.id = id;
+        this.name = name;
         this.websiteUrl = websiteUrl;
     }
 

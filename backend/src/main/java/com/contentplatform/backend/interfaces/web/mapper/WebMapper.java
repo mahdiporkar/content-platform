@@ -1,9 +1,11 @@
 package com.contentplatform.backend.interfaces.web.mapper;
 
 import com.contentplatform.backend.application.dto.ArticleDto;
+import com.contentplatform.backend.application.dto.ApplicationDto;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.PostDto;
 import com.contentplatform.backend.application.dto.VideoDto;
+import com.contentplatform.backend.interfaces.web.response.ApplicationResponse;
 import com.contentplatform.backend.interfaces.web.response.ArticleResponse;
 import com.contentplatform.backend.interfaces.web.response.PageResponse;
 import com.contentplatform.backend.interfaces.web.response.PostResponse;
@@ -26,6 +28,10 @@ public class WebMapper {
             dto.getCreatedAt(),
             dto.getUpdatedAt()
         );
+    }
+
+    public ApplicationResponse toApplicationResponse(ApplicationDto dto) {
+        return new ApplicationResponse(dto.getId(), dto.getName(), dto.getWebsiteUrl());
     }
 
     public ArticleResponse toArticleResponse(ArticleDto dto) {

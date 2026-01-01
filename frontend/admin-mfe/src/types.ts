@@ -1,5 +1,11 @@
 export type ContentStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
+export type Application = {
+  id: string;
+  name: string;
+  websiteUrl?: string | null;
+};
+
 export type PageResponse<T> = {
   items: T[];
   totalElements: number;

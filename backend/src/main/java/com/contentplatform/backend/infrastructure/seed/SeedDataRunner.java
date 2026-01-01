@@ -48,7 +48,7 @@ public class SeedDataRunner implements CommandLineRunner {
             return existingId;
         }
         String applicationId = UUID.randomUUID().toString();
-        Application app = new Application(applicationId, "Demo Application");
+        Application app = new Application(applicationId, "Demo Application", null);
         applicationRepository.save(app);
         logger.info("Seeded applicationId: {}", applicationId);
         return applicationId;

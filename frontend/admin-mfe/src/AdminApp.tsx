@@ -10,6 +10,8 @@ import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
+import { ApplicationsListPage } from "./features/applications/ApplicationsListPage";
+import { ApplicationEditorPage } from "./features/applications/ApplicationEditorPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -34,6 +36,9 @@ export const AdminApp = () => {
             }
           >
             <Route index element={<Navigate to="/posts" replace />} />
+            <Route path="applications" element={<ApplicationsListPage />} />
+            <Route path="applications/new" element={<ApplicationEditorPage mode="create" />} />
+            <Route path="applications/:id" element={<ApplicationEditorPage mode="edit" />} />
             <Route path="posts" element={<PostsListPage />} />
             <Route path="posts/new" element={<PostEditorPage mode="create" />} />
             <Route path="posts/:id" element={<PostEditorPage mode="edit" />} />

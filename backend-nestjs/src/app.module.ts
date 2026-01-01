@@ -3,12 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './controllers/auth.controller';
+import { AdminApplicationController } from './controllers/admin-application.controller';
 import { AdminPostController } from './controllers/admin-post.controller';
 import { AdminArticleController } from './controllers/admin-article.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
 import { PublicContentController } from './controllers/public-content.controller';
 import { AuthService } from './services/auth.service';
+import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
 import { AdminArticleService } from './services/admin-article.service';
 import { AdminVideoService } from './services/admin-video.service';
@@ -68,6 +70,7 @@ import { parseJdbcUrl } from './common/jdbc-url';
   ],
   controllers: [
     AuthController,
+    AdminApplicationController,
     AdminPostController,
     AdminArticleController,
     AdminVideoController,
@@ -78,6 +81,7 @@ import { parseJdbcUrl } from './common/jdbc-url';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     JwtTokenService,
     AuthService,
+    AdminApplicationService,
     AdminPostService,
     AdminArticleService,
     AdminVideoService,

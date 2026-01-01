@@ -4,8 +4,10 @@ import com.contentplatform.backend.application.port.out.ApplicationRepository;
 import com.contentplatform.backend.domain.model.Application;
 import com.contentplatform.backend.infrastructure.jpa.entity.ApplicationEntity;
 import com.contentplatform.backend.infrastructure.jpa.repository.ApplicationJpaRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,9 +30,26 @@ public class JpaApplicationRepositoryAdapter implements ApplicationRepository {
     }
 
     @Override
+    public List<Application> findAll() {
+        return repository.findAll(Sort.by(Sort.Direction.ASC, "name"))
+            .stream()
+            .map(this::toDomain)
+            .toList();
+    }
+
+    @Override
     public Application save(Application application) {
-        ApplicationEntity entity = new ApplicationEntity(application.getId(), application.getName());
+        ApplicationEntity entity = new ApplicationEntity(
+            application.getId(),
+            application.getName(),
+            application.getWebsiteUrl()
+        );
         return toDomain(repository.save(entity));
+    }
+
+    @Override
+    public void deleteById(String id) {
+        repository.deleteById(id);
     }
 
     @Override
@@ -44,6 +63,6 @@ public class JpaApplicationRepositoryAdapter implements ApplicationRepository {
     }
 
     private Application toDomain(ApplicationEntity entity) {
-        return new Application(entity.getId(), entity.getName());
+        return new Application(entity.getId(), entity.getName(), entity.getWebsiteUrl());
     }
 }
