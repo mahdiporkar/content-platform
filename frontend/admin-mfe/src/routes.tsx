@@ -8,6 +8,7 @@ import { PostEditorPage } from "./features/posts/PostEditorPage";
 import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
+import { VideoEditorPage } from "./features/videos/VideoEditorPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
 import { ApplicationsListPage } from "./features/applications/ApplicationsListPage";
 import { ApplicationEditorPage } from "./features/applications/ApplicationEditorPage";
@@ -41,6 +42,7 @@ export const routes: RouteObject[] = [
       { path: "articles/new", element: <ArticleEditorPage mode="create" /> },
       { path: "articles/:id", element: <ArticleEditorPage mode="edit" /> },
       { path: "videos", element: <VideoListPage /> },
+      { path: "videos/:id", element: <VideoEditorPage /> },
       { path: "videos/upload", element: <VideoUploadPage /> }
     ]
   }

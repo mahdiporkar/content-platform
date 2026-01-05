@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, Card, Select, Space, Table, Tag, Typography } from "antd";
+import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, PageResponse, Post } from "../../types";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const statusColors: Record<ContentStatus, "default" | "success" | "warning"> = {
+  DRAFT: "default",
+  PUBLISHED: "success",
+  ARCHIVED: "warning"
+};
 
 export const PostsListPage = () => {
   const { applicationId } = useTenant();
@@ -30,71 +38,95 @@ export const PostsListPage = () => {
     fetchPosts();
   }, [applicationId, status]);
 
+  const columns = useMemo<ColumnsType<Post>>(
+    () => [
+      { title: "Title", dataIndex: "title", width: "30%" },
+      {
+        title: "Slug",
+        dataIndex: "slug",
+        width: "25%",
+        render: (value: string) => <Typography.Text code>{value}</Typography.Text>
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        width: "15%",
+        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
+      },
+      {
+        title: "Updated",
+        dataIndex: "updatedAt",
+        width: "15%",
+        render: (value: string) => new Date(value).toLocaleString()
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: "15%",
+        render: (_, post) => (
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/posts/${post.id}`, { state: { post } })}
+          >
+            Edit
+          </Button>
+        )
+      }
+    ],
+    [navigate]
+  );
+
   return (
-    <div>
+    <Card className="page-card">
       <div className="page-header">
         <div>
-          <h2>Posts</h2>
-          <div className="muted">Short-form content across tenants.</div>
+          <Typography.Title level={4} style={{ marginBottom: 0 }}>
+            Posts
+          </Typography.Title>
+          <Typography.Text type="secondary">Manage your blog posts and content.</Typography.Text>
         </div>
-        <button className="button" onClick={() => navigate("/posts/new")}>
-          New Post
-        </button>
       </div>
 
-      <div className="toolbar">
-        <div className="input">
-          <label>Status</label>
-          <select value={status} onChange={(event) => setStatus(event.target.value as ContentStatus | "")}>
-            <option value="">All</option>
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button className="button secondary" onClick={fetchPosts} disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+      <div className="page-actions">
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/posts/new")}>
+            New Post
+          </Button>
+          <Select
+            value={status || "ALL"}
+            onChange={(value) => setStatus(value === "ALL" ? "" : (value as ContentStatus))}
+            style={{ width: 150 }}
+            options={[
+              { label: "All Status", value: "ALL" },
+              ...statusOptions.map((option) => ({ value: option, label: option }))
+            ]}
+          />
+        </Space>
+        <Button icon={<ReloadOutlined />} onClick={fetchPosts} loading={loading}>
+          Refresh
+        </Button>
       </div>
 
-      <div className="card">
-        {posts.length === 0 && <div className="muted">No posts found for this tenant.</div>}
-        {posts.length > 0 && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Slug</th>
-                <th>Status</th>
-                <th>Updated</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td>{post.title}</td>
-                  <td>{post.slug}</td>
-                  <td>
-                    <span className="badge">{post.status}</span>
-                  </td>
-                  <td>{new Date(post.updatedAt).toLocaleString()}</td>
-                  <td>
-                    <button
-                      className="button secondary"
-                      onClick={() => navigate(`/posts/${post.id}`, { state: { post } })}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+      <Table
+        rowKey="id"
+        dataSource={posts}
+        columns={columns}
+        loading={loading}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <div className="table-empty">
+              <Typography.Text type="secondary">No posts found</Typography.Text>
+              <div>
+                <Button type="primary" onClick={() => navigate("/posts/new")}>
+                  Create your first post
+                </Button>
+              </div>
+            </div>
+          )
+        }}
+      />
+    </Card>
   );
 };

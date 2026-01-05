@@ -1,31 +1,35 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Form, Input, Space, Typography } from "antd";
+import React, { useMemo, useRef, useState } from "react";
+import { Alert, Button, Card, Form, Input, Select, Space, Typography, Upload } from "antd";
+import type { UploadFile } from "antd";
+import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import client from "../../api/client";
-import { Application, GalleryImage, SeoMeta } from "../../types";
+import { uploadMedia } from "../../api/media";
+import { ContentStatus, GalleryImage, SeoMeta } from "../../types";
 
-type Mode = "create" | "edit";
+const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
-type LocationState = {
-  application?: Application;
+type Props = {
+  applicationId: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
-  const navigate = useNavigate();
-  const params = useParams();
-  const location = useLocation();
-  const state = location.state as LocationState | undefined;
-  const [applicationId, setApplicationId] = useState(state?.application?.id ?? "");
-  const [name, setName] = useState(state?.application?.name ?? "");
-  const [websiteUrl, setWebsiteUrl] = useState(state?.application?.websiteUrl ?? "");
-  const [tags, setTags] = useState<string[]>(state?.application?.tags ?? []);
-  const [seo, setSeo] = useState<SeoMeta>(state?.application?.seo ?? {});
-  const [gallery, setGallery] = useState<GalleryImage[]>(state?.application?.gallery ?? []);
-  const [loading, setLoading] = useState(false);
+export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<ContentStatus>("DRAFT");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [seo, setSeo] = useState<SeoMeta>({});
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const tagsInput = useMemo(() => tags.join(", "), [tags]);
 
-  const updateSeo = (key: keyof SeoMeta, value: string | boolean) => {
+  const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
     setSeo((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -41,93 +45,111 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     setGallery((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const loadApplication = async (id: string) => {
-    setLoading(true);
-    const response = await client.get<Application>(`/api/v1/admin/applications/${id}`);
-    setApplicationId(response.data.id);
-    setName(response.data.name);
-    setWebsiteUrl(response.data.websiteUrl ?? "");
-    setTags(response.data.tags ?? []);
-    setSeo(response.data.seo ?? {});
-    setGallery(response.data.gallery ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (mode === "edit" && params.id && !state?.application) {
-      loadApplication(params.id);
-    }
-  }, [mode, params.id, state?.application]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!name.trim()) {
+  const handleUpload = async () => {
+    if (!applicationId) {
+      setError("Application ID is required.");
       return;
     }
-    setLoading(true);
-    if (mode === "create") {
-      await client.post<Application>("/api/v1/admin/applications", {
-        id: applicationId.trim() || undefined,
-        name: name.trim(),
-        websiteUrl: websiteUrl.trim() || undefined,
-        tags,
-        seo,
-        gallery
-      });
-    } else if (params.id) {
-      await client.put<Application>(`/api/v1/admin/applications/${params.id}`, {
-        name: name.trim(),
-        websiteUrl: websiteUrl.trim() || undefined,
-        tags,
-        seo,
-        gallery
-      });
+    if (!file) {
+      setError("Choose a video file to upload.");
+      return;
     }
-    setLoading(false);
-    navigate("/applications");
+    setUploading(true);
+    setError(null);
+    const payload = new FormData();
+    payload.append("file", file);
+    payload.append("title", title);
+    payload.append("description", description);
+    payload.append("applicationId", applicationId);
+    payload.append("status", status);
+    if (tags.length > 0) {
+      payload.append("tags", JSON.stringify(tags));
+    }
+    if (Object.keys(seo).length > 0) {
+      payload.append("seo", JSON.stringify(seo));
+    }
+    if (gallery.length > 0) {
+      payload.append("gallery", JSON.stringify(gallery));
+    }
+
+    try {
+      await client.post("/api/v1/admin/videos/upload", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setFile(null);
+      setFileList([]);
+      onSuccess?.();
+    } catch (err) {
+      setError("Upload failed. Check the fields and try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const title = mode === "create" ? "New Application" : "Edit Application";
-  const subtitle =
-    mode === "create"
-      ? "Create a new application for your content platform."
-      : "Update application details.";
+  const handleFileChange = (nextFileList: UploadFile[]) => {
+    const selected = nextFileList[0]?.originFileObj;
+    setFile(selected ?? null);
+    setFileList(nextFileList);
+  };
 
   return (
     <Card className="page-card">
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            {title}
+            Upload Video
           </Typography.Title>
-          <Typography.Text type="secondary">{subtitle}</Typography.Text>
+          <Typography.Text type="secondary">Upload and publish video content.</Typography.Text>
         </div>
       </div>
 
-      <Form layout="vertical" onSubmitCapture={handleSubmit} style={{ maxWidth: 600 }}>
-        {mode === "create" && (
-          <Form.Item label="Application ID (optional)">
-            <Input
-              value={applicationId}
-              onChange={(event) => setApplicationId(event.target.value)}
-              placeholder="UUID (leave empty to auto-generate)"
-            />
-          </Form.Item>
-        )}
-        {mode === "edit" && (
-          <Form.Item label="Application ID">
-            <Input value={applicationId} readOnly />
-          </Form.Item>
-        )}
-        <Form.Item label="Name" required>
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="App name" />
+      {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 24 }} />}
+
+      <Form layout="vertical" style={{ maxWidth: 600 }}>
+        <Form.Item label="Title" required>
+          <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
         </Form.Item>
-        <Form.Item label="Website URL">
-          <Input
-            value={websiteUrl}
-            onChange={(event) => setWebsiteUrl(event.target.value)}
-            placeholder="https://example.com"
+        <Form.Item label="Description">
+          <Input.TextArea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
+        </Form.Item>
+        <Form.Item label="Status">
+          <Select
+            value={status}
+            onChange={(value) => setStatus(value)}
+            options={statusOptions.map((option) => ({ value: option, label: option }))}
           />
+        </Form.Item>
+        <Form.Item
+          label="Video File"
+          required
+          help="Maximum file size: 500MB. Supported formats: MP4, WebM, MOV"
+        >
+          <Upload
+            beforeUpload={() => false}
+            maxCount={1}
+            accept="video/*"
+            fileList={fileList}
+            onChange={({ fileList }) => handleFileChange(fileList)}
+          >
+            <Button icon={<UploadOutlined />} size="large" block>
+              {fileList.length === 0 ? "Select Video File" : "Change Video File"}
+            </Button>
+          </Upload>
+          {fileList.length > 0 && (
+            <Card size="small" className="upload-preview">
+              <Space>
+                <VideoCameraOutlined className="upload-preview__icon" />
+                <div>
+                  <Typography.Text strong>{fileList[0]?.name}</Typography.Text>
+                  {typeof fileList[0]?.size === "number" && (
+                    <Typography.Text type="secondary" className="upload-preview__meta">
+                      {(fileList[0].size / 1024 / 1024).toFixed(2)} MB
+                    </Typography.Text>
+                  )}
+                </div>
+              </Space>
+            </Card>
+          )}
         </Form.Item>
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
           <Form.Item label="Tags">
@@ -226,6 +248,34 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
         </Card>
         <Card size="small" title="Image Gallery" style={{ marginBottom: 16 }}>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Space>
+              <Button onClick={() => galleryInputRef.current?.click()} disabled={!applicationId}>
+                Upload image
+              </Button>
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) {
+                    return;
+                  }
+                  try {
+                    const response = await uploadMedia(file, applicationId, "image");
+                    setGallery((prev) => [...prev, { url: response.url, alt: file.name, caption: "" }]);
+                  } catch (uploadError) {
+                    setError("Gallery upload failed. Try again.");
+                  } finally {
+                    event.target.value = "";
+                  }
+                }}
+              />
+              <Button type="dashed" onClick={addGalleryItem}>
+                Add Image
+              </Button>
+            </Space>
             {gallery.map((item, index) => (
               <Card key={`${item.url}-${index}`} size="small" style={{ background: "#fafafa" }}>
                 <Space direction="vertical" style={{ width: "100%" }}>
@@ -250,20 +300,20 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
                 </Space>
               </Card>
             ))}
-            <Button type="dashed" onClick={addGalleryItem}>
-              Add Image
-            </Button>
           </Space>
         </Card>
-        <Space>
-          <Button type="primary" htmlType="submit" loading={loading} disabled={!name.trim()}>
-            Save
-          </Button>
-          <Button onClick={() => navigate("/applications")} disabled={loading}>
+      </Form>
+
+      <Space>
+        <Button type="primary" onClick={handleUpload} loading={uploading} size="large" disabled={!file}>
+          {uploading ? "Uploading..." : "Upload Video"}
+        </Button>
+        {onCancel && (
+          <Button onClick={onCancel} disabled={uploading} size="large">
             Cancel
           </Button>
-        </Space>
-      </Form>
+        )}
+      </Space>
     </Card>
   );
 };

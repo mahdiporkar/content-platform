@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, Card, Select, Space, Table, Tag, Typography } from "antd";
+import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, PageResponse, Video } from "../../types";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const statusColors: Record<ContentStatus, "default" | "success" | "warning"> = {
+  DRAFT: "default",
+  PUBLISHED: "success",
+  ARCHIVED: "warning"
+};
 
 export const VideoListPage = () => {
   const { applicationId } = useTenant();
@@ -30,62 +38,95 @@ export const VideoListPage = () => {
     fetchVideos();
   }, [applicationId, status]);
 
+  const columns = useMemo<ColumnsType<Video>>(
+    () => [
+      { title: "Title", dataIndex: "title", width: "35%" },
+      {
+        title: "Status",
+        dataIndex: "status",
+        width: "15%",
+        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
+      },
+      {
+        title: "File (Object Key)",
+        dataIndex: "objectKey",
+        width: "35%",
+        render: (value: string) => <Typography.Text code>{value}</Typography.Text>
+      },
+      {
+        title: "Updated",
+        dataIndex: "updatedAt",
+        width: "15%",
+        render: (value: string) => new Date(value).toLocaleString()
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: "15%",
+        render: (_, video) => (
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
+          >
+            Edit
+          </Button>
+        )
+      }
+    ],
+    [navigate]
+  );
+
   return (
-    <div>
+    <Card className="page-card">
       <div className="page-header">
         <div>
-          <h2>Videos</h2>
-          <div className="muted">Upload video assets to MinIO.</div>
+          <Typography.Title level={4} style={{ marginBottom: 0 }}>
+            Videos
+          </Typography.Title>
+          <Typography.Text type="secondary">Manage your video content and uploads.</Typography.Text>
         </div>
-        <button className="button" onClick={() => navigate("/videos/upload")}>
-          Upload Video
-        </button>
       </div>
 
-      <div className="toolbar">
-        <div className="input">
-          <label>Status</label>
-          <select value={status} onChange={(event) => setStatus(event.target.value as ContentStatus | "")}>
-            <option value="">All</option>
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button className="button secondary" onClick={fetchVideos} disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+      <div className="page-actions">
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/videos/upload")}>
+            Upload Video
+          </Button>
+          <Select
+            value={status || "ALL"}
+            onChange={(value) => setStatus(value === "ALL" ? "" : (value as ContentStatus))}
+            style={{ width: 150 }}
+            options={[
+              { label: "All Status", value: "ALL" },
+              ...statusOptions.map((option) => ({ value: option, label: option }))
+            ]}
+          />
+        </Space>
+        <Button icon={<ReloadOutlined />} onClick={fetchVideos} loading={loading}>
+          Refresh
+        </Button>
       </div>
 
-      <div className="card">
-        {videos.length === 0 && <div className="muted">No videos found for this tenant.</div>}
-        {videos.length > 0 && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>File</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {videos.map((video) => (
-                <tr key={video.id}>
-                  <td>{video.title}</td>
-                  <td>
-                    <span className="badge">{video.status}</span>
-                  </td>
-                  <td className="muted">{video.objectKey}</td>
-                  <td>{new Date(video.updatedAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+      <Table
+        rowKey="id"
+        dataSource={videos}
+        columns={columns}
+        loading={loading}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <div className="table-empty">
+              <Typography.Text type="secondary">No videos found</Typography.Text>
+              <div>
+                <Button type="primary" onClick={() => navigate("/videos/upload")}>
+                  Upload your first video
+                </Button>
+              </div>
+            </div>
+          )
+        }}
+      />
+    </Card>
   );
 };

@@ -4,22 +4,13 @@ import { ContentStatus } from '../../common/content-status.enum';
 import { GalleryImageDto } from './gallery-image.dto';
 import { SeoMetaDto } from './seo-meta.dto';
 
-export class ArticleUpsertRequestDto {
-  @IsNotEmpty()
-  applicationId!: string;
-
+export class VideoUpdateRequestDto {
   @IsNotEmpty()
   title!: string;
 
-  @IsNotEmpty()
-  slug!: string;
-
-  @IsNotEmpty()
-  content!: string;
-
   @IsOptional()
   @IsString()
-  bannerUrl?: string;
+  description?: string;
 
   @IsOptional()
   @IsArray()

@@ -21,6 +21,15 @@ export class ArticleEntity {
   @Column({ name: 'banner_url', type: 'text', nullable: true })
   bannerUrl!: string | null;
 
+  @Column({ type: 'text', array: true, nullable: true })
+  tags!: string[] | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  seo!: Record<string, unknown> | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  gallery!: Record<string, unknown>[] | null;
+
   @Column({ type: 'enum', enum: ContentStatus })
   status!: ContentStatus;
 

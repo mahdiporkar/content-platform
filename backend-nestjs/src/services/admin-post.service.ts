@@ -24,11 +24,22 @@ export class AdminPostService {
       post.slug,
       post.content,
       post.bannerUrl ?? null,
+      post.tags ?? null,
+      post.seo ?? null,
+      post.gallery ?? null,
       post.status,
       post.publishedAt ? post.publishedAt.toISOString() : null,
       post.createdAt.toISOString(),
       post.updatedAt.toISOString(),
     );
+  }
+
+  private normalizeTags(tags?: string[]): string[] | null {
+    if (!tags) {
+      return null;
+    }
+    const normalized = tags.map((tag) => tag.trim()).filter(Boolean);
+    return normalized.length > 0 ? normalized : null;
   }
 
   async create(request: PostUpsertRequestDto): Promise<PostResponseDto> {
@@ -39,6 +50,9 @@ export class AdminPostService {
       slug: request.slug,
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
+      tags: this.normalizeTags(request.tags),
+      seo: request.seo ?? null,
+      gallery: request.gallery ?? null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
     });
@@ -55,6 +69,9 @@ export class AdminPostService {
     post.slug = request.slug;
     post.content = request.content;
     post.bannerUrl = request.bannerUrl?.trim() || null;
+    post.tags = this.normalizeTags(request.tags);
+    post.seo = request.seo ?? null;
+    post.gallery = request.gallery ?? null;
     post.status = request.status;
     post.publishedAt =
       request.status === ContentStatus.PUBLISHED ? post.publishedAt ?? new Date() : null;

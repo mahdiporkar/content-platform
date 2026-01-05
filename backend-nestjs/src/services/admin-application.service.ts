@@ -18,7 +18,18 @@ export class AdminApplicationService {
       application.id,
       application.name,
       application.websiteUrl ?? null,
+      application.tags ?? null,
+      application.seo ?? null,
+      application.gallery ?? null,
     );
+  }
+
+  private normalizeTags(tags?: string[]): string[] | null {
+    if (!tags) {
+      return null;
+    }
+    const normalized = tags.map((tag) => tag.trim()).filter(Boolean);
+    return normalized.length > 0 ? normalized : null;
   }
 
   async list(): Promise<ApplicationResponseDto[]> {
@@ -39,6 +50,9 @@ export class AdminApplicationService {
       id: request.id?.trim() || uuidv4(),
       name: request.name.trim(),
       websiteUrl: request.websiteUrl?.trim() || null,
+      tags: this.normalizeTags(request.tags),
+      seo: request.seo ?? null,
+      gallery: request.gallery ?? null,
     });
     const saved = await this.applicationRepo.save(application);
     return this.mapApplication(saved);
@@ -51,6 +65,9 @@ export class AdminApplicationService {
     }
     application.name = request.name.trim();
     application.websiteUrl = request.websiteUrl?.trim() || null;
+    application.tags = this.normalizeTags(request.tags);
+    application.seo = request.seo ?? null;
+    application.gallery = request.gallery ?? null;
     const saved = await this.applicationRepo.save(application);
     return this.mapApplication(saved);
   }

@@ -24,11 +24,22 @@ export class AdminArticleService {
       article.slug,
       article.content,
       article.bannerUrl ?? null,
+      article.tags ?? null,
+      article.seo ?? null,
+      article.gallery ?? null,
       article.status,
       article.publishedAt ? article.publishedAt.toISOString() : null,
       article.createdAt.toISOString(),
       article.updatedAt.toISOString(),
     );
+  }
+
+  private normalizeTags(tags?: string[]): string[] | null {
+    if (!tags) {
+      return null;
+    }
+    const normalized = tags.map((tag) => tag.trim()).filter(Boolean);
+    return normalized.length > 0 ? normalized : null;
   }
 
   async create(request: ArticleUpsertRequestDto): Promise<ArticleResponseDto> {
@@ -39,6 +50,9 @@ export class AdminArticleService {
       slug: request.slug,
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
+      tags: this.normalizeTags(request.tags),
+      seo: request.seo ?? null,
+      gallery: request.gallery ?? null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
     });
@@ -55,6 +69,9 @@ export class AdminArticleService {
     article.slug = request.slug;
     article.content = request.content;
     article.bannerUrl = request.bannerUrl?.trim() || null;
+    article.tags = this.normalizeTags(request.tags);
+    article.seo = request.seo ?? null;
+    article.gallery = request.gallery ?? null;
     article.status = request.status;
     article.publishedAt =
       request.status === ContentStatus.PUBLISHED ? article.publishedAt ?? new Date() : null;
