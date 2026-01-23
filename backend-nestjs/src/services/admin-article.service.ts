@@ -52,7 +52,7 @@ export class AdminArticleService {
       bannerUrl: request.bannerUrl?.trim() || null,
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
-      gallery: request.gallery ? (request.gallery as Record<string, unknown>[]) : null,
+      gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
     });
@@ -71,7 +71,9 @@ export class AdminArticleService {
     article.bannerUrl = request.bannerUrl?.trim() || null;
     article.tags = this.normalizeTags(request.tags);
     article.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
-    article.gallery = request.gallery ? (request.gallery as Record<string, unknown>[]) : null;
+    article.gallery = request.gallery
+      ? (request.gallery as unknown as Record<string, unknown>[])
+      : null;
     article.status = request.status;
     article.publishedAt =
       request.status === ContentStatus.PUBLISHED ? article.publishedAt ?? new Date() : null;
