@@ -51,8 +51,8 @@ export class AdminPostService {
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
       tags: this.normalizeTags(request.tags),
-      seo: request.seo ?? null,
-      gallery: request.gallery ?? null,
+      seo: request.seo ? (request.seo as Record<string, unknown>) : null,
+      gallery: request.gallery ? (request.gallery as Record<string, unknown>[]) : null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
     });
@@ -70,8 +70,8 @@ export class AdminPostService {
     post.content = request.content;
     post.bannerUrl = request.bannerUrl?.trim() || null;
     post.tags = this.normalizeTags(request.tags);
-    post.seo = request.seo ?? null;
-    post.gallery = request.gallery ?? null;
+    post.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
+    post.gallery = request.gallery ? (request.gallery as Record<string, unknown>[]) : null;
     post.status = request.status;
     post.publishedAt =
       request.status === ContentStatus.PUBLISHED ? post.publishedAt ?? new Date() : null;

@@ -105,8 +105,8 @@ export class AdminVideoService {
     video.title = request.title.trim();
     video.description = request.description?.trim() || null;
     video.tags = this.normalizeTags(request.tags);
-    video.seo = request.seo ?? null;
-    video.gallery = request.gallery ?? null;
+    video.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
+    video.gallery = request.gallery ? (request.gallery as Record<string, unknown>[]) : null;
     video.status = request.status;
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? video.publishedAt ?? new Date() : null;
     const saved = await this.videoRepo.save(video);

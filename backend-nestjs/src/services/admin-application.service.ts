@@ -51,8 +51,8 @@ export class AdminApplicationService {
       name: request.name.trim(),
       websiteUrl: request.websiteUrl?.trim() || null,
       tags: this.normalizeTags(request.tags),
-      seo: request.seo ?? null,
-      gallery: request.gallery ?? null,
+      seo: request.seo ? (request.seo as Record<string, unknown>) : null,
+      gallery: request.gallery ? (request.gallery as Record<string, unknown>[]) : null,
     });
     const saved = await this.applicationRepo.save(application);
     return this.mapApplication(saved);
@@ -66,8 +66,8 @@ export class AdminApplicationService {
     application.name = request.name.trim();
     application.websiteUrl = request.websiteUrl?.trim() || null;
     application.tags = this.normalizeTags(request.tags);
-    application.seo = request.seo ?? null;
-    application.gallery = request.gallery ?? null;
+    application.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
+    application.gallery = request.gallery ? (request.gallery as Record<string, unknown>[]) : null;
     const saved = await this.applicationRepo.save(application);
     return this.mapApplication(saved);
   }
