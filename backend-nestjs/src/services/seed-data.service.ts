@@ -32,14 +32,19 @@ export class SeedDataService implements OnModuleInit {
   private async ensureApplication(): Promise<string | null> {
     const existing = await this.applicationRepo.find({ take: 1, order: { id: 'ASC' } });
     if (existing.length > 0) {
-      const applicationId = existing[0].id;
-      this.logger.log(`Existing applicationId: ${applicationId}`);
-      return applicationId;
+      const application = existing[0];
+      if (!application.apiToken) {
+        application.apiToken = uuidv4().replace(/-/g, '');
+        await this.applicationRepo.save(application);
+      }
+      this.logger.log(`Existing applicationId: ${application.id}`);
+      return application.id;
     }
 
     const application = this.applicationRepo.create({
       id: uuidv4(),
       name: 'Demo Application',
+      apiToken: uuidv4().replace(/-/g, ''),
     });
     await this.applicationRepo.save(application);
     this.logger.log(`Seeded applicationId: ${application.id}`);

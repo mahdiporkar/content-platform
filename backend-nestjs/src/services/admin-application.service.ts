@@ -17,6 +17,7 @@ export class AdminApplicationService {
     return new ApplicationResponseDto(
       application.id,
       application.name,
+      application.apiToken ?? null,
       application.websiteUrl ?? null,
       application.tags ?? null,
       application.seo ?? null,
@@ -49,6 +50,7 @@ export class AdminApplicationService {
     const application = this.applicationRepo.create({
       id: request.id?.trim() || uuidv4(),
       name: request.name.trim(),
+      apiToken: request.apiToken?.trim() || this.generateToken(),
       websiteUrl: request.websiteUrl?.trim() || null,
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
@@ -64,6 +66,11 @@ export class AdminApplicationService {
       throw new NotFoundException('Application not found.');
     }
     application.name = request.name.trim();
+    if (request.apiToken?.trim()) {
+      application.apiToken = request.apiToken.trim();
+    } else if (!application.apiToken) {
+      application.apiToken = this.generateToken();
+    }
     application.websiteUrl = request.websiteUrl?.trim() || null;
     application.tags = this.normalizeTags(request.tags);
     application.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
@@ -72,6 +79,10 @@ export class AdminApplicationService {
       : null;
     const saved = await this.applicationRepo.save(application);
     return this.mapApplication(saved);
+  }
+
+  private generateToken(): string {
+    return uuidv4().replace(/-/g, '');
   }
 
   async remove(id: string): Promise<void> {

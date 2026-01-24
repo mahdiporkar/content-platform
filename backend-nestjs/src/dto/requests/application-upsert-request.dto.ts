@@ -13,6 +13,10 @@ export class ApplicationUpsertRequestDto {
 
   @IsOptional()
   @IsString()
+  apiToken?: string;
+
+  @IsOptional()
+  @IsString()
   websiteUrl?: string;
 
   @IsOptional()

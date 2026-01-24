@@ -5,10 +5,12 @@ import { ContentStatus } from '../common/content-status.enum';
 import { PostResponseDto } from '../dto/responses/post-response.dto';
 import { ArticleResponseDto } from '../dto/responses/article-response.dto';
 import { VideoResponseDto } from '../dto/responses/video-response.dto';
+import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { PostEntity } from '../entities/post.entity';
 import { ArticleEntity } from '../entities/article.entity';
 import { VideoEntity } from '../entities/video.entity';
+import { ApplicationEntity } from '../entities/application.entity';
 import { MinioService } from './minio.service';
 
 @Injectable()
@@ -20,6 +22,8 @@ export class PublicContentService {
     private readonly articleRepo: Repository<ArticleEntity>,
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
+    @InjectRepository(ApplicationEntity)
+    private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly minioService: MinioService,
   ) {}
 
@@ -182,5 +186,65 @@ export class PublicContentService {
     );
 
     return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
+  }
+
+  async getVideo(applicationId: string, id: string): Promise<VideoResponseDto> {
+    const video = await this.videoRepo.findOne({
+      where: { applicationId, id, status: ContentStatus.PUBLISHED },
+    });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    return new VideoResponseDto(
+      video.id,
+      video.applicationId,
+      video.title,
+      video.description,
+      video.tags ?? null,
+      video.seo ?? null,
+      video.gallery ?? null,
+      video.status,
+      video.publishedAt ? video.publishedAt.toISOString() : null,
+      video.objectKey,
+      video.contentType,
+      video.sizeBytes,
+      video.createdAt.toISOString(),
+      video.updatedAt.toISOString(),
+      this.minioService.getPublicUrl(video.objectKey),
+    );
+  }
+
+  async listGallery(
+    applicationId: string,
+    page: number,
+    size: number,
+  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    const gallery = (application.gallery || [])
+      .filter((item) => typeof item.url === 'string' && item.url.trim().length > 0)
+      .map((item) => new GalleryImageResponseDto(item.url as string, item.alt ?? null, item.caption ?? null));
+    const pageNumber = Math.max(0, page);
+    const pageSize = Math.max(1, size);
+    const start = pageNumber * pageSize;
+    const paged = gallery.slice(start, start + pageSize);
+    return new PageResponseDto(paged, gallery.length, Math.ceil(gallery.length / pageSize), pageNumber, pageSize);
+  }
+
+  async getGalleryItem(applicationId: string, index: number): Promise<GalleryImageResponseDto> {
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    const gallery = (application.gallery || []).filter(
+      (item) => typeof item.url === 'string' && item.url.trim().length > 0,
+    );
+    if (index < 0 || index >= gallery.length) {
+      throw new NotFoundException('Gallery item not found.');
+    }
+    const item = gallery[index];
+    return new GalleryImageResponseDto(item.url as string, item.alt ?? null, item.caption ?? null);
   }
 }

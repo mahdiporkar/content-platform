@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'applications' })
 export class ApplicationEntity {
@@ -7,6 +7,10 @@ export class ApplicationEntity {
 
   @Column({ type: 'varchar' })
   name!: string;
+
+  @Index({ unique: true })
+  @Column({ name: 'api_token', type: 'varchar', nullable: true })
+  apiToken!: string | null;
 
   @Column({ name: 'website_url', type: 'varchar', nullable: true })
   websiteUrl?: string | null;

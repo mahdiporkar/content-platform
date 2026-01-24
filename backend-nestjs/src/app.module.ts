@@ -8,12 +8,14 @@ import { AdminPostController } from './controllers/admin-post.controller';
 import { AdminArticleController } from './controllers/admin-article.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
+import { AdminUserController } from './controllers/admin-user.controller';
 import { PublicContentController } from './controllers/public-content.controller';
 import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
 import { AdminArticleService } from './services/admin-article.service';
 import { AdminVideoService } from './services/admin-video.service';
+import { AdminUserService } from './services/admin-user.service';
 import { PublicContentService } from './services/public-content.service';
 import { ApplicationEntity } from './entities/application.entity';
 import { AdminUserEntity } from './entities/admin-user.entity';
@@ -23,6 +25,7 @@ import { ArticleEntity } from './entities/article.entity';
 import { VideoEntity } from './entities/video.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { ApplicationTokenGuard } from './auth/application-token.guard';
 import { SeedDataService } from './services/seed-data.service';
 import { MinioService } from './services/minio.service';
 import { parseJdbcUrl } from './common/jdbc-url';
@@ -75,16 +78,19 @@ import { parseJdbcUrl } from './common/jdbc-url';
     AdminArticleController,
     AdminVideoController,
     AdminMediaController,
+    AdminUserController,
     PublicContentController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     JwtTokenService,
+    ApplicationTokenGuard,
     AuthService,
     AdminApplicationService,
     AdminPostService,
     AdminArticleService,
     AdminVideoService,
+    AdminUserService,
     PublicContentService,
     SeedDataService,
     MinioService,

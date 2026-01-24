@@ -1,12 +1,15 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { PublicContentService } from '../services/public-content.service';
 import { ContentStatus } from '../common/content-status.enum';
 import { PostResponseDto } from '../dto/responses/post-response.dto';
 import { ArticleResponseDto } from '../dto/responses/article-response.dto';
 import { VideoResponseDto } from '../dto/responses/video-response.dto';
+import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
+import { ApplicationTokenGuard } from '../auth/application-token.guard';
 
 @Controller('/api/v1/public')
+@UseGuards(ApplicationTokenGuard)
 export class PublicContentController {
   constructor(private readonly publicContent: PublicContentService) {}
 
@@ -54,5 +57,30 @@ export class PublicContentController {
     @Query('size') size = '10',
   ): Promise<PageResponseDto<VideoResponseDto>> {
     return await this.publicContent.listVideos(applicationId, status, Number(page), Number(size));
+  }
+
+  @Get(':applicationId/videos/:id')
+  async getVideo(
+    @Param('applicationId') applicationId: string,
+    @Param('id') id: string,
+  ): Promise<VideoResponseDto> {
+    return await this.publicContent.getVideo(applicationId, id);
+  }
+
+  @Get(':applicationId/gallery')
+  async listGallery(
+    @Param('applicationId') applicationId: string,
+    @Query('page') page = '0',
+    @Query('size') size = '10',
+  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
+    return await this.publicContent.listGallery(applicationId, Number(page), Number(size));
+  }
+
+  @Get(':applicationId/gallery/:index')
+  async getGalleryItem(
+    @Param('applicationId') applicationId: string,
+    @Param('index') index: string,
+  ): Promise<GalleryImageResponseDto> {
+    return await this.publicContent.getGalleryItem(applicationId, Number(index));
   }
 }
