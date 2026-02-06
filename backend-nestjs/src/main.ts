@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ValidationError } from 'class-validator';
 
@@ -37,9 +38,23 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Content Platform API')
+    .setDescription(
+      'Admin endpoints use Bearer auth. Public endpoints require x-application-token (and optional x-application-id).'
+    )
+    .setVersion('1.0')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')
+    .addApiKey({ type: 'apiKey', name: 'x-application-id', in: 'header' }, 'application-id')
+    .addApiKey({ type: 'apiKey', name: 'x-application-token', in: 'header' }, 'application-token')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, swaggerDocument);
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(port);
   console.log(`Backend listening on port ${port}`);
 }
 
 bootstrap();
+
+

@@ -4,11 +4,15 @@ public class ApplicationDto {
     private final String id;
     private final String name;
     private final String websiteUrl;
+    private final String apiToken;
+    private final java.util.List<GalleryImageDto> gallery;
 
-    public ApplicationDto(String id, String name, String websiteUrl) {
+    public ApplicationDto(String id, String name, String websiteUrl, String apiToken, java.util.List<GalleryImageDto> gallery) {
         this.id = id;
         this.name = name;
         this.websiteUrl = websiteUrl;
+        this.apiToken = apiToken;
+        this.gallery = gallery == null ? java.util.List.of() : java.util.List.copyOf(gallery);
     }
 
     public String getId() {
@@ -21,5 +25,13 @@ public class ApplicationDto {
 
     public String getWebsiteUrl() {
         return websiteUrl;
+    }
+
+    public String getApiToken() {
+        return apiToken;
+    }
+
+    public java.util.List<GalleryImageDto> getGallery() {
+        return gallery;
     }
 }

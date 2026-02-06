@@ -42,7 +42,9 @@ public class JpaApplicationRepositoryAdapter implements ApplicationRepository {
         ApplicationEntity entity = new ApplicationEntity(
             application.getId(),
             application.getName(),
-            application.getWebsiteUrl()
+            application.getWebsiteUrl(),
+            application.getApiToken(),
+            application.getGallery()
         );
         return toDomain(repository.save(entity));
     }
@@ -63,6 +65,12 @@ public class JpaApplicationRepositoryAdapter implements ApplicationRepository {
     }
 
     private Application toDomain(ApplicationEntity entity) {
-        return new Application(entity.getId(), entity.getName(), entity.getWebsiteUrl());
+        return new Application(
+            entity.getId(),
+            entity.getName(),
+            entity.getWebsiteUrl(),
+            entity.getApiToken(),
+            entity.getGallery()
+        );
     }
 }
