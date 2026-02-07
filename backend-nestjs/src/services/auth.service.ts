@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginRequestDto } from '../dto/requests/login-request.dto';
 import { AuthResponseDto } from '../dto/responses/auth-response.dto';
-import { AdminUserEntity } from '../entities/admin-user.entity';
+import { AdminUserEntity, AdminUserStatus } from '../entities/admin-user.entity';
 import { JwtTokenService } from '../auth/jwt-token.service';
 
 @Injectable()
@@ -29,11 +29,15 @@ export class AuthService {
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials.');
     }
+    if (admin.status === AdminUserStatus.SUSPENDED) {
+      throw new UnauthorizedException('Account is suspended.');
+    }
 
     const applicationIds = (admin.applications || []).map((entry) => entry.applicationId);
     const token = this.jwtTokenService.sign({
       sub: admin.id,
       email: admin.email,
+      role: admin.role,
       applicationIds,
     });
     return new AuthResponseDto(token);

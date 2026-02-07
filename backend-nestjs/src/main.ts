@@ -41,10 +41,11 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Content Platform API')
     .setDescription(
-      'Admin endpoints use Bearer auth. Public endpoints require x-application-token (and optional x-application-id).'
+      'Admin endpoints use Bearer auth. Delivery endpoints require x-app-id (or path appId) and Authorization: Bearer <appToken>.'
     )
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')
+    .addApiKey({ type: 'apiKey', name: 'x-app-id', in: 'header' }, 'app-id')
     .addApiKey({ type: 'apiKey', name: 'x-application-id', in: 'header' }, 'application-id')
     .addApiKey({ type: 'apiKey', name: 'x-application-token', in: 'header' }, 'application-token')
     .build();

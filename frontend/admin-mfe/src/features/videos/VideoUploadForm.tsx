@@ -6,7 +6,7 @@ import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta } from "../../types";
 
-const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
 type Props = {
   applicationId: string;

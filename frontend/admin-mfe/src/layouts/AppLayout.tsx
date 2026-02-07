@@ -3,9 +3,13 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button, Input, Layout, Menu, Typography } from "antd";
 import {
   AppstoreOutlined,
+  BarChartOutlined,
   FileTextOutlined,
   LogoutOutlined,
+  PictureOutlined,
   ReadOutlined,
+  TeamOutlined,
+  UnorderedListOutlined,
   VideoCameraOutlined
 } from "@ant-design/icons";
 import { useTenant } from "../app/tenant";
@@ -46,9 +50,13 @@ export const AppLayout = () => {
           onClick={({ key }) => navigate(`/${key}`)}
           items={[
             { key: "applications", icon: <AppstoreOutlined />, label: "Applications" },
+            { key: "users", icon: <TeamOutlined />, label: "Users" },
+            { key: "collections", icon: <UnorderedListOutlined />, label: "Collections" },
             { key: "posts", icon: <FileTextOutlined />, label: "Posts" },
             { key: "articles", icon: <ReadOutlined />, label: "Articles" },
-            { key: "videos", icon: <VideoCameraOutlined />, label: "Videos" }
+            { key: "videos", icon: <VideoCameraOutlined />, label: "Videos" },
+            { key: "images", icon: <PictureOutlined />, label: "Images" },
+            { key: "analytics", icon: <BarChartOutlined />, label: "Analytics" }
           ]}
           className="sidebar-menu"
         />

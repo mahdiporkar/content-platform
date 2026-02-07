@@ -34,9 +34,23 @@ export const ApplicationsListPage = () => {
     () => [
       { title: "Name", dataIndex: "name", width: "30%" },
       {
+        title: "Status",
+        dataIndex: "status",
+        width: "10%",
+        render: (value: string | undefined) =>
+          value ? <Typography.Text>{value}</Typography.Text> : <Typography.Text type="secondary">-</Typography.Text>
+      },
+      {
+        title: "Media Policy",
+        dataIndex: "mediaPolicy",
+        width: "15%",
+        render: (value: string | undefined) =>
+          value ? <Typography.Text>{value}</Typography.Text> : <Typography.Text type="secondary">-</Typography.Text>
+      },
+      {
         title: "Website",
         dataIndex: "websiteUrl",
-        width: "35%",
+        width: "25%",
         render: (value: string | undefined) =>
           value ? (
             <a href={value} target="_blank" rel="noopener noreferrer">
@@ -49,7 +63,7 @@ export const ApplicationsListPage = () => {
       {
         title: "ID",
         dataIndex: "id",
-        width: "25%",
+        width: "10%",
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
       },
       {

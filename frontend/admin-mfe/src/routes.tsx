@@ -12,6 +12,12 @@ import { VideoEditorPage } from "./features/videos/VideoEditorPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
 import { ApplicationsListPage } from "./features/applications/ApplicationsListPage";
 import { ApplicationEditorPage } from "./features/applications/ApplicationEditorPage";
+import { UsersListPage } from "./features/users/UsersListPage";
+import { CollectionsListPage } from "./features/collections/CollectionsListPage";
+import { CollectionEditorPage } from "./features/collections/CollectionEditorPage";
+import { ImagesListPage } from "./features/images/ImagesListPage";
+import { ImageEditorPage } from "./features/images/ImageEditorPage";
+import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -35,6 +41,10 @@ export const routes: RouteObject[] = [
       { path: "applications", element: <ApplicationsListPage /> },
       { path: "applications/new", element: <ApplicationEditorPage mode="create" /> },
       { path: "applications/:id", element: <ApplicationEditorPage mode="edit" /> },
+      { path: "users", element: <UsersListPage /> },
+      { path: "collections", element: <CollectionsListPage /> },
+      { path: "collections/new", element: <CollectionEditorPage mode="create" /> },
+      { path: "collections/:id", element: <CollectionEditorPage mode="edit" /> },
       { path: "posts", element: <PostsListPage /> },
       { path: "posts/new", element: <PostEditorPage mode="create" /> },
       { path: "posts/:id", element: <PostEditorPage mode="edit" /> },
@@ -43,7 +53,10 @@ export const routes: RouteObject[] = [
       { path: "articles/:id", element: <ArticleEditorPage mode="edit" /> },
       { path: "videos", element: <VideoListPage /> },
       { path: "videos/:id", element: <VideoEditorPage /> },
-      { path: "videos/upload", element: <VideoUploadPage /> }
+      { path: "videos/upload", element: <VideoUploadPage /> },
+      { path: "images", element: <ImagesListPage /> },
+      { path: "images/:id", element: <ImageEditorPage /> },
+      { path: "analytics", element: <AnalyticsDashboardPage /> }
     ]
   }
 ];

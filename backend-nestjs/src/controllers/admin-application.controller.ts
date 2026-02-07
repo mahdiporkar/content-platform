@@ -30,6 +30,16 @@ export class AdminApplicationController {
     return await this.applicationService.update(id, request);
   }
 
+  @Post(':id/token/rotate')
+  async rotateToken(@Param('id') id: string): Promise<ApplicationResponseDto> {
+    return await this.applicationService.rotateToken(id);
+  }
+
+  @Post(':id/token/revoke')
+  async revokeToken(@Param('id') id: string): Promise<ApplicationResponseDto> {
+    return await this.applicationService.revokeToken(id);
+  }
+
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<{ id: string }> {
     await this.applicationService.remove(id);

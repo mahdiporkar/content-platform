@@ -21,14 +21,19 @@ export class AdminPostService {
       post.id,
       post.applicationId,
       post.title,
+      post.description ?? null,
       post.slug,
       post.content,
       post.bannerUrl ?? null,
+      post.bannerKey ?? null,
+      post.locale ?? null,
       post.tags ?? null,
       post.seo ?? null,
       post.gallery ?? null,
       post.status,
       post.publishedAt ? post.publishedAt.toISOString() : null,
+      post.scheduledAt ? post.scheduledAt.toISOString() : null,
+      post.viewCount ?? 0,
       post.createdAt.toISOString(),
       post.updatedAt.toISOString(),
     );
@@ -46,15 +51,19 @@ export class AdminPostService {
     const post = this.postRepo.create({
       id: uuidv4(),
       applicationId: request.applicationId,
-      title: request.title,
-      slug: request.slug,
+      title: request.title.trim(),
+      description: request.description?.trim() || null,
+      slug: request.slug.trim(),
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
+      bannerKey: request.bannerKey?.trim() || null,
+      locale: request.locale?.trim() || null,
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
       gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
+      scheduledAt: request.scheduledAt ? new Date(request.scheduledAt) : null,
     });
     const saved = await this.postRepo.save(post);
     return this.mapPost(saved);
@@ -65,10 +74,13 @@ export class AdminPostService {
     if (!post) {
       throw new NotFoundException('Post not found.');
     }
-    post.title = request.title;
-    post.slug = request.slug;
+    post.title = request.title.trim();
+    post.description = request.description?.trim() || null;
+    post.slug = request.slug.trim();
     post.content = request.content;
     post.bannerUrl = request.bannerUrl?.trim() || null;
+    post.bannerKey = request.bannerKey?.trim() || null;
+    post.locale = request.locale?.trim() || null;
     post.tags = this.normalizeTags(request.tags);
     post.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
     post.gallery = request.gallery
@@ -77,6 +89,7 @@ export class AdminPostService {
     post.status = request.status;
     post.publishedAt =
       request.status === ContentStatus.PUBLISHED ? post.publishedAt ?? new Date() : null;
+    post.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
     const saved = await this.postRepo.save(post);
     return this.mapPost(saved);
   }

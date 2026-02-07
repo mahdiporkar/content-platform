@@ -9,6 +9,8 @@ import { VideoResponseDto } from '../dto/responses/video-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { VideoEntity } from '../entities/video.entity';
 import { MinioService } from './minio.service';
+import { BaseUrlService } from './base-url.service';
+import { ApplicationEntity } from '../entities/application.entity';
 
 @Injectable()
 export class AdminVideoService {
@@ -16,25 +18,39 @@ export class AdminVideoService {
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
     private readonly minioService: MinioService,
+    private readonly baseUrl: BaseUrlService,
+    @InjectRepository(ApplicationEntity)
+    private readonly applicationRepo: Repository<ApplicationEntity>,
   ) {}
 
-  private mapVideo(video: VideoEntity): VideoResponseDto {
+  private mapVideo(video: VideoEntity, application?: ApplicationEntity | null): VideoResponseDto {
+    const app = application || (video.applicationId ? this.applicationRepo.create({ id: video.applicationId }) : null);
+    const mediaUrl = app ? this.baseUrl.buildMediaUrl(app, video.objectKey) : null;
     return new VideoResponseDto(
       video.id,
       video.applicationId,
       video.title,
       video.description,
+      video.locale ?? null,
       video.tags ?? null,
       video.seo ?? null,
       video.gallery ?? null,
       video.status,
       video.publishedAt ? video.publishedAt.toISOString() : null,
+      video.scheduledAt ? video.scheduledAt.toISOString() : null,
+      video.viewCount ?? 0,
       video.objectKey,
+      video.posterKey ?? null,
+      video.durationSeconds ?? null,
+      video.width ?? null,
+      video.height ?? null,
       video.contentType,
       video.sizeBytes,
+      video.altText ?? null,
       video.createdAt.toISOString(),
       video.updatedAt.toISOString(),
-      this.minioService.getPublicUrl(video.objectKey),
+      mediaUrl,
+      mediaUrl,
     );
   }
 
@@ -65,6 +81,7 @@ export class AdminVideoService {
       applicationId,
       title: title.trim(),
       description: description?.trim() || null,
+      locale: null,
       tags: this.normalizeTags(tags),
       seo: seo ?? null,
       gallery: gallery ?? null,
@@ -75,7 +92,8 @@ export class AdminVideoService {
       sizeBytes: upload.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
-    return this.mapVideo(saved);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapVideo(saved, application);
   }
 
   async changeStatus(id: string, request: ChangeStatusRequestDto): Promise<VideoResponseDto> {
@@ -86,7 +104,8 @@ export class AdminVideoService {
     video.status = request.status;
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
     const saved = await this.videoRepo.save(video);
-    return this.mapVideo(saved);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapVideo(saved, application);
   }
 
   async getById(id: string): Promise<VideoResponseDto> {
@@ -94,7 +113,8 @@ export class AdminVideoService {
     if (!video) {
       throw new NotFoundException('Video not found.');
     }
-    return this.mapVideo(video);
+    const application = await this.applicationRepo.findOne({ where: { id: video.applicationId } });
+    return this.mapVideo(video, application);
   }
 
   async update(id: string, request: VideoUpdateRequestDto): Promise<VideoResponseDto> {
@@ -104,6 +124,12 @@ export class AdminVideoService {
     }
     video.title = request.title.trim();
     video.description = request.description?.trim() || null;
+    video.locale = request.locale?.trim() || null;
+    video.posterKey = request.posterKey?.trim() || null;
+    video.durationSeconds = request.durationSeconds ?? null;
+    video.width = request.width ?? null;
+    video.height = request.height ?? null;
+    video.altText = request.altText?.trim() || null;
     video.tags = this.normalizeTags(request.tags);
     video.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
     video.gallery = request.gallery
@@ -111,8 +137,10 @@ export class AdminVideoService {
       : null;
     video.status = request.status;
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? video.publishedAt ?? new Date() : null;
+    video.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
     const saved = await this.videoRepo.save(video);
-    return this.mapVideo(saved);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapVideo(saved, application);
   }
 
   async list(
@@ -131,7 +159,8 @@ export class AdminVideoService {
       take: pageSize,
     });
 
-    const mapped = items.map((video) => this.mapVideo(video));
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    const mapped = items.map((video) => this.mapVideo(video, application));
     return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
   }
 }

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ContentStatus } from '../../common/content-status.enum';
 import { GalleryImageDto } from './gallery-image.dto';
 import { SeoMetaDto } from './seo-meta.dto';
@@ -11,6 +11,10 @@ export class PostUpsertRequestDto {
   @IsNotEmpty()
   title!: string;
 
+  @IsOptional()
+  @IsString()
+  description?: string;
+
   @IsNotEmpty()
   slug!: string;
 
@@ -20,6 +24,14 @@ export class PostUpsertRequestDto {
   @IsOptional()
   @IsString()
   bannerUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  bannerKey?: string;
+
+  @IsOptional()
+  @IsString()
+  locale?: string;
 
   @IsOptional()
   @IsArray()
@@ -39,4 +51,8 @@ export class PostUpsertRequestDto {
 
   @IsEnum(ContentStatus)
   status!: ContentStatus;
+
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: string;
 }

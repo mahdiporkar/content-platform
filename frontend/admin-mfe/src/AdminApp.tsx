@@ -14,6 +14,12 @@ import { VideoEditorPage } from "./features/videos/VideoEditorPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
 import { ApplicationsListPage } from "./features/applications/ApplicationsListPage";
 import { ApplicationEditorPage } from "./features/applications/ApplicationEditorPage";
+import { UsersListPage } from "./features/users/UsersListPage";
+import { CollectionsListPage } from "./features/collections/CollectionsListPage";
+import { CollectionEditorPage } from "./features/collections/CollectionEditorPage";
+import { ImagesListPage } from "./features/images/ImagesListPage";
+import { ImageEditorPage } from "./features/images/ImageEditorPage";
+import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -50,6 +56,10 @@ export const AdminApp = () => {
               <Route path="applications" element={<ApplicationsListPage />} />
               <Route path="applications/new" element={<ApplicationEditorPage mode="create" />} />
               <Route path="applications/:id" element={<ApplicationEditorPage mode="edit" />} />
+              <Route path="users" element={<UsersListPage />} />
+              <Route path="collections" element={<CollectionsListPage />} />
+              <Route path="collections/new" element={<CollectionEditorPage mode="create" />} />
+              <Route path="collections/:id" element={<CollectionEditorPage mode="edit" />} />
               <Route path="posts" element={<PostsListPage />} />
               <Route path="posts/new" element={<PostEditorPage mode="create" />} />
               <Route path="posts/:id" element={<PostEditorPage mode="edit" />} />
@@ -59,6 +69,9 @@ export const AdminApp = () => {
             <Route path="videos" element={<VideoListPage />} />
             <Route path="videos/:id" element={<VideoEditorPage />} />
             <Route path="videos/upload" element={<VideoUploadPage />} />
+            <Route path="images" element={<ImagesListPage />} />
+            <Route path="images/:id" element={<ImageEditorPage />} />
+            <Route path="analytics" element={<AnalyticsDashboardPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

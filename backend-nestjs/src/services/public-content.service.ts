@@ -11,7 +11,7 @@ import { PostEntity } from '../entities/post.entity';
 import { ArticleEntity } from '../entities/article.entity';
 import { VideoEntity } from '../entities/video.entity';
 import { ApplicationEntity } from '../entities/application.entity';
-import { MinioService } from './minio.service';
+import { BaseUrlService } from './base-url.service';
 
 @Injectable()
 export class PublicContentService {
@@ -24,8 +24,12 @@ export class PublicContentService {
     private readonly videoRepo: Repository<VideoEntity>,
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
-    private readonly minioService: MinioService,
+    private readonly baseUrl: BaseUrlService,
   ) {}
+
+  private toOptionalString(value: unknown): string | null {
+    return typeof value === 'string' ? value : null;
+  }
 
   async listPosts(
     applicationId: string,
@@ -42,24 +46,32 @@ export class PublicContentService {
       take: pageSize,
     });
 
-    const mapped = items.map(
-      (post) =>
-        new PostResponseDto(
-          post.id,
-          post.applicationId,
-          post.title,
-          post.slug,
-          post.content,
-          post.bannerUrl ?? null,
-          post.tags ?? null,
-          post.seo ?? null,
-          post.gallery ?? null,
-          post.status,
-          post.publishedAt ? post.publishedAt.toISOString() : null,
-          post.createdAt.toISOString(),
-          post.updatedAt.toISOString(),
-        ),
-    );
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    const mapped = items.map((post) => {
+      const bannerUrl = post.bannerKey && application
+        ? this.baseUrl.buildMediaUrl(application, post.bannerKey)
+        : post.bannerUrl ?? null;
+      return new PostResponseDto(
+        post.id,
+        post.applicationId,
+        post.title,
+        post.description ?? null,
+        post.slug,
+        post.content,
+        bannerUrl,
+        post.bannerKey ?? null,
+        post.locale ?? null,
+        post.tags ?? null,
+        post.seo ?? null,
+        post.gallery ?? null,
+        post.status,
+        post.publishedAt ? post.publishedAt.toISOString() : null,
+        post.scheduledAt ? post.scheduledAt.toISOString() : null,
+        post.viewCount ?? 0,
+        post.createdAt.toISOString(),
+        post.updatedAt.toISOString(),
+      );
+    });
 
     return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
   }
@@ -71,18 +83,27 @@ export class PublicContentService {
     if (!post) {
       throw new NotFoundException('Post not found.');
     }
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    const bannerUrl = post.bannerKey && application
+      ? this.baseUrl.buildMediaUrl(application, post.bannerKey)
+      : post.bannerUrl ?? null;
     return new PostResponseDto(
       post.id,
       post.applicationId,
       post.title,
+      post.description ?? null,
       post.slug,
       post.content,
-      post.bannerUrl ?? null,
+      bannerUrl,
+      post.bannerKey ?? null,
+      post.locale ?? null,
       post.tags ?? null,
       post.seo ?? null,
       post.gallery ?? null,
       post.status,
       post.publishedAt ? post.publishedAt.toISOString() : null,
+      post.scheduledAt ? post.scheduledAt.toISOString() : null,
+      post.viewCount ?? 0,
       post.createdAt.toISOString(),
       post.updatedAt.toISOString(),
     );
@@ -103,24 +124,32 @@ export class PublicContentService {
       take: pageSize,
     });
 
-    const mapped = items.map(
-      (article) =>
-        new ArticleResponseDto(
-          article.id,
-          article.applicationId,
-          article.title,
-          article.slug,
-          article.content,
-          article.bannerUrl ?? null,
-          article.tags ?? null,
-          article.seo ?? null,
-          article.gallery ?? null,
-          article.status,
-          article.publishedAt ? article.publishedAt.toISOString() : null,
-          article.createdAt.toISOString(),
-          article.updatedAt.toISOString(),
-        ),
-    );
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    const mapped = items.map((article) => {
+      const bannerUrl = article.bannerKey && application
+        ? this.baseUrl.buildMediaUrl(application, article.bannerKey)
+        : article.bannerUrl ?? null;
+      return new ArticleResponseDto(
+        article.id,
+        article.applicationId,
+        article.title,
+        article.description ?? null,
+        article.slug,
+        article.content,
+        bannerUrl,
+        article.bannerKey ?? null,
+        article.locale ?? null,
+        article.tags ?? null,
+        article.seo ?? null,
+        article.gallery ?? null,
+        article.status,
+        article.publishedAt ? article.publishedAt.toISOString() : null,
+        article.scheduledAt ? article.scheduledAt.toISOString() : null,
+        article.viewCount ?? 0,
+        article.createdAt.toISOString(),
+        article.updatedAt.toISOString(),
+      );
+    });
 
     return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
   }
@@ -132,18 +161,27 @@ export class PublicContentService {
     if (!article) {
       throw new NotFoundException('Article not found.');
     }
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    const bannerUrl = article.bannerKey && application
+      ? this.baseUrl.buildMediaUrl(application, article.bannerKey)
+      : article.bannerUrl ?? null;
     return new ArticleResponseDto(
       article.id,
       article.applicationId,
       article.title,
+      article.description ?? null,
       article.slug,
       article.content,
-      article.bannerUrl ?? null,
+      bannerUrl,
+      article.bannerKey ?? null,
+      article.locale ?? null,
       article.tags ?? null,
       article.seo ?? null,
       article.gallery ?? null,
       article.status,
       article.publishedAt ? article.publishedAt.toISOString() : null,
+      article.scheduledAt ? article.scheduledAt.toISOString() : null,
+      article.viewCount ?? 0,
       article.createdAt.toISOString(),
       article.updatedAt.toISOString(),
     );
@@ -164,6 +202,7 @@ export class PublicContentService {
       take: pageSize,
     });
 
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
     const mapped = items.map(
       (video) =>
         new VideoResponseDto(
@@ -171,17 +210,26 @@ export class PublicContentService {
           video.applicationId,
           video.title,
           video.description,
+          video.locale ?? null,
           video.tags ?? null,
           video.seo ?? null,
           video.gallery ?? null,
           video.status,
           video.publishedAt ? video.publishedAt.toISOString() : null,
+          video.scheduledAt ? video.scheduledAt.toISOString() : null,
+          video.viewCount ?? 0,
           video.objectKey,
+          video.posterKey ?? null,
+          video.durationSeconds ?? null,
+          video.width ?? null,
+          video.height ?? null,
           video.contentType,
           video.sizeBytes,
+          video.altText ?? null,
           video.createdAt.toISOString(),
           video.updatedAt.toISOString(),
-          this.minioService.getPublicUrl(video.objectKey),
+          application ? this.baseUrl.buildMediaUrl(application, video.objectKey) : null,
+          application ? this.baseUrl.buildMediaUrl(application, video.objectKey) : null,
         ),
     );
 
@@ -195,22 +243,32 @@ export class PublicContentService {
     if (!video) {
       throw new NotFoundException('Video not found.');
     }
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
     return new VideoResponseDto(
       video.id,
       video.applicationId,
       video.title,
       video.description,
+      video.locale ?? null,
       video.tags ?? null,
       video.seo ?? null,
       video.gallery ?? null,
       video.status,
       video.publishedAt ? video.publishedAt.toISOString() : null,
+      video.scheduledAt ? video.scheduledAt.toISOString() : null,
+      video.viewCount ?? 0,
       video.objectKey,
+      video.posterKey ?? null,
+      video.durationSeconds ?? null,
+      video.width ?? null,
+      video.height ?? null,
       video.contentType,
       video.sizeBytes,
+      video.altText ?? null,
       video.createdAt.toISOString(),
       video.updatedAt.toISOString(),
-      this.minioService.getPublicUrl(video.objectKey),
+      application ? this.baseUrl.buildMediaUrl(application, video.objectKey) : null,
+      application ? this.baseUrl.buildMediaUrl(application, video.objectKey) : null,
     );
   }
 
@@ -225,7 +283,14 @@ export class PublicContentService {
     }
     const gallery = (application.gallery || [])
       .filter((item) => typeof item.url === 'string' && item.url.trim().length > 0)
-      .map((item) => new GalleryImageResponseDto(item.url as string, item.alt ?? null, item.caption ?? null));
+      .map(
+        (item) =>
+          new GalleryImageResponseDto(
+            item.url as string,
+            this.toOptionalString(item.alt),
+            this.toOptionalString(item.caption),
+          ),
+      );
     const pageNumber = Math.max(0, page);
     const pageSize = Math.max(1, size);
     const start = pageNumber * pageSize;
@@ -245,6 +310,10 @@ export class PublicContentService {
       throw new NotFoundException('Gallery item not found.');
     }
     const item = gallery[index];
-    return new GalleryImageResponseDto(item.url as string, item.alt ?? null, item.caption ?? null);
+    return new GalleryImageResponseDto(
+      item.url as string,
+      this.toOptionalString(item.alt),
+      this.toOptionalString(item.caption),
+    );
   }
 }

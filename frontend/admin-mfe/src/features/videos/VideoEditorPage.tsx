@@ -5,7 +5,7 @@ import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta, Video } from "../../types";
 
-const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
 export const VideoEditorPage = () => {
   const navigate = useNavigate();
@@ -103,7 +103,7 @@ export const VideoEditorPage = () => {
     }
   };
 
-  const previewUrl = video?.presignedUrl ?? null;
+  const previewUrl = video?.mediaUrl ?? video?.presignedUrl ?? null;
 
   return (
     <Card className="page-card">

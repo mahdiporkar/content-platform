@@ -15,6 +15,9 @@ export class VideoEntity {
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  locale!: string | null;
+
   @Column({ type: 'text', array: true, nullable: true })
   tags!: string[] | null;
 
@@ -30,8 +33,29 @@ export class VideoEntity {
   @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
   publishedAt!: Date | null;
 
+  @Column({ name: 'scheduled_at', type: 'timestamptz', nullable: true })
+  scheduledAt!: Date | null;
+
+  @Column({ name: 'view_count', type: 'bigint', default: 0, transformer: {
+    to: (value: number) => value,
+    from: (value: string) => Number(value),
+  } })
+  viewCount!: number;
+
   @Column({ name: 'object_key', type: 'varchar' })
   objectKey!: string;
+
+  @Column({ name: 'poster_key', type: 'varchar', nullable: true })
+  posterKey!: string | null;
+
+  @Column({ name: 'duration_seconds', type: 'int', nullable: true })
+  durationSeconds!: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  width!: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  height!: number | null;
 
   @Column({ name: 'content_type', type: 'varchar' })
   contentType!: string;
@@ -45,6 +69,9 @@ export class VideoEntity {
     },
   })
   sizeBytes!: number;
+
+  @Column({ name: 'alt_text', type: 'text', nullable: true })
+  altText!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

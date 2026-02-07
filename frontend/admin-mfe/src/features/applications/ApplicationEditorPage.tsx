@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Form, Input, Space, Typography } from "antd";
+import { Button, Card, Form, Input, Select, Space, Typography } from "antd";
 import client from "../../api/client";
 import { Application, GalleryImage, SeoMeta } from "../../types";
 
@@ -17,7 +17,27 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
   const state = location.state as LocationState | undefined;
   const [applicationId, setApplicationId] = useState(state?.application?.id ?? "");
   const [name, setName] = useState(state?.application?.name ?? "");
+  const [description, setDescription] = useState(state?.application?.description ?? "");
+  const [status, setStatus] = useState<"active" | "suspended">(
+    state?.application?.status ?? "active"
+  );
+  const [mediaPolicy, setMediaPolicy] = useState<
+    "public-via-gateway" | "domain-locked" | "jwt-required"
+  >(state?.application?.mediaPolicy ?? "public-via-gateway");
+  const [allowedDomains, setAllowedDomains] = useState<string[]>(
+    state?.application?.allowedDomains ?? []
+  );
+  const [rateLimitPolicy, setRateLimitPolicy] = useState<string>(
+    state?.application?.rateLimitPolicy ? JSON.stringify(state?.application?.rateLimitPolicy, null, 2) : ""
+  );
   const [websiteUrl, setWebsiteUrl] = useState(state?.application?.websiteUrl ?? "");
+  const [publicBaseUrlOverride, setPublicBaseUrlOverride] = useState(
+    state?.application?.publicBaseUrlOverride ?? ""
+  );
+  const [mediaBaseUrlOverride, setMediaBaseUrlOverride] = useState(
+    state?.application?.mediaBaseUrlOverride ?? ""
+  );
+  const [apiToken, setApiToken] = useState(state?.application?.apiToken ?? "");
   const [tags, setTags] = useState<string[]>(state?.application?.tags ?? []);
   const [seo, setSeo] = useState<SeoMeta>(state?.application?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(state?.application?.gallery ?? []);
@@ -46,7 +66,15 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     const response = await client.get<Application>(`/api/v1/admin/applications/${id}`);
     setApplicationId(response.data.id);
     setName(response.data.name);
+    setDescription(response.data.description ?? "");
+    setStatus(response.data.status ?? "active");
+    setMediaPolicy(response.data.mediaPolicy ?? "public-via-gateway");
+    setAllowedDomains(response.data.allowedDomains ?? []);
+    setRateLimitPolicy(response.data.rateLimitPolicy ? JSON.stringify(response.data.rateLimitPolicy, null, 2) : "");
     setWebsiteUrl(response.data.websiteUrl ?? "");
+    setPublicBaseUrlOverride(response.data.publicBaseUrlOverride ?? "");
+    setMediaBaseUrlOverride(response.data.mediaBaseUrlOverride ?? "");
+    setApiToken(response.data.apiToken ?? "");
     setTags(response.data.tags ?? []);
     setSeo(response.data.seo ?? {});
     setGallery(response.data.gallery ?? []);
@@ -64,12 +92,28 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     if (!name.trim()) {
       return;
     }
+    let parsedRateLimit: Record<string, unknown> | undefined = undefined;
+    if (rateLimitPolicy.trim()) {
+      try {
+        parsedRateLimit = JSON.parse(rateLimitPolicy);
+      } catch {
+        return;
+      }
+    }
     setLoading(true);
     if (mode === "create") {
       await client.post<Application>("/api/v1/admin/applications", {
         id: applicationId.trim() || undefined,
         name: name.trim(),
+        description: description.trim() || undefined,
+        status,
+        mediaPolicy,
+        allowedDomains,
+        rateLimitPolicy: parsedRateLimit,
         websiteUrl: websiteUrl.trim() || undefined,
+        publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
+        mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
+        apiToken: apiToken.trim() || undefined,
         tags,
         seo,
         gallery
@@ -77,7 +121,15 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     } else if (params.id) {
       await client.put<Application>(`/api/v1/admin/applications/${params.id}`, {
         name: name.trim(),
+        description: description.trim() || undefined,
+        status,
+        mediaPolicy,
+        allowedDomains,
+        rateLimitPolicy: parsedRateLimit,
         websiteUrl: websiteUrl.trim() || undefined,
+        publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
+        mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
+        apiToken: apiToken.trim() || undefined,
         tags,
         seo,
         gallery
@@ -85,6 +137,26 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     }
     setLoading(false);
     navigate("/applications");
+  };
+
+  const handleRotateToken = async () => {
+    if (!params.id) {
+      return;
+    }
+    setLoading(true);
+    const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/rotate`);
+    setApiToken(response.data.apiToken ?? "");
+    setLoading(false);
+  };
+
+  const handleRevokeToken = async () => {
+    if (!params.id) {
+      return;
+    }
+    setLoading(true);
+    const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/revoke`);
+    setApiToken(response.data.apiToken ?? "");
+    setLoading(false);
   };
 
   const title = mode === "create" ? "New Application" : "Edit Application";
@@ -122,6 +194,63 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
         <Form.Item label="Name" required>
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="App name" />
         </Form.Item>
+        <Form.Item label="Description">
+          <Input.TextArea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+          />
+        </Form.Item>
+        <Form.Item label="Status">
+          <Select
+            value={status}
+            onChange={(value) => setStatus(value)}
+            options={[
+              { value: "active", label: "Active" },
+              { value: "suspended", label: "Suspended" }
+            ]}
+          />
+        </Form.Item>
+        <Form.Item label="Media Policy">
+          <Select
+            value={mediaPolicy}
+            onChange={(value) => setMediaPolicy(value)}
+            options={[
+              { value: "public-via-gateway", label: "Public via gateway" },
+              { value: "domain-locked", label: "Domain locked" },
+              { value: "jwt-required", label: "JWT required (future)" }
+            ]}
+          />
+        </Form.Item>
+        <Form.Item label="Allowed Domains">
+          <Input
+            value={allowedDomains.join(", ")}
+            onChange={(event) =>
+              setAllowedDomains(
+                event.target.value
+                  .split(",")
+                  .map((domain) => domain.trim())
+                  .filter(Boolean)
+              )
+            }
+            placeholder="app1.com, www.app1.com"
+          />
+        </Form.Item>
+        <Form.Item label="Rate Limit Policy (JSON)">
+          <Input.TextArea
+            value={rateLimitPolicy}
+            onChange={(event) => setRateLimitPolicy(event.target.value)}
+            rows={4}
+            placeholder='{"windowMs":60000,"max":1000}'
+          />
+        </Form.Item>
+        <Form.Item label="API Token">
+          <Input
+            value={apiToken}
+            onChange={(event) => setApiToken(event.target.value)}
+            placeholder="Auto-generated if empty"
+          />
+        </Form.Item>
         <Form.Item label="Website URL">
           <Input
             value={websiteUrl}
@@ -129,6 +258,34 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
             placeholder="https://example.com"
           />
         </Form.Item>
+        <Card size="small" title="Base URL Overrides" style={{ marginBottom: 16 }}>
+          <Form.Item label="Public Base URL Override">
+            <Input
+              value={publicBaseUrlOverride}
+              onChange={(event) => setPublicBaseUrlOverride(event.target.value)}
+              placeholder="https://consumer-domain.com"
+            />
+          </Form.Item>
+          <Form.Item label="Media Base URL Override">
+            <Input
+              value={mediaBaseUrlOverride}
+              onChange={(event) => setMediaBaseUrlOverride(event.target.value)}
+              placeholder="https://media.consumer-domain.com"
+            />
+          </Form.Item>
+        </Card>
+        {mode === "edit" && (
+          <Card size="small" title="Token Management" style={{ marginBottom: 16 }}>
+            <Space>
+              <Button onClick={handleRotateToken} loading={loading}>
+                Rotate Token
+              </Button>
+              <Button danger onClick={handleRevokeToken} loading={loading}>
+                Revoke Token
+              </Button>
+            </Space>
+          </Card>
+        )}
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
           <Form.Item label="Tags">
             <Input

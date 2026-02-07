@@ -1,0 +1,360 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { ContentStatus } from '../common/content-status.enum';
+import { ContentType } from '../common/content-type.enum';
+import { ArticleEntity } from '../entities/article.entity';
+import { VideoEntity } from '../entities/video.entity';
+import { ImageEntity } from '../entities/image.entity';
+import { CollectionEntity } from '../entities/collection.entity';
+import { CollectionItemEntity } from '../entities/collection-item.entity';
+import { ViewEventEntity } from '../entities/view-event.entity';
+import { DeliveryContentResponseDto } from '../dto/responses/delivery-content-response.dto';
+import { DeliveryCollectionResponseDto } from '../dto/responses/delivery-collection-response.dto';
+import { PageResponseDto } from '../dto/page-response.dto';
+import { BaseUrlService } from './base-url.service';
+import { ApplicationEntity } from '../entities/application.entity';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class DeliveryContentService {
+  constructor(
+    @InjectRepository(ArticleEntity)
+    private readonly articleRepo: Repository<ArticleEntity>,
+    @InjectRepository(VideoEntity)
+    private readonly videoRepo: Repository<VideoEntity>,
+    @InjectRepository(ImageEntity)
+    private readonly imageRepo: Repository<ImageEntity>,
+    @InjectRepository(CollectionEntity)
+    private readonly collectionRepo: Repository<CollectionEntity>,
+    @InjectRepository(CollectionItemEntity)
+    private readonly collectionItemRepo: Repository<CollectionItemEntity>,
+    @InjectRepository(ViewEventEntity)
+    private readonly viewEventRepo: Repository<ViewEventEntity>,
+    private readonly baseUrl: BaseUrlService,
+  ) {}
+
+  async listContent(params: {
+    application: ApplicationEntity;
+    type?: ContentType;
+    tags?: string[];
+    collectionSlug?: string;
+    locale?: string;
+    page: number;
+    size: number;
+  }): Promise<PageResponseDto<DeliveryContentResponseDto>> {
+    const pageNumber = Math.max(0, params.page);
+    const pageSize = Math.max(1, params.size);
+    const type = params.type;
+    const tags = (params.tags || []).map((tag) => tag.trim()).filter(Boolean);
+    const locale = params.locale?.trim() || null;
+    let filteredIds: Record<ContentType, string[] | null> | null = null;
+
+    if (params.collectionSlug) {
+      const collection = await this.collectionRepo.findOne({
+        where: { applicationId: params.application.id, slug: params.collectionSlug },
+      });
+      if (!collection) {
+        throw new NotFoundException('Collection not found.');
+      }
+      const items = await this.collectionItemRepo.find({ where: { collectionId: collection.id } });
+      filteredIds = {
+        [ContentType.ARTICLE]: items
+          .filter((item) => item.contentType === ContentType.ARTICLE)
+          .map((item) => item.contentId),
+        [ContentType.VIDEO]: items
+          .filter((item) => item.contentType === ContentType.VIDEO)
+          .map((item) => item.contentId),
+        [ContentType.IMAGE]: items
+          .filter((item) => item.contentType === ContentType.IMAGE)
+          .map((item) => item.contentId),
+      };
+    }
+
+    if (type === ContentType.ARTICLE) {
+      const [items, total] = await this.queryArticles(params.application.id, tags, locale, filteredIds?.article, pageNumber, pageSize);
+      return new PageResponseDto(
+        items.map((article) => this.mapArticle(params.application, article)),
+        total,
+        Math.ceil(total / pageSize),
+        pageNumber,
+        pageSize,
+      );
+    }
+    if (type === ContentType.VIDEO) {
+      const [items, total] = await this.queryVideos(params.application.id, tags, locale, filteredIds?.video, pageNumber, pageSize);
+      return new PageResponseDto(
+        items.map((video) => this.mapVideo(params.application, video)),
+        total,
+        Math.ceil(total / pageSize),
+        pageNumber,
+        pageSize,
+      );
+    }
+    if (type === ContentType.IMAGE) {
+      const [items, total] = await this.queryImages(params.application.id, tags, locale, filteredIds?.image, pageNumber, pageSize);
+      return new PageResponseDto(
+        items.map((image) => this.mapImage(params.application, image)),
+        total,
+        Math.ceil(total / pageSize),
+        pageNumber,
+        pageSize,
+      );
+    }
+
+    const [articles, videos, images] = await Promise.all([
+      this.queryArticles(params.application.id, tags, locale, filteredIds?.article, pageNumber, pageSize),
+      this.queryVideos(params.application.id, tags, locale, filteredIds?.video, pageNumber, pageSize),
+      this.queryImages(params.application.id, tags, locale, filteredIds?.image, pageNumber, pageSize),
+    ]);
+
+    const allItems = [
+      ...articles[0].map((article) => this.mapArticle(params.application, article)),
+      ...videos[0].map((video) => this.mapVideo(params.application, video)),
+      ...images[0].map((image) => this.mapImage(params.application, image)),
+    ];
+    const total = articles[1] + videos[1] + images[1];
+
+    return new PageResponseDto(allItems, total, Math.ceil(total / pageSize), pageNumber, pageSize);
+  }
+
+  async getCollection(application: ApplicationEntity, slug: string, locale?: string): Promise<DeliveryCollectionResponseDto> {
+    const collection = await this.collectionRepo.findOne({ where: { applicationId: application.id, slug } });
+    if (!collection) {
+      throw new NotFoundException('Collection not found.');
+    }
+    const items = await this.collectionItemRepo.find({ where: { collectionId: collection.id }, order: { position: 'ASC' } });
+    const mapped: DeliveryContentResponseDto[] = [];
+
+    const localeValue = locale?.trim() || null;
+    const grouped = {
+      article: items.filter((item) => item.contentType === ContentType.ARTICLE).map((item) => item.contentId),
+      video: items.filter((item) => item.contentType === ContentType.VIDEO).map((item) => item.contentId),
+      image: items.filter((item) => item.contentType === ContentType.IMAGE).map((item) => item.contentId),
+    };
+
+    if (grouped.article.length > 0) {
+      const articles = await this.articleRepo.find({ where: { id: In(grouped.article), status: ContentStatus.PUBLISHED } });
+      const sorted = grouped.article
+        .map((id) => articles.find((entry) => entry.id === id))
+        .filter(Boolean) as ArticleEntity[];
+      sorted.forEach((article) => {
+        if (!localeValue || article.locale === localeValue) {
+          mapped.push(this.mapArticle(application, article));
+        }
+      });
+    }
+    if (grouped.video.length > 0) {
+      const videos = await this.videoRepo.find({ where: { id: In(grouped.video), status: ContentStatus.PUBLISHED } });
+      const sorted = grouped.video
+        .map((id) => videos.find((entry) => entry.id === id))
+        .filter(Boolean) as VideoEntity[];
+      sorted.forEach((video) => {
+        if (!localeValue || video.locale === localeValue) {
+          mapped.push(this.mapVideo(application, video));
+        }
+      });
+    }
+    if (grouped.image.length > 0) {
+      const images = await this.imageRepo.find({ where: { id: In(grouped.image), status: ContentStatus.PUBLISHED } });
+      const sorted = grouped.image
+        .map((id) => images.find((entry) => entry.id === id))
+        .filter(Boolean) as ImageEntity[];
+      sorted.forEach((image) => {
+        if (!localeValue || image.locale === localeValue) {
+          mapped.push(this.mapImage(application, image));
+        }
+      });
+    }
+
+    return new DeliveryCollectionResponseDto(
+      collection.id,
+      collection.applicationId,
+      collection.slug,
+      collection.title,
+      collection.description ?? null,
+      collection.allowedTypes ?? null,
+      collection.maxItems ?? null,
+      mapped,
+    );
+  }
+
+  async incrementView(contentType: ContentType, contentId: string, applicationId?: string, locale?: string | null): Promise<void> {
+    if (contentType === ContentType.ARTICLE) {
+      await this.articleRepo.increment({ id: contentId }, 'viewCount', 1);
+    } else if (contentType === ContentType.VIDEO) {
+      await this.videoRepo.increment({ id: contentId }, 'viewCount', 1);
+    } else if (contentType === ContentType.IMAGE) {
+      await this.imageRepo.increment({ id: contentId }, 'viewCount', 1);
+    }
+    if (applicationId) {
+      const event = this.viewEventRepo.create({
+        id: uuidv4(),
+        applicationId,
+        contentId,
+        contentType,
+        locale: locale ?? null,
+      });
+      await this.viewEventRepo.save(event);
+    }
+  }
+
+  private async queryArticles(
+    applicationId: string,
+    tags: string[],
+    locale: string | null,
+    ids: string[] | null | undefined,
+    pageNumber: number,
+    pageSize: number,
+  ): Promise<[ArticleEntity[], number]> {
+    const qb = this.articleRepo.createQueryBuilder('article');
+    qb.where('article.applicationId = :applicationId', { applicationId })
+      .andWhere('article.status = :status', { status: ContentStatus.PUBLISHED });
+    if (locale) {
+      qb.andWhere('article.locale = :locale', { locale });
+    }
+    if (tags.length > 0) {
+      qb.andWhere('article.tags && ARRAY[:...tags]', { tags });
+    }
+    if (ids && ids.length > 0) {
+      qb.andWhere('article.id IN (:...ids)', { ids });
+    }
+    qb.orderBy('article.publishedAt', 'DESC').addOrderBy('article.createdAt', 'DESC');
+    qb.skip(pageNumber * pageSize).take(pageSize);
+    return await qb.getManyAndCount();
+  }
+
+  private async queryVideos(
+    applicationId: string,
+    tags: string[],
+    locale: string | null,
+    ids: string[] | null | undefined,
+    pageNumber: number,
+    pageSize: number,
+  ): Promise<[VideoEntity[], number]> {
+    const qb = this.videoRepo.createQueryBuilder('video');
+    qb.where('video.applicationId = :applicationId', { applicationId })
+      .andWhere('video.status = :status', { status: ContentStatus.PUBLISHED });
+    if (locale) {
+      qb.andWhere('video.locale = :locale', { locale });
+    }
+    if (tags.length > 0) {
+      qb.andWhere('video.tags && ARRAY[:...tags]', { tags });
+    }
+    if (ids && ids.length > 0) {
+      qb.andWhere('video.id IN (:...ids)', { ids });
+    }
+    qb.orderBy('video.publishedAt', 'DESC').addOrderBy('video.createdAt', 'DESC');
+    qb.skip(pageNumber * pageSize).take(pageSize);
+    return await qb.getManyAndCount();
+  }
+
+  private async queryImages(
+    applicationId: string,
+    tags: string[],
+    locale: string | null,
+    ids: string[] | null | undefined,
+    pageNumber: number,
+    pageSize: number,
+  ): Promise<[ImageEntity[], number]> {
+    const qb = this.imageRepo.createQueryBuilder('image');
+    qb.where('image.applicationId = :applicationId', { applicationId })
+      .andWhere('image.status = :status', { status: ContentStatus.PUBLISHED });
+    if (locale) {
+      qb.andWhere('image.locale = :locale', { locale });
+    }
+    if (tags.length > 0) {
+      qb.andWhere('image.tags && ARRAY[:...tags]', { tags });
+    }
+    if (ids && ids.length > 0) {
+      qb.andWhere('image.id IN (:...ids)', { ids });
+    }
+    qb.orderBy('image.publishedAt', 'DESC').addOrderBy('image.createdAt', 'DESC');
+    qb.skip(pageNumber * pageSize).take(pageSize);
+    return await qb.getManyAndCount();
+  }
+
+  private mapArticle(application: ApplicationEntity, article: ArticleEntity): DeliveryContentResponseDto {
+    const mediaUrl = article.bannerKey
+      ? this.baseUrl.buildMediaUrl(application, article.bannerKey)
+      : article.bannerUrl ?? null;
+    return new DeliveryContentResponseDto(
+      article.id,
+      article.applicationId,
+      ContentType.ARTICLE,
+      article.title,
+      article.description ?? null,
+      article.locale ?? null,
+      article.tags ?? null,
+      article.status,
+      article.slug,
+      article.publishedAt ? article.publishedAt.toISOString() : null,
+      article.scheduledAt ? article.scheduledAt.toISOString() : null,
+      article.viewCount ?? 0,
+      mediaUrl,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      article.seo ?? null,
+      article.content ?? null,
+    );
+  }
+
+  private mapVideo(application: ApplicationEntity, video: VideoEntity): DeliveryContentResponseDto {
+    return new DeliveryContentResponseDto(
+      video.id,
+      video.applicationId,
+      ContentType.VIDEO,
+      video.title,
+      video.description ?? null,
+      video.locale ?? null,
+      video.tags ?? null,
+      video.status,
+      null,
+      video.publishedAt ? video.publishedAt.toISOString() : null,
+      video.scheduledAt ? video.scheduledAt.toISOString() : null,
+      video.viewCount ?? 0,
+      this.baseUrl.buildMediaUrl(application, video.objectKey),
+      video.posterKey ? this.baseUrl.buildMediaUrl(application, video.posterKey) : null,
+      video.durationSeconds ?? null,
+      video.width ?? null,
+      video.height ?? null,
+      video.contentType ?? null,
+      video.sizeBytes ?? null,
+      video.altText ?? null,
+      video.seo ?? null,
+      null,
+    );
+  }
+
+  private mapImage(application: ApplicationEntity, image: ImageEntity): DeliveryContentResponseDto {
+    return new DeliveryContentResponseDto(
+      image.id,
+      image.applicationId,
+      ContentType.IMAGE,
+      image.title,
+      image.description ?? null,
+      image.locale ?? null,
+      image.tags ?? null,
+      image.status,
+      null,
+      image.publishedAt ? image.publishedAt.toISOString() : null,
+      image.scheduledAt ? image.scheduledAt.toISOString() : null,
+      image.viewCount ?? 0,
+      this.baseUrl.buildMediaUrl(application, image.objectKey),
+      null,
+      null,
+      image.width ?? null,
+      image.height ?? null,
+      image.contentType ?? null,
+      image.sizeBytes ?? null,
+      image.altText ?? null,
+      image.seo ?? null,
+      null,
+    );
+  }
+}

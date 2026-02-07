@@ -7,11 +7,12 @@ import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, PageResponse, Post } from "../../types";
 
-const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
-const statusColors: Record<ContentStatus, "default" | "success" | "warning"> = {
+const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
+const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
   DRAFT: "default",
   PUBLISHED: "success",
-  ARCHIVED: "warning"
+  ARCHIVED: "warning",
+  SCHEDULED: "processing"
 };
 
 export const PostsListPage = () => {

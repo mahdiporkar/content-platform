@@ -10,11 +10,17 @@ import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
 import { AdminUserController } from './controllers/admin-user.controller';
 import { PublicContentController } from './controllers/public-content.controller';
+import { AdminCollectionController } from './controllers/admin-collection.controller';
+import { AdminImageController } from './controllers/admin-image.controller';
+import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
+import { DeliveryContentController } from './controllers/delivery-content.controller';
+import { MediaGatewayController } from './controllers/media-gateway.controller';
 import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
 import { AdminArticleService } from './services/admin-article.service';
 import { AdminVideoService } from './services/admin-video.service';
+import { AdminImageService } from './services/admin-image.service';
 import { AdminUserService } from './services/admin-user.service';
 import { PublicContentService } from './services/public-content.service';
 import { ApplicationEntity } from './entities/application.entity';
@@ -23,12 +29,23 @@ import { AdminUserApplicationEntity } from './entities/admin-user-application.en
 import { PostEntity } from './entities/post.entity';
 import { ArticleEntity } from './entities/article.entity';
 import { VideoEntity } from './entities/video.entity';
+import { ImageEntity } from './entities/image.entity';
+import { CollectionEntity } from './entities/collection.entity';
+import { CollectionItemEntity } from './entities/collection-item.entity';
+import { AuditLogEntity } from './entities/audit-log.entity';
+import { ViewEventEntity } from './entities/view-event.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
 import { SeedDataService } from './services/seed-data.service';
 import { MinioService } from './services/minio.service';
 import { parseJdbcUrl } from './common/jdbc-url';
+import { BaseUrlService } from './services/base-url.service';
+import { DomainPolicyService } from './services/domain-policy.service';
+import { DeliveryContentService } from './services/delivery-content.service';
+import { AdminCollectionService } from './services/admin-collection.service';
+import { AuditLogService } from './services/audit-log.service';
+import { AdminAnalyticsService } from './services/admin-analytics.service';
 
 @Module({
   imports: [
@@ -57,6 +74,11 @@ import { parseJdbcUrl } from './common/jdbc-url';
             PostEntity,
             ArticleEntity,
             VideoEntity,
+            ImageEntity,
+            CollectionEntity,
+            CollectionItemEntity,
+            AuditLogEntity,
+            ViewEventEntity,
           ],
           synchronize: true,
         };
@@ -69,17 +91,27 @@ import { parseJdbcUrl } from './common/jdbc-url';
       PostEntity,
       ArticleEntity,
       VideoEntity,
+      ImageEntity,
+      CollectionEntity,
+      CollectionItemEntity,
+      AuditLogEntity,
+      ViewEventEntity,
     ]),
   ],
   controllers: [
     AuthController,
     AdminApplicationController,
+    AdminCollectionController,
     AdminPostController,
     AdminArticleController,
     AdminVideoController,
+    AdminImageController,
     AdminMediaController,
     AdminUserController,
+    AdminAnalyticsController,
     PublicContentController,
+    DeliveryContentController,
+    MediaGatewayController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -87,11 +119,18 @@ import { parseJdbcUrl } from './common/jdbc-url';
     ApplicationTokenGuard,
     AuthService,
     AdminApplicationService,
+    AdminCollectionService,
     AdminPostService,
     AdminArticleService,
     AdminVideoService,
+    AdminImageService,
     AdminUserService,
+    AdminAnalyticsService,
     PublicContentService,
+    DeliveryContentService,
+    BaseUrlService,
+    DomainPolicyService,
+    AuditLogService,
     SeedDataService,
     MinioService,
   ],

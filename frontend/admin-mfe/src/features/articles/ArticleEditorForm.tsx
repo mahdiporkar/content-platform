@@ -6,7 +6,7 @@ import { uploadMedia } from "../../api/media";
 import { Article, ContentStatus, GalleryImage, SeoMeta } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
 
-const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
 type EditorMode = "create" | "edit";
 
@@ -29,6 +29,7 @@ export const ArticleEditorForm = ({
 }: Props) => {
   const [title, setTitle] = useState(initialArticle?.title ?? "");
   const [slug, setSlug] = useState(initialArticle?.slug ?? "");
+  const [description, setDescription] = useState(initialArticle?.description ?? "");
   const [content, setContent] = useState(initialArticle?.content ?? "");
   const [bannerUrl, setBannerUrl] = useState(initialArticle?.bannerUrl ?? "");
   const [tags, setTags] = useState<string[]>(initialArticle?.tags ?? []);
@@ -97,7 +98,7 @@ export const ArticleEditorForm = ({
     }
     setSaving(true);
     setError(null);
-    const payload = { applicationId, title, slug, content, status, bannerUrl, tags, seo, gallery };
+    const payload = { applicationId, title, description, slug, content, status, bannerUrl, tags, seo, gallery };
     try {
       if (mode === "create") {
         await client.post("/api/v1/admin/articles", payload);
@@ -128,6 +129,13 @@ export const ArticleEditorForm = ({
       <Form layout="vertical">
         <Form.Item label="Title" required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
+        </Form.Item>
+        <Form.Item label="Description">
+          <Input.TextArea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+          />
         </Form.Item>
         <Row gutter={16}>
           <Col span={12}>

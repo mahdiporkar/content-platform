@@ -21,14 +21,19 @@ export class AdminArticleService {
       article.id,
       article.applicationId,
       article.title,
+      article.description ?? null,
       article.slug,
       article.content,
       article.bannerUrl ?? null,
+      article.bannerKey ?? null,
+      article.locale ?? null,
       article.tags ?? null,
       article.seo ?? null,
       article.gallery ?? null,
       article.status,
       article.publishedAt ? article.publishedAt.toISOString() : null,
+      article.scheduledAt ? article.scheduledAt.toISOString() : null,
+      article.viewCount ?? 0,
       article.createdAt.toISOString(),
       article.updatedAt.toISOString(),
     );
@@ -46,15 +51,19 @@ export class AdminArticleService {
     const article = this.articleRepo.create({
       id: uuidv4(),
       applicationId: request.applicationId,
-      title: request.title,
-      slug: request.slug,
+      title: request.title.trim(),
+      description: request.description?.trim() || null,
+      slug: request.slug.trim(),
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
+      bannerKey: request.bannerKey?.trim() || null,
+      locale: request.locale?.trim() || null,
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
       gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
       status: request.status,
       publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
+      scheduledAt: request.scheduledAt ? new Date(request.scheduledAt) : null,
     });
     const saved = await this.articleRepo.save(article);
     return this.mapArticle(saved);
@@ -65,10 +74,13 @@ export class AdminArticleService {
     if (!article) {
       throw new NotFoundException('Article not found.');
     }
-    article.title = request.title;
-    article.slug = request.slug;
+    article.title = request.title.trim();
+    article.description = request.description?.trim() || null;
+    article.slug = request.slug.trim();
     article.content = request.content;
     article.bannerUrl = request.bannerUrl?.trim() || null;
+    article.bannerKey = request.bannerKey?.trim() || null;
+    article.locale = request.locale?.trim() || null;
     article.tags = this.normalizeTags(request.tags);
     article.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
     article.gallery = request.gallery
@@ -77,6 +89,7 @@ export class AdminArticleService {
     article.status = request.status;
     article.publishedAt =
       request.status === ContentStatus.PUBLISHED ? article.publishedAt ?? new Date() : null;
+    article.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
     const saved = await this.articleRepo.save(article);
     return this.mapArticle(saved);
   }

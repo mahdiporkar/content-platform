@@ -14,8 +14,6 @@ type UploadResult = {
 export class MinioService {
   private readonly client: Client;
   private readonly bucket: string;
-  private readonly publicUrl: string;
-
   constructor(private readonly config: ConfigService) {
     const url = this.config.get<string>('MINIO_URL') || 'http://localhost:9000';
     const accessKey = this.config.get<string>('MINIO_ACCESS_KEY') || 'minioadmin';
@@ -29,11 +27,6 @@ export class MinioService {
       secretKey,
     });
     this.bucket = this.config.get<string>('MINIO_BUCKET') || 'media';
-    this.publicUrl = (this.config.get<string>('MINIO_PUBLIC_URL') || url).replace(/\/$/, '');
-  }
-
-  getPublicUrl(objectKey: string): string {
-    return `${this.publicUrl}/${this.bucket}/${objectKey}`;
   }
 
   async upload(applicationId: string, kind: string | undefined, file: Express.Multer.File): Promise<UploadResult> {
@@ -51,8 +44,19 @@ export class MinioService {
       objectKey,
       contentType: file.mimetype || 'application/octet-stream',
       sizeBytes: file.size,
-      url: this.getPublicUrl(objectKey),
+      url: objectKey,
     };
+  }
+
+  async statObject(objectKey: string) {
+    return await this.client.statObject(this.bucket, objectKey);
+  }
+
+  async getObject(objectKey: string, offset?: number, length?: number) {
+    if (offset !== undefined && length !== undefined) {
+      return await this.client.getPartialObject(this.bucket, objectKey, offset, length);
+    }
+    return await this.client.getObject(this.bucket, objectKey);
   }
 
   private buildObjectKey(applicationId: string, kind: string | undefined, originalName: string | undefined) {

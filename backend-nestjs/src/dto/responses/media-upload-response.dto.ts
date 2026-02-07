@@ -4,5 +4,6 @@ export class MediaUploadResponseDto {
     public contentType: string,
     public sizeBytes: number,
     public url: string,
+    public mediaUrl: string,
   ) {}
 }

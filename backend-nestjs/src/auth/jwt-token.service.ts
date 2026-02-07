@@ -5,6 +5,7 @@ import * as jwt from 'jsonwebtoken';
 export type JwtPayload = {
   sub: string;
   email: string;
+  role?: string;
   applicationIds: string[];
 };
 

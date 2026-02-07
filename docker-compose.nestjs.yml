@@ -33,7 +33,6 @@ services:
       sleep 2;
       mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       mc mb --ignore-existing local/media;
-      mc anonymous set download local/media;
       "
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
@@ -54,7 +53,9 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-media}
-      MINIO_PUBLIC_URL: http://localhost:9000
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3001}
+      MEDIA_BASE_PATH: ${MEDIA_BASE_PATH:-/media}
+      DELIVERY_BASE_PATH: ${DELIVERY_BASE_PATH:-/delivery}
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3001:3001"

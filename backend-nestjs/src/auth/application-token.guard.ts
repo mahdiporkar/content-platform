@@ -1,8 +1,8 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Request } from 'express';
 import { Repository } from 'typeorm';
-import { ApplicationEntity } from '../entities/application.entity';
+import { ApplicationEntity, ApplicationStatus } from '../entities/application.entity';
 
 @Injectable()
 export class ApplicationTokenGuard implements CanActivate {
@@ -13,9 +13,12 @@ export class ApplicationTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const headerAppId = this.getHeader(request, 'x-application-id');
-    const token = this.getHeader(request, 'x-application-token');
-    const paramAppId = request.params?.applicationId;
+    const headerAppId =
+      this.getHeader(request, 'x-app-id') || this.getHeader(request, 'x-application-id');
+    const tokenHeader = this.getHeader(request, 'x-application-token');
+    const bearerToken = this.getBearerToken(request);
+    const token = bearerToken || tokenHeader;
+    const paramAppId = request.params?.applicationId || request.params?.appId;
 
     const applicationId = paramAppId || headerAppId;
     if (!applicationId) {
@@ -35,6 +38,12 @@ export class ApplicationTokenGuard implements CanActivate {
     if (application.apiToken !== token) {
       throw new UnauthorizedException('Invalid application credentials.');
     }
+    if (application.status === ApplicationStatus.SUSPENDED) {
+      throw new ForbiddenException('Application is suspended.');
+    }
+    application.lastUsedAt = new Date();
+    await this.applicationRepo.save(application);
+    (request as Request & { application?: ApplicationEntity }).application = application;
 
     return true;
   }
@@ -45,5 +54,17 @@ export class ApplicationTokenGuard implements CanActivate {
       return undefined;
     }
     return Array.isArray(value) ? value[0] : value;
+  }
+
+  private getBearerToken(request: Request): string | undefined {
+    const header = this.getHeader(request, 'authorization');
+    if (!header) {
+      return undefined;
+    }
+    const [scheme, token] = header.split(' ');
+    if (scheme !== 'Bearer' || !token) {
+      return undefined;
+    }
+    return token;
   }
 }

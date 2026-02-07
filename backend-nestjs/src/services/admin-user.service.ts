@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
-import { AdminUserEntity } from '../entities/admin-user.entity';
+import { AdminUserEntity, AdminUserRole, AdminUserStatus } from '../entities/admin-user.entity';
 import { AdminUserApplicationEntity } from '../entities/admin-user-application.entity';
 import { AdminUserUpsertRequestDto } from '../dto/requests/admin-user-upsert-request.dto';
 import { AdminUserResponseDto } from '../dto/responses/admin-user-response.dto';
@@ -19,7 +19,13 @@ export class AdminUserService {
 
   private mapUser(user: AdminUserEntity): AdminUserResponseDto {
     const applicationIds = (user.applications || []).map((entry) => entry.applicationId);
-    return new AdminUserResponseDto(user.id, user.email, applicationIds);
+    return new AdminUserResponseDto(
+      user.id,
+      user.email,
+      user.role ?? AdminUserRole.EDITOR,
+      user.status ?? AdminUserStatus.ACTIVE,
+      applicationIds,
+    );
   }
 
   async list(): Promise<AdminUserResponseDto[]> {
@@ -50,6 +56,8 @@ export class AdminUserService {
       id: uuidv4(),
       email,
       passwordHash,
+      role: request.role ?? AdminUserRole.EDITOR,
+      status: request.status ?? AdminUserStatus.ACTIVE,
       applications: [],
     });
     await this.adminUserRepo.save(user);
@@ -83,6 +91,8 @@ export class AdminUserService {
     if (request.password?.trim()) {
       user.passwordHash = await bcrypt.hash(request.password.trim(), 10);
     }
+    user.role = request.role ?? user.role ?? AdminUserRole.EDITOR;
+    user.status = request.status ?? user.status ?? AdminUserStatus.ACTIVE;
 
     await this.adminUserRepo.save(user);
 
