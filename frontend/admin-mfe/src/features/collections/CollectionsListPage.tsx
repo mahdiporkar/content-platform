@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Popconfirm, Space, Table, Typography } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { Button, Card, Input, Popconfirm, Space, Table, Tag, Typography, message } from "antd";
+import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import client from "../../api/client";
-import { Collection } from "../../types";
+import { Collection, PageResponse } from "../../types";
 import { useTenant } from "../../app/tenant";
 
 export const CollectionsListPage = () => {
@@ -11,44 +11,90 @@ export const CollectionsListPage = () => {
   const { applicationId } = useTenant();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({ page: 0, size: 10, total: 0 });
+  const [messageApi, contextHolder] = message.useMessage();
 
-  const fetchCollections = useCallback(async () => {
+  const fetchCollections = useCallback(
+    async (next?: { page?: number; size?: number; search?: string }) => {
+      if (!applicationId) {
+        setCollections([]);
+        return;
+      }
+      const page = next?.page ?? pagination.page;
+      const size = next?.size ?? pagination.size;
+      const searchValue = next?.search ?? search;
+      setLoading(true);
+      try {
+        const response = await client.get<PageResponse<Collection>>(`/api/v1/admin/apps/${applicationId}/collections`, {
+          params: { page, size, search: searchValue || undefined }
+        });
+        setCollections(response.data.items);
+        setPagination({ page: response.data.page, size: response.data.size, total: response.data.totalElements });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applicationId, pagination.page, pagination.size, search]
+  );
+
+  useEffect(() => {
+    void fetchCollections({ page: 0 });
+  }, [fetchCollections, applicationId]);
+
+  const handleDelete = async (collection: Collection) => {
     if (!applicationId) {
       return;
     }
-    setLoading(true);
-    const response = await client.get<Collection[]>("/api/v1/admin/collections", {
-      params: { applicationId }
-    });
-    setCollections(response.data);
-    setLoading(false);
-  }, [applicationId]);
-
-  useEffect(() => {
-    fetchCollections();
-  }, [fetchCollections]);
-
-  const handleDelete = async (id: string) => {
-    await client.delete(`/api/v1/admin/collections/${id}`);
-    await fetchCollections();
+    try {
+      await client.delete(`/api/v1/admin/apps/${applicationId}/collections/${collection.id}`);
+      messageApi.success("Collection deleted.");
+      await fetchCollections();
+    } catch (error) {
+      messageApi.error("Cannot delete this collection while it has items.");
+    }
   };
 
   const columns = useMemo<ColumnsType<Collection>>(
     () => [
-      { title: "Title", dataIndex: "title", width: "30%" },
-      { title: "Slug", dataIndex: "slug", width: "20%" },
+      {
+        title: "Title",
+        dataIndex: "title",
+        width: "22%",
+        render: (_, record) => (
+          <Button type="link" onClick={() => navigate(`/collections/${record.id}`, { state: { collection: record } })}>
+            {record.title}
+          </Button>
+        )
+      },
+      { title: "Slug", dataIndex: "slug", width: "16%" },
       {
         title: "Allowed Types",
         dataIndex: "allowedTypes",
         width: "20%",
-        render: (value: string[] | undefined) =>
-          value && value.length > 0 ? value.join(", ") : <Typography.Text type="secondary">-</Typography.Text>
+        render: (value: string[] | null | undefined) =>
+          value && value.length > 0 ? (
+            <Space wrap>
+              {value.map((type) => (
+                <Tag key={type}>{type}</Tag>
+              ))}
+            </Space>
+          ) : (
+            <Typography.Text type="secondary">All</Typography.Text>
+          )
       },
-      { title: "Max Items", dataIndex: "maxItems", width: "10%" },
+      { title: "Items", dataIndex: "itemsCount", width: "8%" },
+      {
+        title: "Visibility",
+        dataIndex: "isPublic",
+        width: "10%",
+        render: (value: boolean | undefined) => (value === false ? <Tag color="orange">Private</Tag> : <Tag color="green">Public</Tag>)
+      },
+      { title: "Updated", dataIndex: "updatedAt", width: "14%", render: (value: string) => new Date(value).toLocaleString() },
       {
         title: "Actions",
         key: "actions",
-        width: "20%",
+        width: "10%",
         render: (_, collection) => (
           <Space size="small">
             <Button type="text" onClick={() => navigate(`/collections/${collection.id}`, { state: { collection } })}>
@@ -58,7 +104,7 @@ export const CollectionsListPage = () => {
               title="Delete this collection?"
               okText="Delete"
               okButtonProps={{ danger: true }}
-              onConfirm={() => handleDelete(collection.id)}
+              onConfirm={() => void handleDelete(collection)}
             >
               <Button danger type="text">
                 Delete
@@ -71,8 +117,15 @@ export const CollectionsListPage = () => {
     [navigate]
   );
 
+  const onTableChange = (nextPagination: TablePaginationConfig) => {
+    const page = Math.max(0, (nextPagination.current ?? 1) - 1);
+    const size = nextPagination.pageSize ?? pagination.size;
+    void fetchCollections({ page, size });
+  };
+
   return (
     <Card className="page-card">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
@@ -81,12 +134,32 @@ export const CollectionsListPage = () => {
           <Typography.Text type="secondary">Curated content lists per application.</Typography.Text>
         </div>
       </div>
-      <div className="page-actions">
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          allowClear
+          placeholder="Search title or slug"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          onSearch={() => void fetchCollections({ page: 0 })}
+          style={{ width: 280 }}
+        />
         <Button type="primary" onClick={() => navigate("/collections/new")} disabled={!applicationId}>
           New Collection
         </Button>
-      </div>
-      <Table rowKey="id" dataSource={collections} columns={columns} loading={loading} pagination={false} />
+      </Space>
+      <Table
+        rowKey="id"
+        dataSource={collections}
+        columns={columns}
+        loading={loading}
+        onChange={onTableChange}
+        pagination={{
+          current: pagination.page + 1,
+          pageSize: pagination.size,
+          total: pagination.total,
+          showSizeChanger: true
+        }}
+      />
     </Card>
   );
 };

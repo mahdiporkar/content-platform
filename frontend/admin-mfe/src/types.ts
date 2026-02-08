@@ -160,6 +160,8 @@ export type Collection = {
   description?: string | null;
   allowedTypes?: string[] | null;
   maxItems?: number | null;
+  isPublic?: boolean;
+  itemsCount?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -167,9 +169,16 @@ export type Collection = {
 export type CollectionItem = {
   id: string;
   collectionId: string;
-  contentType: "article" | "video" | "image";
+  contentType: "post" | "article" | "video" | "image";
   contentId: string;
   position: number;
+  title?: string | null;
+  status?: ContentStatus | null;
+  locale?: string | null;
+  tags?: string[] | null;
+  slug?: string | null;
+  thumbnailUrl?: string | null;
+  publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };

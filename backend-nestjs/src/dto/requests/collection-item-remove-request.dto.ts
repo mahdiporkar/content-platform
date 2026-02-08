@@ -1,16 +1,11 @@
-import { IsIn, IsInt, IsNotEmpty, IsOptional, Min } from 'class-validator';
+import { IsIn, IsNotEmpty } from 'class-validator';
 import { ContentType } from '../../common/content-type.enum';
 
-export class CollectionItemAddRequestDto {
+export class CollectionItemRemoveRequestDto {
   @IsNotEmpty()
   contentId!: string;
 
   @IsNotEmpty()
   @IsIn([ContentType.POST, ContentType.ARTICLE, ContentType.VIDEO, ContentType.IMAGE])
   contentType!: ContentType;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  position?: number;
 }

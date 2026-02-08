@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Alert, Button, Card, Form, Input, Select, Space, Typography, Upload } from "antd";
 import type { UploadFile } from "antd";
 import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
@@ -26,8 +26,6 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-
-  const tagsInput = useMemo(() => tags.join(", "), [tags]);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
     setSeo((prev) => ({ ...prev, [key]: value }));
@@ -153,17 +151,12 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         </Form.Item>
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
           <Form.Item label="Tags">
-            <Input
-              value={tagsInput}
-              onChange={(event) =>
-                setTags(
-                  event.target.value
-                    .split(",")
-                    .map((tag) => tag.trim())
-                    .filter(Boolean)
-                )
-              }
-              placeholder="news, fintech, growth"
+            <Select
+              mode="tags"
+              value={tags}
+              onChange={(value) => setTags(value)}
+              tokenSeparators={[","]}
+              placeholder="Enter tags"
             />
           </Form.Item>
         </Card>

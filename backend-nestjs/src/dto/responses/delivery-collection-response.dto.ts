@@ -7,6 +7,7 @@ export class DeliveryCollectionResponseDto {
     public slug: string,
     public title: string,
     public description: string | null,
+    public isPublic: boolean,
     public allowedTypes: string[] | null,
     public maxItems: number | null,
     public items: DeliveryContentResponseDto[],

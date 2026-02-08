@@ -7,6 +7,8 @@ export class CollectionResponseDto {
     public description: string | null,
     public allowedTypes: string[] | null,
     public maxItems: number | null,
+    public isPublic: boolean,
+    public itemsCount: number,
     public createdAt: string,
     public updatedAt: string,
   ) {}

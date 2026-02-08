@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { ContentStatus } from '../common/content-status.enum';
 import { ContentType } from '../common/content-type.enum';
 import { ArticleEntity } from '../entities/article.entity';
+import { PostEntity } from '../entities/post.entity';
 import { VideoEntity } from '../entities/video.entity';
 import { ImageEntity } from '../entities/image.entity';
 import { CollectionEntity } from '../entities/collection.entity';
@@ -21,6 +22,8 @@ export class DeliveryContentService {
   constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepo: Repository<ArticleEntity>,
+    @InjectRepository(PostEntity)
+    private readonly postRepo: Repository<PostEntity>,
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
     @InjectRepository(ImageEntity)
@@ -59,6 +62,9 @@ export class DeliveryContentService {
       }
       const items = await this.collectionItemRepo.find({ where: { collectionId: collection.id } });
       filteredIds = {
+        [ContentType.POST]: items
+          .filter((item) => item.contentType === ContentType.POST)
+          .map((item) => item.contentId),
         [ContentType.ARTICLE]: items
           .filter((item) => item.contentType === ContentType.ARTICLE)
           .map((item) => item.contentId),
@@ -75,6 +81,16 @@ export class DeliveryContentService {
       const [items, total] = await this.queryArticles(params.application.id, tags, locale, filteredIds?.article, pageNumber, pageSize);
       return new PageResponseDto(
         items.map((article) => this.mapArticle(params.application, article)),
+        total,
+        Math.ceil(total / pageSize),
+        pageNumber,
+        pageSize,
+      );
+    }
+    if (type === ContentType.POST) {
+      const [items, total] = await this.queryPosts(params.application.id, tags, locale, filteredIds?.post, pageNumber, pageSize);
+      return new PageResponseDto(
+        items.map((post) => this.mapPost(params.application, post)),
         total,
         Math.ceil(total / pageSize),
         pageNumber,
@@ -102,18 +118,20 @@ export class DeliveryContentService {
       );
     }
 
-    const [articles, videos, images] = await Promise.all([
+    const [posts, articles, videos, images] = await Promise.all([
+      this.queryPosts(params.application.id, tags, locale, filteredIds?.post, pageNumber, pageSize),
       this.queryArticles(params.application.id, tags, locale, filteredIds?.article, pageNumber, pageSize),
       this.queryVideos(params.application.id, tags, locale, filteredIds?.video, pageNumber, pageSize),
       this.queryImages(params.application.id, tags, locale, filteredIds?.image, pageNumber, pageSize),
     ]);
 
     const allItems = [
+      ...posts[0].map((post) => this.mapPost(params.application, post)),
       ...articles[0].map((article) => this.mapArticle(params.application, article)),
       ...videos[0].map((video) => this.mapVideo(params.application, video)),
       ...images[0].map((image) => this.mapImage(params.application, image)),
     ];
-    const total = articles[1] + videos[1] + images[1];
+    const total = posts[1] + articles[1] + videos[1] + images[1];
 
     return new PageResponseDto(allItems, total, Math.ceil(total / pageSize), pageNumber, pageSize);
   }
@@ -123,16 +141,31 @@ export class DeliveryContentService {
     if (!collection) {
       throw new NotFoundException('Collection not found.');
     }
+    if (!collection.isPublic) {
+      throw new NotFoundException('Collection not found.');
+    }
     const items = await this.collectionItemRepo.find({ where: { collectionId: collection.id }, order: { position: 'ASC' } });
     const mapped: DeliveryContentResponseDto[] = [];
 
     const localeValue = locale?.trim() || null;
     const grouped = {
+      post: items.filter((item) => item.contentType === ContentType.POST).map((item) => item.contentId),
       article: items.filter((item) => item.contentType === ContentType.ARTICLE).map((item) => item.contentId),
       video: items.filter((item) => item.contentType === ContentType.VIDEO).map((item) => item.contentId),
       image: items.filter((item) => item.contentType === ContentType.IMAGE).map((item) => item.contentId),
     };
 
+    if (grouped.post.length > 0) {
+      const posts = await this.postRepo.find({ where: { id: In(grouped.post), status: ContentStatus.PUBLISHED } });
+      const sorted = grouped.post
+        .map((id) => posts.find((entry) => entry.id === id))
+        .filter(Boolean) as PostEntity[];
+      sorted.forEach((post) => {
+        if (!localeValue || post.locale === localeValue) {
+          mapped.push(this.mapPost(application, post));
+        }
+      });
+    }
     if (grouped.article.length > 0) {
       const articles = await this.articleRepo.find({ where: { id: In(grouped.article), status: ContentStatus.PUBLISHED } });
       const sorted = grouped.article
@@ -173,6 +206,7 @@ export class DeliveryContentService {
       collection.slug,
       collection.title,
       collection.description ?? null,
+      collection.isPublic,
       collection.allowedTypes ?? null,
       collection.maxItems ?? null,
       mapped,
@@ -180,7 +214,9 @@ export class DeliveryContentService {
   }
 
   async incrementView(contentType: ContentType, contentId: string, applicationId?: string, locale?: string | null): Promise<void> {
-    if (contentType === ContentType.ARTICLE) {
+    if (contentType === ContentType.POST) {
+      await this.postRepo.increment({ id: contentId }, 'viewCount', 1);
+    } else if (contentType === ContentType.ARTICLE) {
       await this.articleRepo.increment({ id: contentId }, 'viewCount', 1);
     } else if (contentType === ContentType.VIDEO) {
       await this.videoRepo.increment({ id: contentId }, 'viewCount', 1);
@@ -220,6 +256,31 @@ export class DeliveryContentService {
       qb.andWhere('article.id IN (:...ids)', { ids });
     }
     qb.orderBy('article.publishedAt', 'DESC').addOrderBy('article.createdAt', 'DESC');
+    qb.skip(pageNumber * pageSize).take(pageSize);
+    return await qb.getManyAndCount();
+  }
+
+  private async queryPosts(
+    applicationId: string,
+    tags: string[],
+    locale: string | null,
+    ids: string[] | null | undefined,
+    pageNumber: number,
+    pageSize: number,
+  ): Promise<[PostEntity[], number]> {
+    const qb = this.postRepo.createQueryBuilder('post');
+    qb.where('post.applicationId = :applicationId', { applicationId })
+      .andWhere('post.status = :status', { status: ContentStatus.PUBLISHED });
+    if (locale) {
+      qb.andWhere('post.locale = :locale', { locale });
+    }
+    if (tags.length > 0) {
+      qb.andWhere('post.tags && ARRAY[:...tags]', { tags });
+    }
+    if (ids && ids.length > 0) {
+      qb.andWhere('post.id IN (:...ids)', { ids });
+    }
+    qb.orderBy('post.publishedAt', 'DESC').addOrderBy('post.createdAt', 'DESC');
     qb.skip(pageNumber * pageSize).take(pageSize);
     return await qb.getManyAndCount();
   }
@@ -301,6 +362,36 @@ export class DeliveryContentService {
       null,
       article.seo ?? null,
       article.content ?? null,
+    );
+  }
+
+  private mapPost(application: ApplicationEntity, post: PostEntity): DeliveryContentResponseDto {
+    const mediaUrl = post.bannerKey
+      ? this.baseUrl.buildMediaUrl(application, post.bannerKey)
+      : post.bannerUrl ?? null;
+    return new DeliveryContentResponseDto(
+      post.id,
+      post.applicationId,
+      ContentType.POST,
+      post.title,
+      post.description ?? null,
+      post.locale ?? null,
+      post.tags ?? null,
+      post.status,
+      post.slug,
+      post.publishedAt ? post.publishedAt.toISOString() : null,
+      post.scheduledAt ? post.scheduledAt.toISOString() : null,
+      post.viewCount ?? 0,
+      mediaUrl,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      post.seo ?? null,
+      post.content ?? null,
     );
   }
 

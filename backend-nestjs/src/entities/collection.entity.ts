@@ -24,6 +24,9 @@ export class CollectionEntity {
   @Column({ name: 'max_items', type: 'int', nullable: true })
   maxItems!: number | null;
 
+  @Column({ name: 'is_public', type: 'boolean', default: true })
+  isPublic!: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

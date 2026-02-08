@@ -11,6 +11,7 @@ import { AdminMediaController } from './controllers/admin-media.controller';
 import { AdminUserController } from './controllers/admin-user.controller';
 import { PublicContentController } from './controllers/public-content.controller';
 import { AdminCollectionController } from './controllers/admin-collection.controller';
+import { AdminAppCollectionController } from './controllers/admin-app-collection.controller';
 import { AdminImageController } from './controllers/admin-image.controller';
 import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
 import { DeliveryContentController } from './controllers/delivery-content.controller';
@@ -102,6 +103,7 @@ import { AdminAnalyticsService } from './services/admin-analytics.service';
     AuthController,
     AdminApplicationController,
     AdminCollectionController,
+    AdminAppCollectionController,
     AdminPostController,
     AdminArticleController,
     AdminVideoController,
