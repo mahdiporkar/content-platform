@@ -8,6 +8,7 @@ const client = axios.create({
     "Content-Type": "application/json"
   }
 });
+let redirectingToLogin = false;
 
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
@@ -21,5 +22,21 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
+
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const token = authStore.getToken();
+    if (status === 401 && token) {
+      authStore.clearToken();
+      if (!redirectingToLogin && window.location.pathname !== "/login") {
+        redirectingToLogin = true;
+        window.location.replace("/login");
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default client;

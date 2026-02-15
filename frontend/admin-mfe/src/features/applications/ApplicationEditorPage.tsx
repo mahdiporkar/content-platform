@@ -43,6 +43,13 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
   const [gallery, setGallery] = useState<GalleryImage[]>(state?.application?.gallery ?? []);
   const [loading, setLoading] = useState(false);
 
+  const createLocalToken = () => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().replace(/-/g, "");
+    }
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+  };
+
   const tagsInput = useMemo(() => tags.join(", "), [tags]);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean) => {
@@ -139,7 +146,11 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     navigate("/applications");
   };
 
-  const handleRotateToken = async () => {
+  const handleRegenerateToken = async () => {
+    if (mode === "create") {
+      setApiToken(createLocalToken());
+      return;
+    }
     if (!params.id) {
       return;
     }
@@ -245,11 +256,16 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
           />
         </Form.Item>
         <Form.Item label="API Token">
-          <Input
-            value={apiToken}
-            onChange={(event) => setApiToken(event.target.value)}
-            placeholder="Auto-generated if empty"
-          />
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Input
+              value={apiToken}
+              onChange={(event) => setApiToken(event.target.value)}
+              placeholder="Auto-generated if empty"
+            />
+            <Button onClick={handleRegenerateToken} loading={loading}>
+              Re-generate Token
+            </Button>
+          </Space>
         </Form.Item>
         <Form.Item label="Website URL">
           <Input
@@ -277,9 +293,6 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
         {mode === "edit" && (
           <Card size="small" title="Token Management" style={{ marginBottom: 16 }}>
             <Space>
-              <Button onClick={handleRotateToken} loading={loading}>
-                Rotate Token
-              </Button>
               <Button danger onClick={handleRevokeToken} loading={loading}>
                 Revoke Token
               </Button>
