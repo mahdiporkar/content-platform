@@ -189,4 +189,13 @@ export type AdminUser = {
   role: "super_admin" | "editor" | "publisher";
   status: "active" | "suspended";
   applicationIds: string[];
+  systemPermissions: ("applications.manage" | "users.manage")[];
+  servicePermissions: (
+    | "posts.manage"
+    | "articles.manage"
+    | "images.manage"
+    | "videos.manage"
+    | "collections.manage"
+    | "analytics.view"
+  )[];
 };

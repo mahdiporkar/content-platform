@@ -5,5 +5,7 @@ export class AdminUserResponseDto {
     public role: string,
     public status: string,
     public applicationIds: string[],
+    public systemPermissions: string[],
+    public servicePermissions: string[],
   ) {}
 }

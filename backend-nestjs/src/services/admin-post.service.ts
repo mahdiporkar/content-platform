@@ -105,6 +105,14 @@ export class AdminPostService {
     return this.mapPost(saved);
   }
 
+  async getApplicationIdById(id: string): Promise<string> {
+    const post = await this.postRepo.findOne({ where: { id } });
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+    return post.applicationId;
+  }
+
   async list(
     applicationId: string,
     status: ContentStatus | undefined,

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Form, Input, Select, Space, Typography } from "antd";
+import { Button, Card, Form, Input, Select, Space, Typography, message } from "antd";
 import client from "../../api/client";
 import { Application, GalleryImage, SeoMeta } from "../../types";
 
@@ -42,6 +42,16 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
   const [seo, setSeo] = useState<SeoMeta>(state?.application?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(state?.application?.gallery ?? []);
   const [loading, setLoading] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const showRequestError = (error: unknown, fallback: string) => {
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 403) {
+      messageApi.error("You do not have permission for this action.");
+      return;
+    }
+    messageApi.error(fallback);
+  };
 
   const createLocalToken = () => {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -70,22 +80,28 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
 
   const loadApplication = async (id: string) => {
     setLoading(true);
-    const response = await client.get<Application>(`/api/v1/admin/applications/${id}`);
-    setApplicationId(response.data.id);
-    setName(response.data.name);
-    setDescription(response.data.description ?? "");
-    setStatus(response.data.status ?? "active");
-    setMediaPolicy(response.data.mediaPolicy ?? "public-via-gateway");
-    setAllowedDomains(response.data.allowedDomains ?? []);
-    setRateLimitPolicy(response.data.rateLimitPolicy ? JSON.stringify(response.data.rateLimitPolicy, null, 2) : "");
-    setWebsiteUrl(response.data.websiteUrl ?? "");
-    setPublicBaseUrlOverride(response.data.publicBaseUrlOverride ?? "");
-    setMediaBaseUrlOverride(response.data.mediaBaseUrlOverride ?? "");
-    setApiToken(response.data.apiToken ?? "");
-    setTags(response.data.tags ?? []);
-    setSeo(response.data.seo ?? {});
-    setGallery(response.data.gallery ?? []);
-    setLoading(false);
+    try {
+      const response = await client.get<Application>(`/api/v1/admin/applications/${id}`);
+      setApplicationId(response.data.id);
+      setName(response.data.name);
+      setDescription(response.data.description ?? "");
+      setStatus(response.data.status ?? "active");
+      setMediaPolicy(response.data.mediaPolicy ?? "public-via-gateway");
+      setAllowedDomains(response.data.allowedDomains ?? []);
+      setRateLimitPolicy(response.data.rateLimitPolicy ? JSON.stringify(response.data.rateLimitPolicy, null, 2) : "");
+      setWebsiteUrl(response.data.websiteUrl ?? "");
+      setPublicBaseUrlOverride(response.data.publicBaseUrlOverride ?? "");
+      setMediaBaseUrlOverride(response.data.mediaBaseUrlOverride ?? "");
+      setApiToken(response.data.apiToken ?? "");
+      setTags(response.data.tags ?? []);
+      setSeo(response.data.seo ?? {});
+      setGallery(response.data.gallery ?? []);
+    } catch (error) {
+      showRequestError(error, "Failed to load application.");
+      navigate("/applications");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -108,42 +124,47 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       }
     }
     setLoading(true);
-    if (mode === "create") {
-      await client.post<Application>("/api/v1/admin/applications", {
-        id: applicationId.trim() || undefined,
-        name: name.trim(),
-        description: description.trim() || undefined,
-        status,
-        mediaPolicy,
-        allowedDomains,
-        rateLimitPolicy: parsedRateLimit,
-        websiteUrl: websiteUrl.trim() || undefined,
-        publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
-        mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
-        apiToken: apiToken.trim() || undefined,
-        tags,
-        seo,
-        gallery
-      });
-    } else if (params.id) {
-      await client.put<Application>(`/api/v1/admin/applications/${params.id}`, {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        status,
-        mediaPolicy,
-        allowedDomains,
-        rateLimitPolicy: parsedRateLimit,
-        websiteUrl: websiteUrl.trim() || undefined,
-        publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
-        mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
-        apiToken: apiToken.trim() || undefined,
-        tags,
-        seo,
-        gallery
-      });
+    try {
+      if (mode === "create") {
+        await client.post<Application>("/api/v1/admin/applications", {
+          id: applicationId.trim() || undefined,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          status,
+          mediaPolicy,
+          allowedDomains,
+          rateLimitPolicy: parsedRateLimit,
+          websiteUrl: websiteUrl.trim() || undefined,
+          publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
+          mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
+          apiToken: apiToken.trim() || undefined,
+          tags,
+          seo,
+          gallery
+        });
+      } else if (params.id) {
+        await client.put<Application>(`/api/v1/admin/applications/${params.id}`, {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          status,
+          mediaPolicy,
+          allowedDomains,
+          rateLimitPolicy: parsedRateLimit,
+          websiteUrl: websiteUrl.trim() || undefined,
+          publicBaseUrlOverride: publicBaseUrlOverride.trim() || undefined,
+          mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
+          apiToken: apiToken.trim() || undefined,
+          tags,
+          seo,
+          gallery
+        });
+      }
+      navigate("/applications");
+    } catch (error) {
+      showRequestError(error, "Failed to save application.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    navigate("/applications");
   };
 
   const handleRegenerateToken = async () => {
@@ -155,9 +176,14 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       return;
     }
     setLoading(true);
-    const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/rotate`);
-    setApiToken(response.data.apiToken ?? "");
-    setLoading(false);
+    try {
+      const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/rotate`);
+      setApiToken(response.data.apiToken ?? "");
+    } catch (error) {
+      showRequestError(error, "Failed to regenerate token.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRevokeToken = async () => {
@@ -165,9 +191,14 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       return;
     }
     setLoading(true);
-    const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/revoke`);
-    setApiToken(response.data.apiToken ?? "");
-    setLoading(false);
+    try {
+      const response = await client.post<Application>(`/api/v1/admin/applications/${params.id}/token/revoke`);
+      setApiToken(response.data.apiToken ?? "");
+    } catch (error) {
+      showRequestError(error, "Failed to revoke token.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const title = mode === "create" ? "New Application" : "Edit Application";
@@ -178,6 +209,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
 
   return (
     <Card className="page-card">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>

@@ -1,47 +1,75 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { AdminApplicationService } from '../services/admin-application.service';
 import { ApplicationUpsertRequestDto } from '../dto/requests/application-upsert-request.dto';
 import { ApplicationResponseDto } from '../dto/responses/application-response.dto';
+import { AdminAuthorizationService } from '../auth/admin-authorization.service';
+import { SystemPermission } from '../auth/admin-permissions';
 
 @Controller('/api/v1/admin/applications')
 export class AdminApplicationController {
-  constructor(private readonly applicationService: AdminApplicationService) {}
+  constructor(
+    private readonly applicationService: AdminApplicationService,
+    private readonly access: AdminAuthorizationService,
+  ) {}
 
   @Get()
-  async list(): Promise<ApplicationResponseDto[]> {
-    return await this.applicationService.list();
+  async list(@Req() request: Request): Promise<ApplicationResponseDto[]> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    const applications = await this.applicationService.list();
+    if (this.access.isSuperAdmin(request)) {
+      return applications;
+    }
+    const allowed = new Set((this.access.getUser(request).applicationIds || []).filter(Boolean));
+    return applications.filter((application) => allowed.has(application.id));
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string): Promise<ApplicationResponseDto> {
+  async getById(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.getById(id);
   }
 
   @Post()
-  async create(@Body() request: ApplicationUpsertRequestDto): Promise<ApplicationResponseDto> {
-    return await this.applicationService.create(request);
+  async create(
+    @Req() request: Request,
+    @Body() body: ApplicationUpsertRequestDto,
+  ): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertSuperAdmin(request);
+    return await this.applicationService.create(body);
   }
 
   @Put(':id')
   async update(
+    @Req() request: Request,
     @Param('id') id: string,
-    @Body() request: ApplicationUpsertRequestDto,
+    @Body() body: ApplicationUpsertRequestDto,
   ): Promise<ApplicationResponseDto> {
-    return await this.applicationService.update(id, request);
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertApplicationAccess(request, id);
+    return await this.applicationService.update(id, body);
   }
 
   @Post(':id/token/rotate')
-  async rotateToken(@Param('id') id: string): Promise<ApplicationResponseDto> {
+  async rotateToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.rotateToken(id);
   }
 
   @Post(':id/token/revoke')
-  async revokeToken(@Param('id') id: string): Promise<ApplicationResponseDto> {
+  async revokeToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.revokeToken(id);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<{ id: string }> {
+  async remove(@Req() request: Request, @Param('id') id: string): Promise<{ id: string }> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    this.access.assertApplicationAccess(request, id);
     await this.applicationService.remove(id);
     return { id };
   }

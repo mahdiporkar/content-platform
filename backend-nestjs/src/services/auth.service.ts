@@ -6,6 +6,7 @@ import { LoginRequestDto } from '../dto/requests/login-request.dto';
 import { AuthResponseDto } from '../dto/responses/auth-response.dto';
 import { AdminUserEntity, AdminUserStatus } from '../entities/admin-user.entity';
 import { JwtTokenService } from '../auth/jwt-token.service';
+import { normalizeServicePermissions, normalizeSystemPermissions } from '../auth/admin-permissions';
 
 @Injectable()
 export class AuthService {
@@ -34,11 +35,15 @@ export class AuthService {
     }
 
     const applicationIds = (admin.applications || []).map((entry) => entry.applicationId);
+    const systemPermissions = normalizeSystemPermissions(admin.role, admin.systemPermissions);
+    const servicePermissions = normalizeServicePermissions(admin.role, admin.servicePermissions);
     const token = this.jwtTokenService.sign({
       sub: admin.id,
       email: admin.email,
       role: admin.role,
       applicationIds,
+      systemPermissions,
+      servicePermissions,
     });
     return new AuthResponseDto(token);
   }

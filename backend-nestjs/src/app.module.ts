@@ -38,6 +38,7 @@ import { ViewEventEntity } from './entities/view-event.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
+import { AdminAuthorizationService } from './auth/admin-authorization.service';
 import { SeedDataService } from './services/seed-data.service';
 import { MinioService } from './services/minio.service';
 import { parseJdbcUrl } from './common/jdbc-url';
@@ -119,6 +120,7 @@ import { AdminAnalyticsService } from './services/admin-analytics.service';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     JwtTokenService,
     ApplicationTokenGuard,
+    AdminAuthorizationService,
     AuthService,
     AdminApplicationService,
     AdminCollectionService,

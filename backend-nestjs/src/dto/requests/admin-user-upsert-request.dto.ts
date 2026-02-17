@@ -1,5 +1,6 @@
 import { IsArray, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AdminUserRole, AdminUserStatus } from '../../entities/admin-user.entity';
+import { ServicePermission, SystemPermission } from '../../auth/admin-permissions';
 
 export class AdminUserUpsertRequestDto {
   @IsEmail()
@@ -22,4 +23,14 @@ export class AdminUserUpsertRequestDto {
   @IsArray()
   @IsString({ each: true })
   applicationIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsIn(Object.values(SystemPermission), { each: true })
+  systemPermissions?: SystemPermission[];
+
+  @IsOptional()
+  @IsArray()
+  @IsIn(Object.values(ServicePermission), { each: true })
+  servicePermissions?: ServicePermission[];
 }

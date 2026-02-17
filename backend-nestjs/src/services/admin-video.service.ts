@@ -108,6 +108,14 @@ export class AdminVideoService {
     return this.mapVideo(saved, application);
   }
 
+  async getApplicationIdById(id: string): Promise<string> {
+    const video = await this.videoRepo.findOne({ where: { id } });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    return video.applicationId;
+  }
+
   async getById(id: string): Promise<VideoResponseDto> {
     const video = await this.videoRepo.findOne({ where: { id } });
     if (!video) {

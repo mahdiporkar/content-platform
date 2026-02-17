@@ -108,6 +108,14 @@ export class AdminImageService {
     return this.mapImage(saved, application);
   }
 
+  async getApplicationIdById(id: string): Promise<string> {
+    const image = await this.imageRepo.findOne({ where: { id } });
+    if (!image) {
+      throw new NotFoundException('Image not found.');
+    }
+    return image.applicationId;
+  }
+
   async getById(id: string): Promise<ImageResponseDto> {
     const image = await this.imageRepo.findOne({ where: { id } });
     if (!image) {

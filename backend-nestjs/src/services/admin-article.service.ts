@@ -105,6 +105,14 @@ export class AdminArticleService {
     return this.mapArticle(saved);
   }
 
+  async getApplicationIdById(id: string): Promise<string> {
+    const article = await this.articleRepo.findOne({ where: { id } });
+    if (!article) {
+      throw new NotFoundException('Article not found.');
+    }
+    return article.applicationId;
+  }
+
   async list(
     applicationId: string,
     status: ContentStatus | undefined,

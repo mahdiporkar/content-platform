@@ -1,37 +1,58 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { AdminPostService } from '../services/admin-post.service';
 import { PostUpsertRequestDto } from '../dto/requests/post-upsert-request.dto';
 import { ChangeStatusRequestDto } from '../dto/requests/change-status-request.dto';
 import { ContentStatus } from '../common/content-status.enum';
 import { PostResponseDto } from '../dto/responses/post-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
+import { AdminAuthorizationService } from '../auth/admin-authorization.service';
+import { ServicePermission } from '../auth/admin-permissions';
 
 @Controller('/api/v1/admin/posts')
 export class AdminPostController {
-  constructor(private readonly postService: AdminPostService) {}
+  constructor(
+    private readonly postService: AdminPostService,
+    private readonly access: AdminAuthorizationService,
+  ) {}
 
   @Post()
-  async create(@Body() request: PostUpsertRequestDto): Promise<PostResponseDto> {
-    return await this.postService.create(request);
+  async create(@Req() request: Request, @Body() body: PostUpsertRequestDto): Promise<PostResponseDto> {
+    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, body.applicationId);
+    return await this.postService.create(body);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() request: PostUpsertRequestDto): Promise<PostResponseDto> {
-    return await this.postService.update(id, request);
+  async update(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Body() body: PostUpsertRequestDto,
+  ): Promise<PostResponseDto> {
+    const applicationId = await this.postService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, applicationId);
+    return await this.postService.update(id, body);
   }
 
   @Patch(':id/status')
-  async changeStatus(@Param('id') id: string, @Body() request: ChangeStatusRequestDto): Promise<PostResponseDto> {
-    return await this.postService.changeStatus(id, request);
+  async changeStatus(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Body() body: ChangeStatusRequestDto,
+  ): Promise<PostResponseDto> {
+    const applicationId = await this.postService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, applicationId);
+    return await this.postService.changeStatus(id, body);
   }
 
   @Get()
   async list(
+    @Req() request: Request,
     @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<PostResponseDto>> {
+    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, applicationId);
     return await this.postService.list(applicationId, status, Number(page), Number(size));
   }
 }

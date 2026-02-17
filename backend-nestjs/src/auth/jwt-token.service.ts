@@ -7,6 +7,8 @@ export type JwtPayload = {
   email: string;
   role?: string;
   applicationIds: string[];
+  systemPermissions?: string[];
+  servicePermissions?: string[];
 };
 
 @Injectable()

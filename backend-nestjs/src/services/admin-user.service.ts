@@ -7,6 +7,7 @@ import { AdminUserEntity, AdminUserRole, AdminUserStatus } from '../entities/adm
 import { AdminUserApplicationEntity } from '../entities/admin-user-application.entity';
 import { AdminUserUpsertRequestDto } from '../dto/requests/admin-user-upsert-request.dto';
 import { AdminUserResponseDto } from '../dto/responses/admin-user-response.dto';
+import { normalizeServicePermissions, normalizeSystemPermissions } from '../auth/admin-permissions';
 
 @Injectable()
 export class AdminUserService {
@@ -19,12 +20,17 @@ export class AdminUserService {
 
   private mapUser(user: AdminUserEntity): AdminUserResponseDto {
     const applicationIds = (user.applications || []).map((entry) => entry.applicationId);
+    const role = user.role ?? AdminUserRole.EDITOR;
+    const systemPermissions = normalizeSystemPermissions(role, user.systemPermissions);
+    const servicePermissions = normalizeServicePermissions(role, user.servicePermissions);
     return new AdminUserResponseDto(
       user.id,
       user.email,
-      user.role ?? AdminUserRole.EDITOR,
+      role,
       user.status ?? AdminUserStatus.ACTIVE,
       applicationIds,
+      systemPermissions,
+      servicePermissions,
     );
   }
 
@@ -58,6 +64,14 @@ export class AdminUserService {
       passwordHash,
       role: request.role ?? AdminUserRole.EDITOR,
       status: request.status ?? AdminUserStatus.ACTIVE,
+      systemPermissions: normalizeSystemPermissions(
+        request.role ?? AdminUserRole.EDITOR,
+        request.systemPermissions,
+      ),
+      servicePermissions: normalizeServicePermissions(
+        request.role ?? AdminUserRole.EDITOR,
+        request.servicePermissions,
+      ),
       applications: [],
     });
     await this.adminUserRepo.save(user);
@@ -93,6 +107,14 @@ export class AdminUserService {
     }
     user.role = request.role ?? user.role ?? AdminUserRole.EDITOR;
     user.status = request.status ?? user.status ?? AdminUserStatus.ACTIVE;
+    user.systemPermissions = normalizeSystemPermissions(
+      user.role,
+      request.systemPermissions ?? user.systemPermissions,
+    );
+    user.servicePermissions = normalizeServicePermissions(
+      user.role,
+      request.servicePermissions ?? user.servicePermissions,
+    );
 
     await this.adminUserRepo.save(user);
 

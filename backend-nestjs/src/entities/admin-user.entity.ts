@@ -30,6 +30,12 @@ export class AdminUserEntity {
   @Column({ type: 'enum', enum: AdminUserStatus, default: AdminUserStatus.ACTIVE })
   status!: AdminUserStatus;
 
+  @Column({ name: 'system_permissions', type: 'simple-json', nullable: true })
+  systemPermissions!: string[] | null;
+
+  @Column({ name: 'service_permissions', type: 'simple-json', nullable: true })
+  servicePermissions!: string[] | null;
+
   @OneToMany(() => AdminUserApplicationEntity, (entry) => entry.adminUser, {
     cascade: true,
     eager: true,

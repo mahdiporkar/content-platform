@@ -2,10 +2,25 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
-import { AdminUser } from "../../types";
+import { AdminUser, Application } from "../../types";
+
+const systemPermissionOptions = [
+  { value: "applications.manage", label: "Manage Applications" },
+  { value: "users.manage", label: "Manage Users" }
+];
+
+const servicePermissionOptions = [
+  { value: "posts.manage", label: "Manage Posts" },
+  { value: "articles.manage", label: "Manage Articles" },
+  { value: "images.manage", label: "Manage Gallery (Images)" },
+  { value: "videos.manage", label: "Manage Videos" },
+  { value: "collections.manage", label: "Manage Collections" },
+  { value: "analytics.view", label: "View Analytics" }
+];
 
 export const UsersListPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminUser | null>(null);
@@ -13,9 +28,16 @@ export const UsersListPage = () => {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const response = await client.get<AdminUser[]>("/api/v1/admin/users");
-    setUsers(response.data);
-    setLoading(false);
+    try {
+      const [usersResponse, applicationsResponse] = await Promise.all([
+        client.get<AdminUser[]>("/api/v1/admin/users"),
+        client.get<Application[]>("/api/v1/admin/applications")
+      ]);
+      setUsers(usersResponse.data);
+      setApplications(applicationsResponse.data);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -34,7 +56,9 @@ export const UsersListPage = () => {
       email: user?.email ?? "",
       role: user?.role ?? "editor",
       status: user?.status ?? "active",
-      applicationIds: (user?.applicationIds ?? []).join(", ")
+      applicationIds: user?.applicationIds ?? [],
+      systemPermissions: user?.systemPermissions ?? [],
+      servicePermissions: user?.servicePermissions ?? []
     });
   };
 
@@ -45,12 +69,9 @@ export const UsersListPage = () => {
       password: values.password || undefined,
       role: values.role,
       status: values.status,
-      applicationIds: values.applicationIds
-        ? values.applicationIds
-            .split(",")
-            .map((entry: string) => entry.trim())
-            .filter(Boolean)
-        : []
+      applicationIds: values.applicationIds || [],
+      systemPermissions: values.systemPermissions || [],
+      servicePermissions: values.servicePermissions || []
     };
     if (editing) {
       await client.put(`/api/v1/admin/users/${editing.id}`, payload);
@@ -70,7 +91,29 @@ export const UsersListPage = () => {
       {
         title: "Applications",
         dataIndex: "applicationIds",
-        width: "25%",
+        width: "20%",
+        render: (value: string[]) =>
+          value && value.length > 0 ? (
+            <Typography.Text>{value.join(", ")}</Typography.Text>
+          ) : (
+            <Typography.Text type="secondary">-</Typography.Text>
+          )
+      },
+      {
+        title: "System Access",
+        dataIndex: "systemPermissions",
+        width: "20%",
+        render: (value: string[]) =>
+          value && value.length > 0 ? (
+            <Typography.Text>{value.join(", ")}</Typography.Text>
+          ) : (
+            <Typography.Text type="secondary">-</Typography.Text>
+          )
+      },
+      {
+        title: "Service Access",
+        dataIndex: "servicePermissions",
+        width: "20%",
         render: (value: string[]) =>
           value && value.length > 0 ? (
             <Typography.Text>{value.join(", ")}</Typography.Text>
@@ -101,7 +144,7 @@ export const UsersListPage = () => {
         )
       }
     ],
-    [editing]
+    []
   );
 
   return (
@@ -152,8 +195,29 @@ export const UsersListPage = () => {
               ]}
             />
           </Form.Item>
-          <Form.Item label="Application IDs" name="applicationIds">
-            <Input placeholder="app-uuid-1, app-uuid-2" />
+          <Form.Item label="Accessible Applications" name="applicationIds">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="Select one or more applications"
+              options={applications.map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }))}
+            />
+          </Form.Item>
+          <Form.Item label="System Permissions" name="systemPermissions">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="Select system-level permissions"
+              options={systemPermissionOptions}
+            />
+          </Form.Item>
+          <Form.Item label="Service Permissions" name="servicePermissions">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="Select content-service permissions"
+              options={servicePermissionOptions}
+            />
           </Form.Item>
         </Form>
       </Modal>
