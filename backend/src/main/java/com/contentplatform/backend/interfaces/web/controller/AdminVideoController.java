@@ -7,6 +7,7 @@ import com.contentplatform.backend.application.dto.UploadVideoCommand;
 import com.contentplatform.backend.application.dto.VideoDto;
 import com.contentplatform.backend.application.port.in.VideoUseCase;
 import com.contentplatform.backend.domain.value.ContentStatus;
+import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ChangeStatusRequest;
@@ -45,7 +46,9 @@ public class AdminVideoController {
                                                 @RequestParam(value = "description", required = false) String description,
                                                 @RequestParam("applicationId") String applicationId,
                                                 @RequestParam("status") ContentStatus status) throws IOException {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
         UploadVideoCommand command = new UploadVideoCommand(
             applicationId,
             title,
@@ -62,7 +65,9 @@ public class AdminVideoController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<VideoResponse> changeStatus(@PathVariable String id, @Valid @RequestBody ChangeStatusRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         VideoDto dto = videoUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
         return ResponseEntity.ok(mapper.toVideoResponse(dto, null));
     }
@@ -72,6 +77,8 @@ public class AdminVideoController {
                                                             @RequestParam(required = false) ContentStatus status,
                                                             @RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "10") int size) {
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
         PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size));
         return ResponseEntity.ok(mapper.toVideoPage(result, video -> null));
     }

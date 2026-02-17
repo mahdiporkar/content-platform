@@ -4,6 +4,8 @@ import com.contentplatform.backend.application.port.out.AdminUserRepository;
 import com.contentplatform.backend.application.port.out.ApplicationRepository;
 import com.contentplatform.backend.domain.model.AdminUser;
 import com.contentplatform.backend.domain.model.Application;
+import com.contentplatform.backend.domain.value.ServicePermission;
+import com.contentplatform.backend.domain.value.SystemPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -59,7 +61,19 @@ public class SeedDataRunner implements CommandLineRunner {
             user -> logger.info("Admin user already exists"),
             () -> {
                 String passwordHash = passwordEncoder.encode("Admin123!");
-                AdminUser admin = new AdminUser(UUID.randomUUID().toString(), "admin@example.com", passwordHash, List.of(applicationId));
+                AdminUser admin = new AdminUser(
+                    UUID.randomUUID().toString(),
+                    "admin@example.com",
+                    passwordHash,
+                    List.of(applicationId),
+                    List.of(SystemPermission.APPLICATIONS_MANAGE, SystemPermission.USERS_MANAGE),
+                    List.of(
+                        ServicePermission.POSTS_MANAGE,
+                        ServicePermission.ARTICLES_MANAGE,
+                        ServicePermission.VIDEOS_MANAGE,
+                        ServicePermission.MEDIA_MANAGE
+                    )
+                );
                 adminUserRepository.save(admin);
                 logger.info("Seeded admin user: admin@example.com / Admin123!");
             }

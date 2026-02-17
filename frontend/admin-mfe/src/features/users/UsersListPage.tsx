@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typography } from "antd";
+import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { AdminUser, Application } from "../../types";
@@ -25,6 +25,7 @@ export const UsersListPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminUser | null>(null);
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -45,8 +46,13 @@ export const UsersListPage = () => {
   }, [fetchUsers]);
 
   const handleDelete = async (id: string) => {
-    await client.delete(`/api/v1/admin/users/${id}`);
-    await fetchUsers();
+    try {
+      await client.delete(`/api/v1/admin/users/${id}`);
+      messageApi.success("User deleted.");
+      await fetchUsers();
+    } catch {
+      messageApi.error("Failed to delete user.");
+    }
   };
 
   const openModal = (user?: AdminUser) => {
@@ -73,14 +79,26 @@ export const UsersListPage = () => {
       systemPermissions: values.systemPermissions || [],
       servicePermissions: values.servicePermissions || []
     };
-    if (editing) {
-      await client.put(`/api/v1/admin/users/${editing.id}`, payload);
-    } else {
-      await client.post("/api/v1/admin/users", payload);
+    try {
+      if (editing) {
+        await client.put(`/api/v1/admin/users/${editing.id}`, payload);
+      } else {
+        await client.post("/api/v1/admin/users", payload);
+      }
+      messageApi.success(editing ? "User updated." : "User created.");
+      setModalOpen(false);
+      form.resetFields();
+      await fetchUsers();
+    } catch (error) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        messageApi.error("Email is already in use.");
+      } else if (status === 403) {
+        messageApi.error("You do not have permission for this action.");
+      } else {
+        messageApi.error("Failed to save user.");
+      }
     }
-    setModalOpen(false);
-    form.resetFields();
-    await fetchUsers();
   };
 
   const columns = useMemo<ColumnsType<AdminUser>>(
@@ -149,6 +167,7 @@ export const UsersListPage = () => {
 
   return (
     <Card className="page-card">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>

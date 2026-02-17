@@ -28,11 +28,16 @@ export const ArticlesListPage = () => {
       return;
     }
     setLoading(true);
-    const response = await client.get<PageResponse<Article>>("/api/v1/admin/articles", {
-      params: { applicationId, status: status || undefined }
-    });
-    setArticles(response.data.items);
-    setLoading(false);
+    try {
+      const response = await client.get<PageResponse<Article>>("/api/v1/admin/articles", {
+        params: { applicationId, status: status || undefined }
+      });
+      setArticles(response.data.items);
+    } catch {
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

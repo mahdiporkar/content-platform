@@ -4,6 +4,8 @@ import com.contentplatform.backend.application.dto.ApplicationDto;
 import com.contentplatform.backend.application.dto.CreateApplicationCommand;
 import com.contentplatform.backend.application.dto.UpdateApplicationCommand;
 import com.contentplatform.backend.application.port.in.ApplicationUseCase;
+import com.contentplatform.backend.domain.value.SystemPermission;
+import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ApplicationUpsertRequest;
 import com.contentplatform.backend.interfaces.web.response.ApplicationResponse;
@@ -33,6 +35,7 @@ public class AdminApplicationController {
 
     @GetMapping
     public ResponseEntity<List<ApplicationResponse>> list() {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         List<ApplicationResponse> items = applicationUseCase.list().stream()
             .map(mapper::toApplicationResponse)
             .toList();
@@ -41,12 +44,14 @@ public class AdminApplicationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getById(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.getById(id);
         return ResponseEntity.ok(mapper.toApplicationResponse(dto));
     }
 
     @PostMapping
     public ResponseEntity<ApplicationResponse> create(@Valid @RequestBody ApplicationUpsertRequest request) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.create(
             new CreateApplicationCommand(request.getId(), request.getName(), request.getWebsiteUrl())
         );
@@ -55,6 +60,7 @@ public class AdminApplicationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse> update(@PathVariable String id, @Valid @RequestBody ApplicationUpsertRequest request) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.update(
             new UpdateApplicationCommand(id, request.getName(), request.getWebsiteUrl())
         );
@@ -63,6 +69,7 @@ public class AdminApplicationController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         applicationUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }

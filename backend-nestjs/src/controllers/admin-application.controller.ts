@@ -16,18 +16,12 @@ export class AdminApplicationController {
   @Get()
   async list(@Req() request: Request): Promise<ApplicationResponseDto[]> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    const applications = await this.applicationService.list();
-    if (this.access.isSuperAdmin(request)) {
-      return applications;
-    }
-    const allowed = new Set((this.access.getUser(request).applicationIds || []).filter(Boolean));
-    return applications.filter((application) => allowed.has(application.id));
+    return await this.applicationService.list();
   }
 
   @Get(':id')
   async getById(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.getById(id);
   }
 
@@ -37,7 +31,6 @@ export class AdminApplicationController {
     @Body() body: ApplicationUpsertRequestDto,
   ): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertSuperAdmin(request);
     return await this.applicationService.create(body);
   }
 
@@ -48,28 +41,24 @@ export class AdminApplicationController {
     @Body() body: ApplicationUpsertRequestDto,
   ): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.update(id, body);
   }
 
   @Post(':id/token/rotate')
   async rotateToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.rotateToken(id);
   }
 
   @Post(':id/token/revoke')
   async revokeToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertApplicationAccess(request, id);
     return await this.applicationService.revokeToken(id);
   }
 
   @Delete(':id')
   async remove(@Req() request: Request, @Param('id') id: string): Promise<{ id: string }> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    this.access.assertApplicationAccess(request, id);
     await this.applicationService.remove(id);
     return { id };
   }

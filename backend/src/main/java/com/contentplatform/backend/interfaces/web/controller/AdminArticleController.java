@@ -8,6 +8,7 @@ import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UpdateArticleCommand;
 import com.contentplatform.backend.application.port.in.ArticleUseCase;
 import com.contentplatform.backend.domain.value.ContentStatus;
+import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ArticleUpsertRequest;
@@ -41,7 +42,9 @@ public class AdminArticleController {
 
     @PostMapping
     public ResponseEntity<ArticleResponse> create(@Valid @RequestBody ArticleUpsertRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.ARTICLES_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         ArticleDto dto = articleUseCase.create(
             new CreateArticleCommand(
                 request.getApplicationId(),
@@ -57,7 +60,9 @@ public class AdminArticleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ArticleResponse> update(@PathVariable String id, @Valid @RequestBody ArticleUpsertRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.ARTICLES_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         ArticleDto dto = articleUseCase.update(
             new UpdateArticleCommand(
                 id,
@@ -74,7 +79,9 @@ public class AdminArticleController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ArticleResponse> changeStatus(@PathVariable String id, @Valid @RequestBody ChangeStatusRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.ARTICLES_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         ArticleDto dto = articleUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
         return ResponseEntity.ok(mapper.toArticleResponse(dto));
     }
@@ -84,6 +91,8 @@ public class AdminArticleController {
                                                               @RequestParam(required = false) ContentStatus status,
                                                               @RequestParam(defaultValue = "0") int page,
                                                               @RequestParam(defaultValue = "10") int size) {
+        SecurityUtils.requireServicePermission(ServicePermission.ARTICLES_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
         PageResult<ArticleDto> result = articleUseCase.list(applicationId, status, new PageRequest(page, size));
         return ResponseEntity.ok(mapper.toArticlePage(result));
     }

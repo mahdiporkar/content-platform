@@ -27,7 +27,9 @@ public class JpaAdminUserRepositoryAdapter implements AdminUserRepository {
             adminUser.getId(),
             adminUser.getEmail(),
             adminUser.getPasswordHash(),
-            adminUser.getAllowedApplicationIds()
+            adminUser.getAllowedApplicationIds(),
+            adminUser.getSystemPermissions(),
+            adminUser.getServicePermissions()
         );
         return toDomain(repository.save(entity));
     }
@@ -37,7 +39,9 @@ public class JpaAdminUserRepositoryAdapter implements AdminUserRepository {
             entity.getId(),
             entity.getEmail(),
             entity.getPasswordHash(),
-            entity.getAllowedApplicationIds()
+            entity.getAllowedApplicationIds(),
+            entity.getSystemPermissions(),
+            entity.getServicePermissions()
         );
     }
 }

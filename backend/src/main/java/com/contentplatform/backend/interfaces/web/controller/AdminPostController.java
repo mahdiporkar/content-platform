@@ -8,6 +8,7 @@ import com.contentplatform.backend.application.dto.PostDto;
 import com.contentplatform.backend.application.dto.UpdatePostCommand;
 import com.contentplatform.backend.application.port.in.PostUseCase;
 import com.contentplatform.backend.domain.value.ContentStatus;
+import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ChangeStatusRequest;
@@ -41,7 +42,9 @@ public class AdminPostController {
 
     @PostMapping
     public ResponseEntity<PostResponse> create(@Valid @RequestBody PostUpsertRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.POSTS_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         PostDto dto = postUseCase.create(
             new CreatePostCommand(
                 request.getApplicationId(),
@@ -57,7 +60,9 @@ public class AdminPostController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PostResponse> update(@PathVariable String id, @Valid @RequestBody PostUpsertRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.POSTS_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         PostDto dto = postUseCase.update(
             new UpdatePostCommand(
                 id,
@@ -74,7 +79,9 @@ public class AdminPostController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<PostResponse> changeStatus(@PathVariable String id, @Valid @RequestBody ChangeStatusRequest request) {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.POSTS_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         PostDto dto = postUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
         return ResponseEntity.ok(mapper.toPostResponse(dto));
     }
@@ -84,6 +91,8 @@ public class AdminPostController {
                                                            @RequestParam(required = false) ContentStatus status,
                                                            @RequestParam(defaultValue = "0") int page,
                                                            @RequestParam(defaultValue = "10") int size) {
+        SecurityUtils.requireServicePermission(ServicePermission.POSTS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
         PageResult<PostDto> result = postUseCase.list(applicationId, status, new PageRequest(page, size));
         return ResponseEntity.ok(mapper.toPostPage(result));
     }

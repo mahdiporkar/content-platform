@@ -3,6 +3,7 @@ package com.contentplatform.backend.interfaces.web.controller;
 import com.contentplatform.backend.application.dto.MediaUploadDto;
 import com.contentplatform.backend.application.dto.UploadMediaCommand;
 import com.contentplatform.backend.application.port.in.MediaUseCase;
+import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.response.MediaUploadResponse;
 import org.springframework.http.MediaType;
@@ -29,7 +30,9 @@ public class AdminMediaController {
     public ResponseEntity<MediaUploadResponse> upload(@RequestParam("file") MultipartFile file,
                                                       @RequestParam("applicationId") String applicationId,
                                                       @RequestParam(value = "kind", required = false) String kind) throws IOException {
-        List<String> allowed = SecurityUtils.getAllowedApplicationIds();
+        SecurityUtils.requireServicePermission(ServicePermission.MEDIA_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
         UploadMediaCommand command = new UploadMediaCommand(
             applicationId,
             kind,

@@ -2,6 +2,8 @@ package com.contentplatform.backend.infrastructure.security;
 
 import com.contentplatform.backend.application.port.out.TokenProvider;
 import com.contentplatform.backend.domain.model.AdminUser;
+import com.contentplatform.backend.domain.value.ServicePermission;
+import com.contentplatform.backend.domain.value.SystemPermission;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -34,6 +36,8 @@ public class JwtTokenProvider implements TokenProvider {
             .setSubject(adminUser.getId())
             .claim("email", adminUser.getEmail())
             .claim("applicationIds", adminUser.getAllowedApplicationIds())
+            .claim("systemPermissions", adminUser.getSystemPermissions().stream().map(Enum::name).toList())
+            .claim("servicePermissions", adminUser.getServicePermissions().stream().map(Enum::name).toList())
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(expiry))
             .signWith(Keys.hmacShaKeyFor(secret), SignatureAlgorithm.HS256)
@@ -49,6 +53,42 @@ public class JwtTokenProvider implements TokenProvider {
         String subject = claims.getSubject();
         String email = claims.get("email", String.class);
         List<String> applicationIds = claims.get("applicationIds", List.class);
-        return new JwtUser(subject, email, applicationIds);
+        List<String> systemRaw = claims.get("systemPermissions", List.class);
+        List<String> serviceRaw = claims.get("servicePermissions", List.class);
+        List<SystemPermission> systemPermissions = parseSystemPermissions(systemRaw);
+        List<ServicePermission> servicePermissions = parseServicePermissions(serviceRaw);
+        return new JwtUser(subject, email, applicationIds, systemPermissions, servicePermissions);
+    }
+
+    private List<SystemPermission> parseSystemPermissions(List<String> values) {
+        if (values == null) {
+            return List.of();
+        }
+        return values.stream()
+            .map(value -> {
+                try {
+                    return SystemPermission.valueOf(value);
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            })
+            .filter(permission -> permission != null)
+            .toList();
+    }
+
+    private List<ServicePermission> parseServicePermissions(List<String> values) {
+        if (values == null) {
+            return List.of();
+        }
+        return values.stream()
+            .map(value -> {
+                try {
+                    return ServicePermission.valueOf(value);
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            })
+            .filter(permission -> permission != null)
+            .toList();
     }
 }
