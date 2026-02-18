@@ -12,6 +12,7 @@ import { CollectionItemEntity } from '../entities/collection-item.entity';
 import { ViewEventEntity } from '../entities/view-event.entity';
 import { DeliveryContentResponseDto } from '../dto/responses/delivery-content-response.dto';
 import { DeliveryCollectionResponseDto } from '../dto/responses/delivery-collection-response.dto';
+import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
@@ -36,6 +37,10 @@ export class DeliveryContentService {
     private readonly viewEventRepo: Repository<ViewEventEntity>,
     private readonly baseUrl: BaseUrlService,
   ) {}
+
+  private toOptionalString(value: unknown): string | null {
+    return typeof value === 'string' ? value : null;
+  }
 
   async listContent(params: {
     application: ApplicationEntity;
@@ -210,6 +215,73 @@ export class DeliveryContentService {
       collection.allowedTypes ?? null,
       collection.maxItems ?? null,
       mapped,
+    );
+  }
+
+  async getPostBySlug(application: ApplicationEntity, slug: string): Promise<DeliveryContentResponseDto> {
+    const post = await this.postRepo.findOne({
+      where: { applicationId: application.id, slug, status: ContentStatus.PUBLISHED },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+    return this.mapPost(application, post);
+  }
+
+  async getArticleBySlug(application: ApplicationEntity, slug: string): Promise<DeliveryContentResponseDto> {
+    const article = await this.articleRepo.findOne({
+      where: { applicationId: application.id, slug, status: ContentStatus.PUBLISHED },
+    });
+    if (!article) {
+      throw new NotFoundException('Article not found.');
+    }
+    return this.mapArticle(application, article);
+  }
+
+  async getVideoById(application: ApplicationEntity, id: string): Promise<DeliveryContentResponseDto> {
+    const video = await this.videoRepo.findOne({
+      where: { applicationId: application.id, id, status: ContentStatus.PUBLISHED },
+    });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    return this.mapVideo(application, video);
+  }
+
+  async listGallery(
+    application: ApplicationEntity,
+    page: number,
+    size: number,
+  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
+    const gallery = (application.gallery || [])
+      .filter((item) => typeof item.url === 'string' && item.url.trim().length > 0)
+      .map(
+        (item) =>
+          new GalleryImageResponseDto(
+            item.url as string,
+            this.toOptionalString(item.alt),
+            this.toOptionalString(item.caption),
+          ),
+      );
+    const pageNumber = Math.max(0, page);
+    const pageSize = Math.max(1, size);
+    const start = pageNumber * pageSize;
+    const paged = gallery.slice(start, start + pageSize);
+    return new PageResponseDto(paged, gallery.length, Math.ceil(gallery.length / pageSize), pageNumber, pageSize);
+  }
+
+  async getGalleryItem(application: ApplicationEntity, index: number): Promise<GalleryImageResponseDto> {
+    const gallery = (application.gallery || []).filter(
+      (item) => typeof item.url === 'string' && item.url.trim().length > 0,
+    );
+    if (index < 0 || index >= gallery.length) {
+      throw new NotFoundException('Gallery item not found.');
+    }
+    const item = gallery[index];
+    return new GalleryImageResponseDto(
+      item.url as string,
+      this.toOptionalString(item.alt),
+      this.toOptionalString(item.caption),
     );
   }
 

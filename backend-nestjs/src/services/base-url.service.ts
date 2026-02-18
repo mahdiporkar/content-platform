@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationEntity } from '../entities/application.entity';
+import { MediaPolicy } from '../entities/application.entity';
 
 @Injectable()
 export class BaseUrlService {
@@ -14,14 +15,14 @@ export class BaseUrlService {
     );
     this.mediaBasePath = this.normalizePath(this.config.get<string>('MEDIA_BASE_PATH') || '/media');
     this.deliveryBasePath = this.normalizePath(
-      this.config.get<string>('DELIVERY_BASE_PATH') || '/delivery',
+      this.config.get<string>('CONTENT_BASE_PATH') ||
+      this.config.get<string>('DELIVERY_BASE_PATH') ||
+      '/api/v1/content',
     );
   }
 
   buildMediaUrl(application: ApplicationEntity, objectKey: string): string {
-    const baseUrl = this.normalizeBaseUrl(
-      application.mediaBaseUrlOverride || application.publicBaseUrlOverride || this.publicBaseUrl,
-    );
+    const baseUrl = this.resolveMediaBaseUrl(application);
     const objectPath = this.stripApplicationPrefix(application.id, objectKey);
     return `${baseUrl}${this.mediaBasePath}/${application.id}/${objectPath}`;
   }
@@ -51,5 +52,14 @@ export class BaseUrlService {
       return `/${path}`;
     }
     return path.replace(/\/$/, '');
+  }
+
+  private resolveMediaBaseUrl(application: ApplicationEntity): string {
+    if (application.mediaPolicy === MediaPolicy.JWT_REQUIRED) {
+      return this.normalizeBaseUrl(application.publicBaseUrlOverride || this.publicBaseUrl);
+    }
+    return this.normalizeBaseUrl(
+      application.mediaBaseUrlOverride || application.publicBaseUrlOverride || this.publicBaseUrl,
+    );
   }
 }

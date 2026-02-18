@@ -9,7 +9,6 @@ import { AdminArticleController } from './controllers/admin-article.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
 import { AdminUserController } from './controllers/admin-user.controller';
-import { PublicContentController } from './controllers/public-content.controller';
 import { AdminCollectionController } from './controllers/admin-collection.controller';
 import { AdminAppCollectionController } from './controllers/admin-app-collection.controller';
 import { AdminImageController } from './controllers/admin-image.controller';
@@ -23,7 +22,6 @@ import { AdminArticleService } from './services/admin-article.service';
 import { AdminVideoService } from './services/admin-video.service';
 import { AdminImageService } from './services/admin-image.service';
 import { AdminUserService } from './services/admin-user.service';
-import { PublicContentService } from './services/public-content.service';
 import { ApplicationEntity } from './entities/application.entity';
 import { AdminUserEntity } from './entities/admin-user.entity';
 import { AdminUserApplicationEntity } from './entities/admin-user-application.entity';
@@ -112,7 +110,6 @@ import { AdminAnalyticsService } from './services/admin-analytics.service';
     AdminMediaController,
     AdminUserController,
     AdminAnalyticsController,
-    PublicContentController,
     DeliveryContentController,
     MediaGatewayController,
   ],
@@ -130,7 +127,6 @@ import { AdminAnalyticsService } from './services/admin-analytics.service';
     AdminImageService,
     AdminUserService,
     AdminAnalyticsService,
-    PublicContentService,
     DeliveryContentService,
     BaseUrlService,
     DomainPolicyService,

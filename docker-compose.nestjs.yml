@@ -55,7 +55,7 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-media}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3001}
       MEDIA_BASE_PATH: ${MEDIA_BASE_PATH:-/media}
-      DELIVERY_BASE_PATH: ${DELIVERY_BASE_PATH:-/delivery}
+      CONTENT_BASE_PATH: ${CONTENT_BASE_PATH:-/api/v1/content}
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3001:3001"

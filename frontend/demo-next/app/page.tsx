@@ -1,29 +1,23 @@
+import AccessForm from "./components/access-form";
+
 export default function HomePage() {
   return (
     <section className="grid">
       <div className="card">
-        <span className="pill">Getting started</span>
-        <h2 className="title">Pick a tenant</h2>
+        <span className="pill">Access</span>
+        <h2 className="title">Application Credentials</h2>
         <p className="muted">
-          Use the seeded <strong>applicationId</strong> from the backend logs to explore
-          posts, articles, and videos.
+          Enter your <strong>applicationId</strong> and <strong>token</strong> to view
+          posts, articles, gallery, and photos.
         </p>
-        <p className="muted">
-          Example routes:
-          <br />
-          <code>/{`{applicationId}`}/posts</code>
-          <br />
-          <code>/{`{applicationId}`}/articles</code>
-          <br />
-          <code>/{`{applicationId}`}/videos</code>
-        </p>
+        <AccessForm />
       </div>
       <div className="card">
-        <span className="pill">Public APIs</span>
-        <h2 className="title">Read-only</h2>
+        <span className="pill">Required Headers</span>
+        <h2 className="title">Auth via token</h2>
         <p className="muted">
-          The demo reads only published content from the public endpoints. Drafts and
-          archived items remain hidden.
+          The demo sends <code>x-app-id</code> and <code>x-application-token</code>
+          with each request.
         </p>
       </div>
     </section>

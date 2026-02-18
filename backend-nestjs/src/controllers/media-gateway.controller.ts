@@ -1,12 +1,14 @@
-import { Controller, Get, NotFoundException, Param, Req, Res, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Req, Res, ForbiddenException, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApplicationEntity, ApplicationStatus } from '../entities/application.entity';
 import { MinioService } from '../services/minio.service';
 import { DomainPolicyService } from '../services/domain-policy.service';
+import { ApplicationTokenGuard } from '../auth/application-token.guard';
 
 @Controller('/media')
+@UseGuards(ApplicationTokenGuard)
 export class MediaGatewayController {
   constructor(
     @InjectRepository(ApplicationEntity)

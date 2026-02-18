@@ -41,7 +41,7 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Content Platform API')
     .setDescription(
-      'Admin endpoints use Bearer auth. Delivery endpoints require x-app-id (or path appId) and Authorization: Bearer <appToken>.'
+      'Admin endpoints use Bearer JWT. Content/Media access is controlled by application mediaPolicy: public, domain-locked, or JWT-required.'
     )
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')

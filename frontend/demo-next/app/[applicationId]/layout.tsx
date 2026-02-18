@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TenantNav from "./tenant-nav";
 
 export default function ApplicationLayout({
   children,
@@ -8,15 +9,15 @@ export default function ApplicationLayout({
   params: { applicationId: string };
 }) {
   const { applicationId } = params;
+
   return (
     <section className="list">
       <div className="card">
         <strong>Tenant</strong>
         <p className="muted">{applicationId}</p>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <Link href={`/${applicationId}/posts`}>Posts</Link>
-          <Link href={`/${applicationId}/articles`}>Articles</Link>
-          <Link href={`/${applicationId}/videos`}>Videos</Link>
+          <Link href="/">Change credentials</Link>
+          <TenantNav applicationId={applicationId} />
         </div>
       </div>
       {children}

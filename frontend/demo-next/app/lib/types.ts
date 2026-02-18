@@ -38,3 +38,23 @@ export type Video = {
   status: ContentStatus;
   presignedUrl?: string | null;
 };
+
+export type GalleryImage = {
+  url: string;
+  alt: string | null;
+  caption: string | null;
+};
+
+export type DeliveryContent = {
+  contentId: string;
+  appId: string;
+  type: string;
+  title: string;
+  description: string | null;
+  slug: string | null;
+  content: string | null;
+  mediaUrl: string | null;
+  posterUrl: string | null;
+  altText: string | null;
+  status: ContentStatus;
+};

@@ -98,6 +98,37 @@ a {
   font-size: 0.9rem;
 }
 
+.form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #fffcf7;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 600;
+  background: var(--accent-2);
+  color: #fff;
+  cursor: pointer;
+}
+
+.media-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
 @media (max-width: 720px) {
   .hero,
   .main {
