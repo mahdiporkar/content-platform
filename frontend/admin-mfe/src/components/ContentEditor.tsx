@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
+import { BubbleMenu, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -13,6 +13,7 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
+import { Button, Checkbox, Input, Modal, Space } from "antd";
 import { uploadMedia } from "../api/media";
 import type { MediaKind } from "../api/media";
 import type { MediaUploadResponse } from "../types";
@@ -284,9 +285,69 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   const [imageWidthValue, setImageWidthValue] = useState(100);
   const [showTablePicker, setShowTablePicker] = useState(false);
   const [tablePreview, setTablePreview] = useState({ rows: 0, cols: 0 });
+  const [tableModalOpen, setTableModalOpen] = useState(false);
+  const [tableModalRows, setTableModalRows] = useState(3);
+  const [tableModalCols, setTableModalCols] = useState(3);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(true);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const canUpload = Boolean(applicationId);
+
+  const guessKind = (file: File): MediaKind => {
+    const mime = (file.type || "").toLowerCase();
+    if (mime.startsWith("image/")) {
+      return "image";
+    }
+    if (mime.startsWith("video/")) {
+      return "video";
+    }
+    return "file";
+  };
+
+  const handleUpload = async (file: File, kind: MediaKind, editorOverride?: typeof editor) => {
+    const activeEditor = editorOverride ?? editor;
+    if (!canUpload || !applicationId || !activeEditor) {
+      setError("Application ID is required before uploading media.");
+      return;
+    }
+    setUploading(true);
+    setError(null);
+    try {
+      const response: MediaUploadResponse = await uploadMedia(file, applicationId, kind);
+      if (kind === "image") {
+        activeEditor
+          .chain()
+          .focus()
+          .setImage({ src: response.url, alt: file.name, width: "100%", align: "center", float: "none" })
+          .run();
+      } else if (kind === "video") {
+        activeEditor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "video",
+            attrs: { src: response.url, width: "100%", align: "center", float: "none" }
+          })
+          .run();
+      } else {
+        activeEditor
+          .chain()
+          .focus()
+          .insertContent(
+            `<a href="${response.url}" target="_blank" rel="noopener noreferrer">${file.name}</a>`
+          )
+          .run();
+      }
+    } catch {
+      setError("Media upload failed. Check your connection and try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const editor = useEditor({
     extensions: [
@@ -295,7 +356,12 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       Highlight,
       TextStyle,
       Color,
-      Link.configure({ openOnClick: false }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          rel: "noopener noreferrer"
+        }
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       ResizableImage,
       Table.configure({ resizable: true }),
@@ -317,50 +383,51 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           setImageWidthValue(Math.min(100, Math.max(20, numeric)));
         }
       }
+    },
+    editorProps: {
+      handlePaste: (_view, event) => {
+        const clipboard = event.clipboardData;
+        if (!clipboard) {
+          return false;
+        }
+        const files = Array.from(clipboard.files || []);
+        if (files.length > 0) {
+          void (async () => {
+            for (const file of files) {
+              await handleUpload(file, guessKind(file), editor);
+            }
+          })();
+          return true;
+        }
+        const text = clipboard.getData("text/plain")?.trim();
+        if (!text || !editor) {
+          return false;
+        }
+        if (/^https?:\/\//i.test(text) && !editor.state.selection.empty) {
+          editor.chain().focus().extendMarkRange("link").setLink({ href: text }).run();
+          return true;
+        }
+        return false;
+      },
+      handleDrop: (_view, event) => {
+        const transfer = event.dataTransfer;
+        if (!transfer) {
+          return false;
+        }
+        const files = Array.from(transfer.files || []);
+        if (files.length === 0) {
+          return false;
+        }
+        event.preventDefault();
+        void (async () => {
+          for (const file of files) {
+            await handleUpload(file, guessKind(file), editor);
+          }
+        })();
+        return true;
+      }
     }
   });
-
-  const canUpload = Boolean(applicationId);
-
-  const handleUpload = async (file: File, kind: MediaKind) => {
-    if (!canUpload || !applicationId || !editor) {
-      setError("Application ID is required before uploading media.");
-      return;
-    }
-    setUploading(true);
-    setError(null);
-    try {
-      const response: MediaUploadResponse = await uploadMedia(file, applicationId, kind);
-      if (kind === "image") {
-        editor
-          .chain()
-          .focus()
-          .setImage({ src: response.url, alt: file.name, width: "100%", align: "center", float: "none" })
-          .run();
-      } else if (kind === "video") {
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: "video",
-            attrs: { src: response.url, width: "100%", align: "center", float: "none" }
-          })
-          .run();
-      } else {
-        editor
-          .chain()
-          .focus()
-          .insertContent(
-            `<a href="${response.url}" target="_blank" rel="noopener noreferrer">${file.name}</a>`
-          )
-          .run();
-      }
-    } catch (err) {
-      setError("Media upload failed. Check your connection and try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, kind: MediaKind) => {
     const file = event.target.files?.[0];
@@ -370,20 +437,45 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
     event.target.value = "";
   };
 
-  const setLink = () => {
+  const openLinkModal = () => {
     if (!editor) {
       return;
     }
     const previousUrl = editor.getAttributes("link").href ?? "";
-    const url = window.prompt("Paste the link URL", previousUrl);
-    if (url === null) {
+    setLinkUrl(previousUrl);
+    const target = editor.getAttributes("link").target;
+    setLinkOpenInNewTab(target !== undefined ? target === "_blank" : true);
+    setLinkModalOpen(true);
+  };
+
+  const applyLink = () => {
+    if (!editor) {
       return;
     }
-    if (url === "") {
+    const url = linkUrl.trim();
+    if (!url) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      setLinkModalOpen(false);
       return;
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({
+        href: url,
+        target: linkOpenInNewTab ? "_blank" : undefined
+      })
+      .run();
+    setLinkModalOpen(false);
+  };
+
+  const removeLink = () => {
+    if (!editor) {
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setLinkModalOpen(false);
   };
 
   const insertTable = (rows: number, cols: number) => {
@@ -612,7 +704,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className="editor-group">
-          <IconButton label="Insert link" onClick={setLink}>
+          <IconButton label="Insert link" onClick={openLinkModal}>
             <Icon>
               <path d="M10 7h3v2h-3a2 2 0 1 0 0 4h3v2h-3a4 4 0 1 1 0-8zm4 0h3a4 4 0 1 1 0 8h-3v-2h3a2 2 0 1 0 0-4h-3V7zM11 10h2v4h-2v-4z" />
             </Icon>
@@ -625,7 +717,16 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             </Icon>
           </IconButton>
           <div className="table-picker">
-            <IconButton label="Insert table" onClick={() => setShowTablePicker((prev) => !prev)}>
+            <IconButton
+              label="Insert table"
+              onClick={() =>
+                setShowTablePicker((prev) => {
+                  const next = !prev;
+                  setTablePreview(next ? { rows: 3, cols: 3 } : { rows: 0, cols: 0 });
+                  return next;
+                })
+              }
+            >
               <Icon>
                 <path d="M4 5h16v14H4V5zm2 2v4h5V7H6zm7 0v4h5V7h-5zm-7 6v4h5v-4H6zm7 0v4h5v-4h-5z" />
               </Icon>
@@ -651,6 +752,20 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
                 </div>
                 <div className="table-picker__label">
                   {tablePreview.rows > 0 ? `${tablePreview.rows} x ${tablePreview.cols}` : "Select size"}
+                </div>
+                <div className="table-picker__actions">
+                  <button
+                    type="button"
+                    className="editor-button"
+                    onClick={() => {
+                      setTableModalRows(tablePreview.rows || 3);
+                      setTableModalCols(tablePreview.cols || 3);
+                      setTableModalOpen(true);
+                      setShowTablePicker(false);
+                    }}
+                  >
+                    More…
+                  </button>
                 </div>
               </div>
             )}
@@ -947,7 +1062,141 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
         {uploading && <div className="asset-status">Uploading...</div>}
       </div>
       {error && <div className="editor-error">{error}</div>}
-      <EditorContent editor={editor} className="editor-content" />
+      <div className="editor-content editor-content--relative">
+        {editor.isEmpty && (
+          <div className="editor-placeholder">
+            Start writing… Tip: paste images, or drag & drop files here.
+          </div>
+        )}
+        <BubbleMenu
+          editor={editor}
+          tippyOptions={{ duration: 100, placement: "top" }}
+          shouldShow={({ editor: tiptap }) => {
+            if (!tiptap.isFocused) {
+              return false;
+            }
+            if (tiptap.isActive("table")) {
+              return true;
+            }
+            if (tiptap.state.selection.empty) {
+              return false;
+            }
+            return true;
+          }}
+        >
+          <div className="editor-bubble">
+            <button
+              type="button"
+              className={`editor-button icon ${editor.isActive("bold") ? "active" : ""}`}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              aria-label="Bold"
+            >
+              <span className="editor-text">B</span>
+            </button>
+            <button
+              type="button"
+              className={`editor-button icon ${editor.isActive("italic") ? "active" : ""}`}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              aria-label="Italic"
+            >
+              <span className="editor-text">I</span>
+            </button>
+            <button
+              type="button"
+              className={`editor-button icon ${editor.isActive("underline") ? "active" : ""}`}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              aria-label="Underline"
+            >
+              <span className="editor-text">U</span>
+            </button>
+            <button
+              type="button"
+              className={`editor-button icon ${editor.isActive("link") ? "active" : ""}`}
+              onClick={openLinkModal}
+              aria-label="Link"
+            >
+              <span className="editor-text">🔗</span>
+            </button>
+            <div className="editor-bubble__divider" />
+            <button
+              type="button"
+              className="editor-button"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              disabled={!editor.isActive("table")}
+            >
+              + Row
+            </button>
+            <button
+              type="button"
+              className="editor-button"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              disabled={!editor.isActive("table")}
+            >
+              + Col
+            </button>
+          </div>
+        </BubbleMenu>
+        <EditorContent editor={editor} />
+      </div>
+
+      <Modal
+        open={linkModalOpen}
+        onCancel={() => setLinkModalOpen(false)}
+        onOk={applyLink}
+        okText={editor.isActive("link") ? "Update link" : "Add link"}
+        title="Link"
+      >
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Input
+            value={linkUrl}
+            onChange={(event) => setLinkUrl(event.target.value)}
+            placeholder="https://example.com"
+            autoFocus
+          />
+          <Checkbox checked={linkOpenInNewTab} onChange={(event) => setLinkOpenInNewTab(event.target.checked)}>
+            Open in new tab
+          </Checkbox>
+          <Space>
+            <Button danger onClick={removeLink} disabled={!editor.isActive("link")}>
+              Remove link
+            </Button>
+          </Space>
+        </Space>
+      </Modal>
+
+      <Modal
+        open={tableModalOpen}
+        onCancel={() => setTableModalOpen(false)}
+        onOk={() => {
+          const rows = Math.max(1, Math.min(50, Number(tableModalRows) || 1));
+          const cols = Math.max(1, Math.min(20, Number(tableModalCols) || 1));
+          insertTable(rows, cols);
+          setTableModalOpen(false);
+        }}
+        okText="Insert"
+        title="Insert table"
+      >
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Space>
+            <span style={{ width: 70 }}>Rows</span>
+            <Input
+              inputMode="numeric"
+              value={String(tableModalRows)}
+              onChange={(event) => setTableModalRows(Number(event.target.value.replace(/[^\d]/g, "")) || 1)}
+              style={{ width: 120 }}
+            />
+          </Space>
+          <Space>
+            <span style={{ width: 70 }}>Cols</span>
+            <Input
+              inputMode="numeric"
+              value={String(tableModalCols)}
+              onChange={(event) => setTableModalCols(Number(event.target.value.replace(/[^\d]/g, "")) || 1)}
+              style={{ width: 120 }}
+            />
+          </Space>
+        </Space>
+      </Modal>
       <input
         ref={imageInputRef}
         type="file"

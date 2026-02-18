@@ -16,6 +16,8 @@ module.exports = {
   },
   devServer: {
     port: 5173,
+    hot: false,
+    liveReload: true,
     historyApiFallback: true,
     proxy: [
       {

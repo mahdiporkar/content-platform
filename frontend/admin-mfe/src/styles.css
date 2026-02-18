@@ -237,6 +237,9 @@ a {
   padding: 12px;
   background: #fafafa;
   border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 5;
+  overflow: visible;
 }
 
 .editor-group {
@@ -385,6 +388,8 @@ a {
   box-shadow: 0 12px 24px var(--shadow);
   z-index: 20;
   width: 190px;
+  max-height: 280px;
+  overflow: auto;
 }
 
 .table-picker__grid {
@@ -397,14 +402,19 @@ a {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  border: 1px solid var(--border);
-  background: #fff;
+  border: 1px solid #bfc8d4;
+  background: #fdfefe;
   cursor: pointer;
 }
 
+.table-picker__cell:hover {
+  border-color: #7fb8ff;
+  background: #eef6ff;
+}
+
 .table-picker__cell.active {
-  background: rgba(31, 111, 139, 0.18);
-  border-color: var(--primary);
+  background: rgba(24, 144, 255, 0.2);
+  border-color: #1890ff;
 }
 
 .table-picker__label {
@@ -414,15 +424,80 @@ a {
   text-align: center;
 }
 
+.table-picker__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 .editor-content {
   padding: 18px;
   min-height: 320px;
+  overflow-x: auto;
+}
+
+.editor-content--relative {
+  position: relative;
+}
+
+.editor-placeholder {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.editor-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.editor-bubble__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
 }
 
 .editor-content .ProseMirror {
   outline: none;
   min-height: 260px;
   line-height: 1.65;
+}
+
+.editor-content .ProseMirror p {
+  margin: 10px 0;
+}
+
+.editor-content .ProseMirror ul,
+.editor-content .ProseMirror ol {
+  padding-left: 22px;
+  margin: 10px 0;
+}
+
+.editor-content .ProseMirror li {
+  margin: 6px 0;
+}
+
+.editor-content .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
+.editor-content .ProseMirror code {
+  background: rgba(24, 144, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.95em;
 }
 
 .editor-content .ProseMirror h1 {
@@ -643,8 +718,19 @@ a {
 
 .editor-content .ProseMirror table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   margin: 12px 0;
+  table-layout: fixed;
+  border: 1px solid #8f9aa8;
+}
+
+.editor-content .ProseMirror .tableWrapper {
+  margin: 12px 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
 }
 
 .editor-content .ProseMirror .column-resize-handle {
@@ -653,8 +739,10 @@ a {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: rgba(31, 111, 139, 0.2);
-  pointer-events: none;
+  background: rgba(24, 144, 255, 0.45);
+  pointer-events: auto;
+  cursor: col-resize;
+  z-index: 2;
 }
 
 .editor-content .ProseMirror.resize-cursor {
@@ -663,8 +751,24 @@ a {
 
 .editor-content .ProseMirror th,
 .editor-content .ProseMirror td {
-  border: 1px solid var(--border);
-  padding: 8px;
+  border: 1px solid #8f9aa8;
+  padding: 8px 10px;
+  min-width: 120px;
+  vertical-align: top;
+  position: relative;
+}
+
+.editor-content .ProseMirror th {
+  background: #f2f6fa;
+  font-weight: 600;
+}
+
+.editor-content .ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(24, 144, 255, 0.7);
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {
