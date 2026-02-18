@@ -55,7 +55,7 @@ export class DeliveryContentController {
     @Query() query: Record<string, string | string[]>,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     const type = (query.type as ContentType | undefined) ?? undefined;
     const collectionSlug = query.collection as string | undefined;
     const locale = query.locale as string | undefined;
@@ -80,7 +80,7 @@ export class DeliveryContentController {
     @Param('slug') slug: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.getPostBySlug(application, slug);
   }
 
@@ -90,7 +90,7 @@ export class DeliveryContentController {
     @Param('slug') slug: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.getArticleBySlug(application, slug);
   }
 
@@ -100,7 +100,7 @@ export class DeliveryContentController {
     @Param('id') id: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.getVideoById(application, id);
   }
 
@@ -111,7 +111,7 @@ export class DeliveryContentController {
     @Query('size') size = '10',
   ): Promise<PageResponseDto<GalleryImageResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.listGallery(application, Number(page), Number(size));
   }
 
@@ -121,7 +121,7 @@ export class DeliveryContentController {
     @Param('index') index: string,
   ): Promise<GalleryImageResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.getGalleryItem(application, Number(index));
   }
 
@@ -132,7 +132,7 @@ export class DeliveryContentController {
     @Query('locale') locale?: string,
   ): Promise<DeliveryCollectionResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.getCollection(application, slug, locale);
   }
 
@@ -154,7 +154,7 @@ export class DeliveryContentController {
     locale?: string,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request);
+    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
     return await this.deliveryService.listContent({
       application,
       type,

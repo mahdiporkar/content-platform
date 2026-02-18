@@ -17,7 +17,8 @@ export async function apiFetch<T>(path: string, auth: ApiAuth): Promise<T> {
   const url = `${apiBaseUrl}${path}`;
   const headers = {
     "x-app-id": auth.applicationId,
-    "x-application-token": auth.token
+    "x-application-token": auth.token,
+    Authorization: `Bearer ${auth.token}`
   };
 
   console.log("[contentplatform:req]", {
@@ -36,7 +37,10 @@ export async function apiFetch<T>(path: string, auth: ApiAuth): Promise<T> {
 
   const contentType = response.headers.get("content-type") || "";
   const rawBody = await response.text();
-  const parsedBody = contentType.includes("application/json") ? JSON.parse(rawBody) : rawBody;
+  let parsedBody: unknown = rawBody;
+  if (contentType.includes("application/json") && rawBody.trim().length > 0) {
+    parsedBody = JSON.parse(rawBody);
+  }
 
   console.log("[contentplatform:res]", {
     url,
@@ -46,7 +50,14 @@ export async function apiFetch<T>(path: string, auth: ApiAuth): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    const errorMessage =
+      typeof parsedBody === "object" &&
+      parsedBody !== null &&
+      "message" in parsedBody &&
+      typeof (parsedBody as { message?: unknown }).message === "string"
+        ? (parsedBody as { message: string }).message
+        : "Unknown error";
+    throw new Error(`Request failed: ${response.status} ${errorMessage} (${url})`);
   }
 
   return parsedBody as T;
