@@ -45,7 +45,8 @@ public class AdminVideoController {
                                                 @RequestParam("title") String title,
                                                 @RequestParam(value = "description", required = false) String description,
                                                 @RequestParam("applicationId") String applicationId,
-                                                @RequestParam("status") ContentStatus status) throws IOException {
+                                                @RequestParam("status") ContentStatus status,
+                                                @RequestParam(value = "locale", required = false) String locale) throws IOException {
         SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
         SecurityUtils.requireApplicationAccess(applicationId);
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
@@ -54,6 +55,7 @@ public class AdminVideoController {
             title,
             description,
             status,
+            locale,
             file.getOriginalFilename(),
             file.getContentType() == null ? "application/octet-stream" : file.getContentType(),
             file.getSize(),

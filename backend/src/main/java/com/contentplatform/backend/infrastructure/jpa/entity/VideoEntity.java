@@ -26,6 +26,9 @@ public class VideoEntity {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
+    @Column(name = "locale", nullable = false, length = 5)
+    private String locale;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ContentStatus status;
@@ -51,13 +54,14 @@ public class VideoEntity {
     protected VideoEntity() {
     }
 
-    public VideoEntity(String id, String applicationId, String title, String description,
+    public VideoEntity(String id, String applicationId, String title, String description, String locale,
                        ContentStatus status, Instant publishedAt, String objectKey,
                        String contentType, long sizeBytes, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
         this.description = description;
+        this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
         this.objectKey = objectKey;
@@ -81,6 +85,10 @@ public class VideoEntity {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

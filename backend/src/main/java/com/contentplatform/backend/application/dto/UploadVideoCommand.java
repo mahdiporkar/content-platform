@@ -9,6 +9,7 @@ public class UploadVideoCommand {
     private final String title;
     private final String description;
     private final ContentStatus status;
+    private final String locale;
     private final String originalFileName;
     private final String contentType;
     private final long sizeBytes;
@@ -18,6 +19,7 @@ public class UploadVideoCommand {
                               String title,
                               String description,
                               ContentStatus status,
+                              String locale,
                               String originalFileName,
                               String contentType,
                               long sizeBytes,
@@ -26,6 +28,7 @@ public class UploadVideoCommand {
         this.title = title;
         this.description = description;
         this.status = status;
+        this.locale = locale;
         this.originalFileName = originalFileName;
         this.contentType = contentType;
         this.sizeBytes = sizeBytes;
@@ -46,6 +49,10 @@ public class UploadVideoCommand {
 
     public ContentStatus getStatus() {
         return status;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public String getOriginalFileName() {

@@ -9,6 +9,7 @@ public class VideoResponse {
     private final String applicationId;
     private final String title;
     private final String description;
+    private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
     private final String objectKey;
@@ -22,6 +23,7 @@ public class VideoResponse {
                          String applicationId,
                          String title,
                          String description,
+                         String locale,
                          ContentStatus status,
                          Instant publishedAt,
                          String objectKey,
@@ -34,6 +36,7 @@ public class VideoResponse {
         this.applicationId = applicationId;
         this.title = title;
         this.description = description;
+        this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
         this.objectKey = objectKey;
@@ -58,6 +61,10 @@ public class VideoResponse {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

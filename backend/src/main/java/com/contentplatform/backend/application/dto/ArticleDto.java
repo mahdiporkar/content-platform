@@ -10,6 +10,7 @@ public class ArticleDto {
     private final String title;
     private final String slug;
     private final String content;
+    private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
     private final Instant createdAt;
@@ -20,6 +21,7 @@ public class ArticleDto {
                       String title,
                       String slug,
                       String content,
+                      String locale,
                       ContentStatus status,
                       Instant publishedAt,
                       Instant createdAt,
@@ -29,6 +31,7 @@ public class ArticleDto {
         this.title = title;
         this.slug = slug;
         this.content = content;
+        this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
         this.createdAt = createdAt;
@@ -53,6 +56,10 @@ public class ArticleDto {
 
     public String getContent() {
         return content;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

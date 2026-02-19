@@ -29,6 +29,9 @@ public class ArticleEntity {
     @Column(name = "content", nullable = false, columnDefinition = "text")
     private String content;
 
+    @Column(name = "locale", nullable = false, length = 5)
+    private String locale;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ContentStatus status;
@@ -45,13 +48,14 @@ public class ArticleEntity {
     protected ArticleEntity() {
     }
 
-    public ArticleEntity(String id, String applicationId, String title, String slug, String content,
+    public ArticleEntity(String id, String applicationId, String title, String slug, String content, String locale,
                          ContentStatus status, Instant publishedAt, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
         this.slug = slug;
         this.content = content;
+        this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
         this.createdAt = createdAt;
@@ -76,6 +80,10 @@ public class ArticleEntity {
 
     public String getContent() {
         return content;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

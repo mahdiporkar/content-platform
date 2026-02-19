@@ -9,14 +9,16 @@ public class UpdateArticleCommand {
     private final String slug;
     private final String content;
     private final ContentStatus status;
+    private final String locale;
 
-    public UpdateArticleCommand(String id, String applicationId, String title, String slug, String content, ContentStatus status) {
+    public UpdateArticleCommand(String id, String applicationId, String title, String slug, String content, ContentStatus status, String locale) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
         this.slug = slug;
         this.content = content;
         this.status = status;
+        this.locale = locale;
     }
 
     public String getId() {
@@ -41,5 +43,9 @@ public class UpdateArticleCommand {
 
     public ContentStatus getStatus() {
         return status;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 }

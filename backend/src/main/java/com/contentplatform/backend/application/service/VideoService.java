@@ -5,6 +5,7 @@ import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UploadVideoCommand;
 import com.contentplatform.backend.application.dto.VideoDto;
+import com.contentplatform.backend.application.exception.BadRequestException;
 import com.contentplatform.backend.application.exception.ForbiddenException;
 import com.contentplatform.backend.application.exception.NotFoundException;
 import com.contentplatform.backend.application.mapper.ContentMapper;
@@ -15,6 +16,7 @@ import com.contentplatform.backend.application.port.out.PageSlice;
 import com.contentplatform.backend.application.port.out.TimeProvider;
 import com.contentplatform.backend.application.port.out.VideoRepository;
 import com.contentplatform.backend.domain.model.Video;
+import com.contentplatform.backend.domain.value.ContentLocale;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,9 @@ public class VideoService implements VideoUseCase {
     @Override
     public VideoDto upload(UploadVideoCommand command, List<String> allowedApplicationIds) {
         enforceTenant(command.getApplicationId(), allowedApplicationIds);
+        if (command.getLocale() != null && !command.getLocale().isBlank() && !ContentLocale.isSupported(command.getLocale())) {
+            throw new BadRequestException("Locale is not supported");
+        }
         Instant now = timeProvider.now();
         String objectKey = buildObjectKey(command.getApplicationId(), command.getOriginalFileName());
         MediaUploadResult result = mediaStoragePort.upload(
@@ -62,6 +67,7 @@ public class VideoService implements VideoUseCase {
             command.getApplicationId(),
             command.getTitle(),
             command.getDescription(),
+            ContentLocale.normalizeOrDefault(command.getLocale()),
             command.getStatus(),
             publishedAt,
             result.objectKey(),
@@ -84,6 +90,7 @@ public class VideoService implements VideoUseCase {
             existing.getApplicationId(),
             existing.getTitle(),
             existing.getDescription(),
+            existing.getLocale(),
             command.getStatus(),
             publishedAt,
             existing.getObjectKey(),

@@ -10,18 +10,20 @@ public class PostResponse {
     private final String title;
     private final String slug;
     private final String content;
+    private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
     private final Instant createdAt;
     private final Instant updatedAt;
 
-    public PostResponse(String id, String applicationId, String title, String slug, String content,
+    public PostResponse(String id, String applicationId, String title, String slug, String content, String locale,
                         ContentStatus status, Instant publishedAt, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
         this.slug = slug;
         this.content = content;
+        this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
         this.createdAt = createdAt;
@@ -46,6 +48,10 @@ public class PostResponse {
 
     public String getContent() {
         return content;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

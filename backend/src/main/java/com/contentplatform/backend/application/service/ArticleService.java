@@ -14,6 +14,7 @@ import com.contentplatform.backend.application.port.out.ArticleRepository;
 import com.contentplatform.backend.application.port.out.PageSlice;
 import com.contentplatform.backend.application.port.out.TimeProvider;
 import com.contentplatform.backend.domain.model.Article;
+import com.contentplatform.backend.domain.value.ContentLocale;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,7 @@ public class ArticleService implements ArticleUseCase {
             command.getTitle(),
             command.getSlug(),
             command.getContent(),
+            ContentLocale.normalizeOrDefault(command.getLocale()),
             command.getStatus(),
             publishedAt,
             now,
@@ -64,6 +66,7 @@ public class ArticleService implements ArticleUseCase {
             command.getTitle(),
             command.getSlug(),
             command.getContent(),
+            ContentLocale.normalizeOrDefault(command.getLocale()),
             command.getStatus(),
             publishedAt,
             existing.getCreatedAt(),
@@ -84,6 +87,7 @@ public class ArticleService implements ArticleUseCase {
             existing.getTitle(),
             existing.getSlug(),
             existing.getContent(),
+            existing.getLocale(),
             command.getStatus(),
             publishedAt,
             existing.getCreatedAt(),

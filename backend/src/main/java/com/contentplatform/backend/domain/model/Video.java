@@ -10,6 +10,7 @@ public class Video {
     private final String applicationId;
     private final String title;
     private final String description;
+    private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
     private final String objectKey;
@@ -22,6 +23,7 @@ public class Video {
                  String applicationId,
                  String title,
                  String description,
+                 String locale,
                  ContentStatus status,
                  Instant publishedAt,
                  String objectKey,
@@ -33,6 +35,7 @@ public class Video {
         this.applicationId = Objects.requireNonNull(applicationId, "applicationId must not be null");
         this.title = Objects.requireNonNull(title, "title must not be null");
         this.description = description;
+        this.locale = Objects.requireNonNull(locale, "locale must not be null");
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.publishedAt = publishedAt;
         this.objectKey = Objects.requireNonNull(objectKey, "objectKey must not be null");
@@ -56,6 +59,10 @@ public class Video {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {

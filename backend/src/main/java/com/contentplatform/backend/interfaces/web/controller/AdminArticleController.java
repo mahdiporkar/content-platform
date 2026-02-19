@@ -51,7 +51,8 @@ public class AdminArticleController {
                 request.getTitle(),
                 request.getSlug(),
                 request.getContent(),
-                request.getStatus()
+                request.getStatus(),
+                request.getLocale()
             ),
             allowed
         );
@@ -70,7 +71,8 @@ public class AdminArticleController {
                 request.getTitle(),
                 request.getSlug(),
                 request.getContent(),
-                request.getStatus()
+                request.getStatus(),
+                request.getLocale()
             ),
             allowed
         );

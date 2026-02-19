@@ -11,6 +11,7 @@ public class Post {
     private final String title;
     private final String slug;
     private final String content;
+    private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
     private final Instant createdAt;
@@ -21,6 +22,7 @@ public class Post {
                 String title,
                 String slug,
                 String content,
+                String locale,
                 ContentStatus status,
                 Instant publishedAt,
                 Instant createdAt,
@@ -30,6 +32,7 @@ public class Post {
         this.title = Objects.requireNonNull(title, "title must not be null");
         this.slug = Objects.requireNonNull(slug, "slug must not be null");
         this.content = Objects.requireNonNull(content, "content must not be null");
+        this.locale = Objects.requireNonNull(locale, "locale must not be null");
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.publishedAt = publishedAt;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
@@ -54,6 +57,10 @@ public class Post {
 
     public String getContent() {
         return content;
+    }
+
+    public String getLocale() {
+        return locale;
     }
 
     public ContentStatus getStatus() {
