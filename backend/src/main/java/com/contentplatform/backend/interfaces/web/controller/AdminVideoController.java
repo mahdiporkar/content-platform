@@ -60,7 +60,7 @@ public class AdminVideoController {
             file.getInputStream()
         );
         VideoDto dto = videoUseCase.upload(command, allowed);
-        return ResponseEntity.ok(mapper.toVideoResponse(dto, null));
+        return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
     @PatchMapping("/{id}/status")
@@ -69,7 +69,7 @@ public class AdminVideoController {
         SecurityUtils.requireApplicationAccess(request.getApplicationId());
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         VideoDto dto = videoUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
-        return ResponseEntity.ok(mapper.toVideoResponse(dto, null));
+        return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
     @GetMapping
@@ -80,6 +80,6 @@ public class AdminVideoController {
         SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
         SecurityUtils.requireApplicationAccess(applicationId);
         PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size));
-        return ResponseEntity.ok(mapper.toVideoPage(result, video -> null));
+        return ResponseEntity.ok(mapper.toVideoPage(result, video -> videoUseCase.getPresignedUrl(video.getObjectKey())));
     }
 }
