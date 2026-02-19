@@ -1,11 +1,35 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Form, Input, Modal, Select, Space, Table, Typography, Upload } from "antd";
+import { Button, Card, Form, Image, Input, Modal, Select, Space, Table, Typography, Upload } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { UploadOutlined } from "@ant-design/icons";
 import client from "../../api/client";
 import { ImageContent } from "../../types";
 import { useTenant } from "../../app/tenant";
+
+const resolveBackendOrigin = (): string => {
+  const apiBase = (process.env.API_BASE_URL || "").trim();
+  if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
+    try {
+      return new URL(apiBase).origin;
+    } catch {
+      return window.location.origin;
+    }
+  }
+  return window.location.origin;
+};
+
+const toGatewayMediaUrl = (image: ImageContent): string => {
+  const objectPath = image.objectKey.startsWith(`${image.applicationId}/`)
+    ? image.objectKey.slice(image.applicationId.length + 1)
+    : image.objectKey;
+  const encodedPath = objectPath
+    .split("/")
+    .filter(Boolean)
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `${resolveBackendOrigin()}/media/${encodeURIComponent(image.applicationId)}/${encodedPath}`;
+};
 
 export const ImagesListPage = () => {
   const navigate = useNavigate();
@@ -53,9 +77,28 @@ export const ImagesListPage = () => {
 
   const columns = useMemo<ColumnsType<ImageContent>>(
     () => [
-      { title: "Title", dataIndex: "title", width: "35%" },
-      { title: "Status", dataIndex: "status", width: "15%" },
-      { title: "Views", dataIndex: "viewCount", width: "10%" },
+      {
+        title: "Preview",
+        key: "preview",
+        width: "10%",
+        render: (_, image) =>
+          image.mediaUrl || image.objectKey ? (
+            <Image
+              src={image.mediaUrl ?? toGatewayMediaUrl(image)}
+              fallback={toGatewayMediaUrl(image)}
+              alt={image.altText ?? image.title}
+              width={72}
+              height={48}
+              style={{ objectFit: "cover", borderRadius: 6 }}
+              preview={{ mask: "Preview" }}
+            />
+          ) : (
+            <Typography.Text type="secondary">-</Typography.Text>
+          )
+      },
+      { title: "Title", dataIndex: "title", width: "28%" },
+      { title: "Status", dataIndex: "status", width: "12%" },
+      { title: "Views", dataIndex: "viewCount", width: "8%" },
       {
         title: "Media",
         dataIndex: "mediaUrl",
@@ -72,7 +115,7 @@ export const ImagesListPage = () => {
       {
         title: "Actions",
         key: "actions",
-        width: "20%",
+        width: "14%",
         render: (_, image) => (
           <Space size="small">
             <Button type="text" onClick={() => navigate(`/images/${image.id}`)}>

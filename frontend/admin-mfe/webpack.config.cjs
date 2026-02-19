@@ -4,6 +4,20 @@ const webpack = require("webpack");
 const { ModuleFederationPlugin } = require("webpack").container;
 const deps = require("./package.json").dependencies;
 
+const resolveProxyTarget = () => {
+  const explicit = process.env.API_PROXY_TARGET;
+  if (explicit) {
+    return explicit;
+  }
+  const apiBaseUrl = process.env.API_BASE_URL;
+  if (apiBaseUrl && /^https?:\/\//.test(apiBaseUrl)) {
+    return apiBaseUrl;
+  }
+  return "http://localhost:3000";
+};
+
+const proxyTarget = resolveProxyTarget();
+
 module.exports = {
   entry: path.resolve(__dirname, "src", "main.tsx"),
   output: {
@@ -21,8 +35,8 @@ module.exports = {
     historyApiFallback: true,
     proxy: [
       {
-        context: ["/api"],
-        target: "http://localhost:3000",
+        context: ["/api", "/media"],
+        target: proxyTarget,
         changeOrigin: true
       }
     ]
