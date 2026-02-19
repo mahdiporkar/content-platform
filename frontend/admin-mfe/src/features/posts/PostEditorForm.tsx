@@ -5,6 +5,7 @@ import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, Post, SeoMeta } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
+import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -36,6 +37,7 @@ export const PostEditorForm = ({
   const [seo, setSeo] = useState<SeoMeta>(initialPost?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(initialPost?.gallery ?? []);
   const [status, setStatus] = useState<ContentStatus>(initialPost?.status ?? "DRAFT");
+  const [locale, setLocale] = useState<ContentLocale>((initialPost?.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export const PostEditorForm = ({
     }
     setSaving(true);
     setError(null);
-    const payload = { applicationId, title, description, slug, content, status, bannerUrl, tags, seo, gallery };
+    const payload = { applicationId, title, description, slug, content, status, locale, bannerUrl, tags, seo, gallery };
     try {
       if (mode === "create") {
         await client.post("/api/v1/admin/posts", payload);
@@ -136,18 +138,23 @@ export const PostEditorForm = ({
           />
         </Form.Item>
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item label="Slug" required>
               <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item label="Status">
               <Select
                 value={status}
                 onChange={(value) => setStatus(value)}
                 options={statusOptions.map((option) => ({ value: option, label: option }))}
               />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="Language" required>
+              <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
             </Form.Item>
           </Col>
         </Row>

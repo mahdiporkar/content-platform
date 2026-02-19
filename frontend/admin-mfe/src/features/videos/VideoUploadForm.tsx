@@ -5,6 +5,7 @@ import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta } from "../../types";
+import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -18,6 +19,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ContentStatus>("DRAFT");
+  const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -60,6 +62,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     payload.append("description", description);
     payload.append("applicationId", applicationId);
     payload.append("status", status);
+    payload.append("locale", locale);
     if (tags.length > 0) {
       payload.append("tags", JSON.stringify(tags));
     }
@@ -116,6 +119,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
             onChange={(value) => setStatus(value)}
             options={statusOptions.map((option) => ({ value: option, label: option }))}
           />
+        </Form.Item>
+        <Form.Item label="Language" required>
+          <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
         </Form.Item>
         <Form.Item
           label="Video File"

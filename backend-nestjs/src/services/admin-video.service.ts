@@ -11,6 +11,7 @@ import { VideoEntity } from '../entities/video.entity';
 import { MinioService } from './minio.service';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
+import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
 
 @Injectable()
 export class AdminVideoService {
@@ -71,9 +72,13 @@ export class AdminVideoService {
     tags?: string[],
     seo?: Record<string, unknown>,
     gallery?: Record<string, unknown>[],
+    locale?: string,
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
+    }
+    if (locale && !isSupportedContentLocale(locale)) {
+      throw new BadRequestException('Locale is not supported.');
     }
     const upload = await this.minioService.upload(applicationId, 'video', file);
     const video = this.videoRepo.create({
@@ -81,7 +86,7 @@ export class AdminVideoService {
       applicationId,
       title: title.trim(),
       description: description?.trim() || null,
-      locale: null,
+      locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
       seo: seo ?? null,
       gallery: gallery ?? null,
@@ -132,7 +137,7 @@ export class AdminVideoService {
     }
     video.title = request.title.trim();
     video.description = request.description?.trim() || null;
-    video.locale = request.locale?.trim() || null;
+    video.locale = normalizeContentLocale(request.locale);
     video.posterKey = request.posterKey?.trim() || null;
     video.durationSeconds = request.durationSeconds ?? null;
     video.width = request.width ?? null;

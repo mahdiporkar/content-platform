@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ContentStatus } from '../../common/content-status.enum';
+import { SUPPORTED_CONTENT_LOCALES } from '../../common/content-locale.constants';
 import { GalleryImageDto } from './gallery-image.dto';
 import { SeoMetaDto } from './seo-meta.dto';
 
@@ -14,6 +15,7 @@ export class ImageUpdateRequestDto {
 
   @IsOptional()
   @IsString()
+  @IsIn(SUPPORTED_CONTENT_LOCALES)
   locale?: string;
 
   @IsOptional()

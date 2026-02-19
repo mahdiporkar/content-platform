@@ -8,6 +8,7 @@ import { ContentStatus } from '../common/content-status.enum';
 import { ArticleResponseDto } from '../dto/responses/article-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { ArticleEntity } from '../entities/article.entity';
+import { normalizeContentLocale } from '../common/content-locale.constants';
 
 @Injectable()
 export class AdminArticleService {
@@ -57,7 +58,7 @@ export class AdminArticleService {
       content: request.content,
       bannerUrl: request.bannerUrl?.trim() || null,
       bannerKey: request.bannerKey?.trim() || null,
-      locale: request.locale?.trim() || null,
+      locale: normalizeContentLocale(request.locale),
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
       gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
@@ -80,7 +81,7 @@ export class AdminArticleService {
     article.content = request.content;
     article.bannerUrl = request.bannerUrl?.trim() || null;
     article.bannerKey = request.bannerKey?.trim() || null;
-    article.locale = request.locale?.trim() || null;
+    article.locale = normalizeContentLocale(request.locale);
     article.tags = this.normalizeTags(request.tags);
     article.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
     article.gallery = request.gallery

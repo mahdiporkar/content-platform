@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Form, Input, Select, Space, Typography } from "antd";
 import client from "../../api/client";
 import { ImageContent } from "../../types";
+import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
 export const ImageEditorPage = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export const ImageEditorPage = () => {
     await client.put(`/api/v1/admin/images/${params.id}`, {
       title: image.title,
       description: image.description ?? undefined,
-      locale: image.locale ?? undefined,
+      locale: image.locale ?? DEFAULT_CONTENT_LOCALE,
       width: image.width ?? undefined,
       height: image.height ?? undefined,
       altText: image.altText ?? undefined,
@@ -79,7 +80,11 @@ export const ImageEditorPage = () => {
           />
         </Form.Item>
         <Form.Item label="Locale">
-          <Input value={image.locale ?? ""} onChange={(event) => setImage({ ...image, locale: event.target.value })} />
+          <Select
+            value={(image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE}
+            onChange={(value) => setImage({ ...image, locale: value })}
+            options={CONTENT_LOCALE_OPTIONS}
+          />
         </Form.Item>
         <Form.Item label="Alt Text">
           <Input value={image.altText ?? ""} onChange={(event) => setImage({ ...image, altText: event.target.value })} />

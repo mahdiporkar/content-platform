@@ -50,8 +50,14 @@ export const ArticlesListPage = () => {
       {
         title: "Slug",
         dataIndex: "slug",
-        width: "25%",
+        width: "21%",
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
+      },
+      {
+        title: "Locale",
+        dataIndex: "locale",
+        width: "9%",
+        render: (value?: string | null) => value || "fa"
       },
       {
         title: "Status",

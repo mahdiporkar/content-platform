@@ -6,6 +6,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import client from "../../api/client";
 import { ImageContent } from "../../types";
 import { useTenant } from "../../app/tenant";
+import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
 const resolveBackendOrigin = (): string => {
   const apiBase = (process.env.API_BASE_URL || "").trim();
@@ -40,6 +41,7 @@ export const ImagesListPage = () => {
   const [fileList, setFileList] = useState<File[]>([]);
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("DRAFT");
+  const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
 
   const fetchImages = useCallback(async () => {
     if (!applicationId) {
@@ -66,12 +68,14 @@ export const ImagesListPage = () => {
     payload.append("title", title.trim());
     payload.append("applicationId", applicationId);
     payload.append("status", status);
+    payload.append("locale", locale);
     await client.post("/api/v1/admin/images/upload", payload, {
       headers: { "Content-Type": "multipart/form-data" }
     });
     setUploadOpen(false);
     setFileList([]);
     setTitle("");
+    setLocale(DEFAULT_CONTENT_LOCALE);
     await fetchImages();
   };
 
@@ -97,6 +101,7 @@ export const ImagesListPage = () => {
           )
       },
       { title: "Title", dataIndex: "title", width: "28%" },
+      { title: "Locale", dataIndex: "locale", width: "8%", render: (value?: string | null) => value || "fa" },
       { title: "Status", dataIndex: "status", width: "12%" },
       { title: "Views", dataIndex: "viewCount", width: "8%" },
       {
@@ -167,6 +172,9 @@ export const ImagesListPage = () => {
                 { value: "SCHEDULED", label: "Scheduled" }
               ]}
             />
+          </Form.Item>
+          <Form.Item label="Language" required>
+            <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
           <Form.Item label="File" required>
             <Upload

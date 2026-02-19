@@ -4,6 +4,7 @@ import { Alert, Button, Card, Form, Input, Select, Space, Typography } from "ant
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta, Video } from "../../types";
+import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -22,6 +23,7 @@ export const VideoEditorPage = () => {
   const [title, setTitle] = useState(existingVideo?.title ?? "");
   const [description, setDescription] = useState(existingVideo?.description ?? "");
   const [status, setStatus] = useState<ContentStatus>(existingVideo?.status ?? "DRAFT");
+  const [locale, setLocale] = useState<ContentLocale>((existingVideo?.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
   const [tags, setTags] = useState<string[]>(existingVideo?.tags ?? []);
   const [seo, setSeo] = useState<SeoMeta>(existingVideo?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(existingVideo?.gallery ?? []);
@@ -48,6 +50,7 @@ export const VideoEditorPage = () => {
     setTitle(next.title);
     setDescription(next.description ?? "");
     setStatus(next.status);
+    setLocale((next.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
     setTags(next.tags ?? []);
     setSeo(next.seo ?? {});
     setGallery(next.gallery ?? []);
@@ -88,6 +91,7 @@ export const VideoEditorPage = () => {
         title: title.trim(),
         description: description.trim() || undefined,
         status,
+        locale,
         tags,
         seo,
         gallery
@@ -136,6 +140,9 @@ export const VideoEditorPage = () => {
               onChange={(value) => setStatus(value)}
               options={statusOptions.map((option) => ({ value: option, label: option }))}
             />
+          </Form.Item>
+          <Form.Item label="Language" required>
+            <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
           <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
             <Form.Item label="Tags">

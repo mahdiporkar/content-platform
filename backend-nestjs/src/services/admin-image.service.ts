@@ -11,6 +11,7 @@ import { ImageEntity } from '../entities/image.entity';
 import { MinioService } from './minio.service';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
+import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
 
 @Injectable()
 export class AdminImageService {
@@ -74,13 +75,16 @@ export class AdminImageService {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
     }
+    if (locale && !isSupportedContentLocale(locale)) {
+      throw new BadRequestException('Locale is not supported.');
+    }
     const upload = await this.minioService.upload(applicationId, 'image', file);
     const image = this.imageRepo.create({
       id: uuidv4(),
       applicationId,
       title: title.trim(),
       description: description?.trim() || null,
-      locale: locale?.trim() || null,
+      locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
       seo: seo ?? null,
       gallery: gallery ?? null,
@@ -132,7 +136,7 @@ export class AdminImageService {
     }
     image.title = request.title.trim();
     image.description = request.description?.trim() || null;
-    image.locale = request.locale?.trim() || null;
+    image.locale = normalizeContentLocale(request.locale);
     image.width = request.width ?? null;
     image.height = request.height ?? null;
     image.altText = request.altText?.trim() || null;

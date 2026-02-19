@@ -106,6 +106,12 @@ export const VideoListPage = () => {
       },
       { title: "Title", dataIndex: "title", width: "25%" },
       {
+        title: "Locale",
+        dataIndex: "locale",
+        width: "8%",
+        render: (value?: string | null) => value || "fa"
+      },
+      {
         title: "Status",
         dataIndex: "status",
         width: "12%",

@@ -17,6 +17,7 @@ import { Button, Checkbox, Input, Modal, Space } from "antd";
 import { uploadMedia } from "../api/media";
 import type { MediaKind } from "../api/media";
 import type { MediaUploadResponse } from "../types";
+import { useI18n } from "../i18n";
 
 type MediaNodeViewProps = {
   node: { attrs: { src: string; width?: string; align?: string; float?: string } };
@@ -225,6 +226,32 @@ const Video = Node.create({
   }
 });
 
+const LayoutTable = Table.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: "100%",
+        parseHTML: (element) => element.style.width || element.getAttribute("data-width") || "100%",
+        renderHTML: (attributes) => ({
+          style: `width: ${attributes.width};`,
+          "data-width": attributes.width
+        })
+      },
+      align: {
+        default: "center",
+        parseHTML: (element) => element.getAttribute("data-align") || "center",
+        renderHTML: (attributes) => ({ "data-align": attributes.align })
+      },
+      float: {
+        default: "none",
+        parseHTML: (element) => element.getAttribute("data-float") || "none",
+        renderHTML: (attributes) => ({ "data-float": attributes.float })
+      }
+    };
+  }
+});
+
 const toolbarImageWidths = [
   { label: "25%", value: "25%" },
   { label: "50%", value: "50%" },
@@ -280,6 +307,7 @@ type Props = {
 };
 
 export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
+  const { t } = useI18n();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageWidthValue, setImageWidthValue] = useState(100);
@@ -311,7 +339,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   const handleUpload = async (file: File, kind: MediaKind, editorOverride?: typeof editor) => {
     const activeEditor = editorOverride ?? editor;
     if (!canUpload || !applicationId || !activeEditor) {
-      setError("Application ID is required before uploading media.");
+      setError(t("error.appIdRequiredUpload"));
       return;
     }
     setUploading(true);
@@ -343,7 +371,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           .run();
       }
     } catch {
-      setError("Media upload failed. Check your connection and try again.");
+      setError(t("error.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -364,7 +392,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       ResizableImage,
-      Table.configure({ resizable: true }),
+      LayoutTable.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
@@ -509,7 +537,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
   );
 
   if (!editor) {
-    return <div className="muted">Loading editor...</div>;
+    return <div className="muted">{t("editor.loading")}</div>;
   }
 
   const handleImageResize = (value: number) => {
@@ -544,6 +572,29 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       return;
     }
     editor.chain().focus().updateAttributes("video", { float, align: "center" }).run();
+  };
+
+  const setTableFloat = (float: "left" | "right" | "none") => {
+    if (!editor.isActive("table")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("table", { float, align: "center" }).run();
+  };
+
+  const setTableWidth = (width: string) => {
+    if (!editor.isActive("table")) {
+      return;
+    }
+    editor.chain().focus().updateAttributes("table", { width }).run();
+  };
+
+  const setMediaSideBySide = (side: "left" | "right") => {
+    if (editor.isActive("image")) {
+      editor.chain().focus().updateAttributes("image", { width: "48%", float: side, align: "center" }).run();
+    }
+    if (editor.isActive("video")) {
+      editor.chain().focus().updateAttributes("video", { width: "48%", float: side, align: "center" }).run();
+    }
   };
 
   return (
@@ -619,7 +670,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             </Icon>
           </IconButton>
           <label className="editor-color">
-            <span>Color</span>
+            <span>{t("editor.color")}</span>
             <input
               type="color"
               onChange={(event) => editor.chain().focus().setColor(event.target.value).run()}
@@ -751,7 +802,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
                   })}
                 </div>
                 <div className="table-picker__label">
-                  {tablePreview.rows > 0 ? `${tablePreview.rows} x ${tablePreview.cols}` : "Select size"}
+                  {tablePreview.rows > 0 ? `${tablePreview.rows} x ${tablePreview.cols}` : t("editor.selectSize")}
                 </div>
                 <div className="table-picker__actions">
                   <button
@@ -764,7 +815,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
                       setShowTablePicker(false);
                     }}
                   >
-                    More…
+                    {t("editor.more")}
                   </button>
                 </div>
               </div>
@@ -777,7 +828,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className={`editor-group ${editor.isActive("table") ? "" : "disabled"}`}>
-          <span className="editor-label">Table</span>
+          <span className="editor-label">{t("editor.table")}</span>
           <IconButton
             label="Add row after"
             onClick={() => editor.chain().focus().addRowAfter().run()}
@@ -855,7 +906,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
         </div>
         <div className="editor-group">{imageSizeButtons}</div>
         <div className={`editor-group editor-resize ${editor.isActive("image") ? "" : "disabled"}`}>
-          <span className="editor-label">Image size</span>
+          <span className="editor-label">{t("editor.imageSize")}</span>
           <input
             className="editor-slider"
             type="range"
@@ -872,11 +923,11 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             onClick={() => handleImageResize(100)}
             disabled={!editor.isActive("image")}
           >
-            Reset
+            {t("editor.reset")}
           </button>
         </div>
         <div className={`editor-group editor-align ${editor.isActive("image") ? "" : "disabled"}`}>
-          <span className="editor-label">Image align</span>
+          <span className="editor-label">{t("editor.imageAlign")}</span>
           <IconButton
             label="Align image left"
             active={editor.isActive("image") && editor.getAttributes("image").align === "left"}
@@ -909,7 +960,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className={`editor-group editor-float ${editor.isActive("image") ? "" : "disabled"}`}>
-          <span className="editor-label">Wrap text</span>
+          <span className="editor-label">{t("editor.wrapText")}</span>
           <IconButton
             label="Float image left"
             active={editor.isActive("image") && editor.getAttributes("image").float === "left"}
@@ -942,7 +993,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className={`editor-group editor-align ${editor.isActive("video") ? "" : "disabled"}`}>
-          <span className="editor-label">Video align</span>
+          <span className="editor-label">{t("editor.videoAlign")}</span>
           <IconButton
             label="Align video left"
             active={editor.isActive("video") && editor.getAttributes("video").align === "left"}
@@ -975,7 +1026,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           </IconButton>
         </div>
         <div className={`editor-group editor-float ${editor.isActive("video") ? "" : "disabled"}`}>
-          <span className="editor-label">Wrap video</span>
+          <span className="editor-label">{t("editor.wrapVideo")}</span>
           <IconButton
             label="Float video left"
             active={editor.isActive("video") && editor.getAttributes("video").float === "left"}
@@ -1007,6 +1058,76 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             </Icon>
           </IconButton>
         </div>
+        <div className={`editor-group ${editor.isActive("image") || editor.isActive("video") ? "" : "disabled"}`}>
+          <span className="editor-label">{t("editor.sideBySide")}</span>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setMediaSideBySide("left")}
+            disabled={!editor.isActive("image") && !editor.isActive("video")}
+          >
+            {t("editor.sideLeft")}
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setMediaSideBySide("right")}
+            disabled={!editor.isActive("image") && !editor.isActive("video")}
+          >
+            {t("editor.sideRight")}
+          </button>
+        </div>
+        <div className={`editor-group ${editor.isActive("table") ? "" : "disabled"}`}>
+          <span className="editor-label">{t("editor.tableLayout")}</span>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableWidth("48%")}
+            disabled={!editor.isActive("table")}
+          >
+            48%
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableWidth("60%")}
+            disabled={!editor.isActive("table")}
+          >
+            60%
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableWidth("100%")}
+            disabled={!editor.isActive("table")}
+          >
+            100%
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableFloat("left")}
+            disabled={!editor.isActive("table")}
+          >
+            {t("editor.inlineLeft")}
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableFloat("right")}
+            disabled={!editor.isActive("table")}
+          >
+            {t("editor.inlineRight")}
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => setTableFloat("none")}
+            disabled={!editor.isActive("table")}
+          >
+            {t("editor.noWrap")}
+          </button>
+        </div>
         <div className="editor-group">
           <IconButton
             label="Undo"
@@ -1030,8 +1151,8 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
       </div>
       <div className="editor-asset-bar">
         <div>
-          <div className="asset-title">Media & attachments</div>
-          <div className="muted">Upload assets and they will be inserted in the content.</div>
+          <div className="asset-title">{t("editor.mediaTitle")}</div>
+          <div className="muted">{t("editor.mediaHint")}</div>
         </div>
         <div className="asset-actions">
           <button
@@ -1040,7 +1161,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             onClick={() => imageInputRef.current?.click()}
             disabled={!canUpload || uploading}
           >
-            Add image
+            {t("editor.addImage")}
           </button>
           <button
             type="button"
@@ -1048,7 +1169,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             onClick={() => videoInputRef.current?.click()}
             disabled={!canUpload || uploading}
           >
-            Add video
+            {t("editor.addVideo")}
           </button>
           <button
             type="button"
@@ -1056,17 +1177,15 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             onClick={() => fileInputRef.current?.click()}
             disabled={!canUpload || uploading}
           >
-            Attach file
+            {t("editor.attachFile")}
           </button>
         </div>
-        {uploading && <div className="asset-status">Uploading...</div>}
+        {uploading && <div className="asset-status">{t("editor.uploading")}</div>}
       </div>
       {error && <div className="editor-error">{error}</div>}
       <div className="editor-content editor-content--relative">
         {editor.isEmpty && (
-          <div className="editor-placeholder">
-            Start writing… Tip: paste images, or drag & drop files here.
-          </div>
+          <div className="editor-placeholder">{t("editor.placeholder")}</div>
         )}
         <BubbleMenu
           editor={editor}
@@ -1113,9 +1232,11 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
               type="button"
               className={`editor-button icon ${editor.isActive("link") ? "active" : ""}`}
               onClick={openLinkModal}
-              aria-label="Link"
+              aria-label={t("editor.linkTitle")}
             >
-              <span className="editor-text">🔗</span>
+              <Icon>
+                <path d="M10 7h3v2h-3a2 2 0 1 0 0 4h3v2h-3a4 4 0 1 1 0-8zm4 0h3a4 4 0 1 1 0 8h-3v-2h3a2 2 0 1 0 0-4h-3V7zM11 10h2v4h-2v-4z" />
+              </Icon>
             </button>
             <div className="editor-bubble__divider" />
             <button
@@ -1124,7 +1245,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
               onClick={() => editor.chain().focus().addRowAfter().run()}
               disabled={!editor.isActive("table")}
             >
-              + Row
+              {t("editor.addRow")}
             </button>
             <button
               type="button"
@@ -1132,7 +1253,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
               onClick={() => editor.chain().focus().addColumnAfter().run()}
               disabled={!editor.isActive("table")}
             >
-              + Col
+              {t("editor.addCol")}
             </button>
           </div>
         </BubbleMenu>
@@ -1143,22 +1264,22 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
         open={linkModalOpen}
         onCancel={() => setLinkModalOpen(false)}
         onOk={applyLink}
-        okText={editor.isActive("link") ? "Update link" : "Add link"}
-        title="Link"
+        okText={editor.isActive("link") ? t("editor.updateLink") : t("editor.addLink")}
+        title={t("editor.linkTitle")}
       >
         <Space direction="vertical" style={{ width: "100%" }}>
           <Input
             value={linkUrl}
             onChange={(event) => setLinkUrl(event.target.value)}
-            placeholder="https://example.com"
+            placeholder={t("editor.linkPlaceholder")}
             autoFocus
           />
           <Checkbox checked={linkOpenInNewTab} onChange={(event) => setLinkOpenInNewTab(event.target.checked)}>
-            Open in new tab
+            {t("editor.openNewTab")}
           </Checkbox>
           <Space>
             <Button danger onClick={removeLink} disabled={!editor.isActive("link")}>
-              Remove link
+              {t("editor.removeLink")}
             </Button>
           </Space>
         </Space>
@@ -1173,12 +1294,12 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
           insertTable(rows, cols);
           setTableModalOpen(false);
         }}
-        okText="Insert"
-        title="Insert table"
+        okText={t("editor.insert")}
+        title={t("editor.insertTable")}
       >
         <Space direction="vertical" style={{ width: "100%" }}>
           <Space>
-            <span style={{ width: 70 }}>Rows</span>
+            <span style={{ width: 70 }}>{t("editor.rows")}</span>
             <Input
               inputMode="numeric"
               value={String(tableModalRows)}
@@ -1187,7 +1308,7 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
             />
           </Space>
           <Space>
-            <span style={{ width: 70 }}>Cols</span>
+            <span style={{ width: 70 }}>{t("editor.cols")}</span>
             <Input
               inputMode="numeric"
               value={String(tableModalCols)}

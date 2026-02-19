@@ -1,6 +1,11 @@
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ConfigProvider } from "antd";
+import enUS from "antd/locale/en_US";
+import faIR from "antd/locale/fa_IR";
+import arEG from "antd/locale/ar_EG";
+import zhCN from "antd/locale/zh_CN";
+import ruRU from "antd/locale/ru_RU";
 import { authStore } from "./app/auth";
 import { TenantProvider } from "./app/tenant";
 import { AppLayout } from "./layouts/AppLayout";
@@ -20,6 +25,7 @@ import { CollectionEditorPage } from "./features/collections/CollectionEditorPag
 import { ImagesListPage } from "./features/images/ImagesListPage";
 import { ImageEditorPage } from "./features/images/ImageEditorPage";
 import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
+import { I18nProvider, type SupportedLocale, useI18n } from "./i18n";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -31,7 +37,26 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 
 export const AdminApp = () => {
   return (
+    <I18nProvider>
+      <LocalizedAdminApp />
+    </I18nProvider>
+  );
+};
+
+const antLocales: Record<SupportedLocale, typeof enUS> = {
+  en: enUS,
+  fa: faIR,
+  ar: arEG,
+  zh: zhCN,
+  ru: ruRU
+};
+
+const LocalizedAdminApp = () => {
+  const { locale } = useI18n();
+
+  return (
     <ConfigProvider
+      locale={antLocales[locale]}
       theme={{
         token: {
           colorPrimary: "#1890ff",
