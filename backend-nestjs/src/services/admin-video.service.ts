@@ -12,6 +12,7 @@ import { MinioService } from './minio.service';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
 import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
+import { resolvePublicationFields } from '../common/publishing';
 
 @Injectable()
 export class AdminVideoService {
@@ -73,6 +74,7 @@ export class AdminVideoService {
     seo?: Record<string, unknown>,
     gallery?: Record<string, unknown>[],
     locale?: string,
+    scheduledAt?: string,
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -80,6 +82,7 @@ export class AdminVideoService {
     if (locale && !isSupportedContentLocale(locale)) {
       throw new BadRequestException('Locale is not supported.');
     }
+    const publication = resolvePublicationFields(status, scheduledAt);
     const upload = await this.minioService.upload(applicationId, 'video', file);
     const video = this.videoRepo.create({
       id: uuidv4(),
@@ -91,7 +94,8 @@ export class AdminVideoService {
       seo: seo ?? null,
       gallery: gallery ?? null,
       status,
-      publishedAt: status === ContentStatus.PUBLISHED ? new Date() : null,
+      publishedAt: publication.publishedAt,
+      scheduledAt: publication.scheduledAt,
       objectKey: upload.objectKey,
       contentType: upload.contentType,
       sizeBytes: upload.sizeBytes,
@@ -108,6 +112,7 @@ export class AdminVideoService {
     }
     video.status = request.status;
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
+    video.scheduledAt = null;
     const saved = await this.videoRepo.save(video);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
@@ -135,6 +140,7 @@ export class AdminVideoService {
     if (!video) {
       throw new NotFoundException('Video not found.');
     }
+    const publication = resolvePublicationFields(request.status, request.scheduledAt, video.publishedAt);
     video.title = request.title.trim();
     video.description = request.description?.trim() || null;
     video.locale = normalizeContentLocale(request.locale);
@@ -149,8 +155,8 @@ export class AdminVideoService {
       ? (request.gallery as unknown as Record<string, unknown>[])
       : null;
     video.status = request.status;
-    video.publishedAt = request.status === ContentStatus.PUBLISHED ? video.publishedAt ?? new Date() : null;
-    video.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
+    video.publishedAt = publication.publishedAt;
+    video.scheduledAt = publication.scheduledAt;
     const saved = await this.videoRepo.save(video);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);

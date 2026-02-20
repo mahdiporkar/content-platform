@@ -1,7 +1,8 @@
 import React, { useRef, useState } from "react";
-import { Alert, Button, Card, Form, Input, Select, Space, Typography, Upload } from "antd";
+import { Alert, Button, Card, DatePicker, Form, Input, Select, Space, Typography, Upload } from "antd";
 import type { UploadFile } from "antd";
 import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta } from "../../types";
@@ -20,6 +21,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ContentStatus>("DRAFT");
   const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
+  const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -45,6 +47,14 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     setGallery((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const scheduleLabelByLocale: Record<ContentLocale, string> = {
+    fa: "زمان انتشار",
+    en: "Publish datetime",
+    ar: "وقت النشر",
+    zh: "发布时间",
+    ru: "Дата публикации"
+  };
+
   const handleUpload = async () => {
     if (!applicationId) {
       setError("Application ID is required.");
@@ -52,6 +62,15 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     }
     if (!file) {
       setError("Choose a video file to upload.");
+      return;
+    }
+    const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
+    if (status === "SCHEDULED" && !scheduledAtIso) {
+      setError(locale === "fa" ? "زمان انتشار را انتخاب کنید." : "Please select publish datetime.");
+      return;
+    }
+    if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
+      setError(locale === "fa" ? "زمان انتشار باید در آینده باشد." : "Publish datetime must be in the future.");
       return;
     }
     setUploading(true);
@@ -63,6 +82,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     payload.append("applicationId", applicationId);
     payload.append("status", status);
     payload.append("locale", locale);
+    if (status === "SCHEDULED" && scheduledAtIso) {
+      payload.append("scheduledAt", scheduledAtIso);
+    }
     if (tags.length > 0) {
       payload.append("tags", JSON.stringify(tags));
     }
@@ -123,6 +145,20 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         <Form.Item label="Language" required>
           <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
         </Form.Item>
+        {status === "SCHEDULED" && (
+          <Form.Item
+            label={scheduleLabelByLocale[locale]}
+            required
+          >
+            <DatePicker
+              showTime={{ format: "HH:mm" }}
+              value={scheduledAt}
+              onChange={(value) => setScheduledAt(value)}
+              format={locale === "fa" ? "YYYY/MM/DD HH:mm" : "YYYY-MM-DD HH:mm"}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           label="Video File"
           required

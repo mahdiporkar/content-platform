@@ -53,12 +53,24 @@ export class AdminVideoController {
     @Body('seo') seoRaw?: string,
     @Body('gallery') galleryRaw?: string,
     @Body('locale') locale?: string,
+    @Body('scheduledAt') scheduledAt?: string,
   ): Promise<VideoResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
     const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
-    return await this.videoService.upload(file, title, description, applicationId, status, tags, seo, gallery, locale);
+    return await this.videoService.upload(
+      file,
+      title,
+      description,
+      applicationId,
+      status,
+      tags,
+      seo,
+      gallery,
+      locale,
+      scheduledAt,
+    );
   }
 
   @Patch(':id/status')

@@ -7,6 +7,7 @@ import client from "../../api/client";
 import { ImageContent } from "../../types";
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { parseGregorianInputToIso, parseJalaliInputToIso } from "../../utils/scheduleDate";
 
 const resolveBackendOrigin = (): string => {
   const apiBase = (process.env.API_BASE_URL || "").trim();
@@ -42,6 +43,8 @@ export const ImagesListPage = () => {
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("DRAFT");
   const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
+  const [scheduledAtGregorian, setScheduledAtGregorian] = useState("");
+  const [scheduledAtJalali, setScheduledAtJalali] = useState("");
 
   const fetchImages = useCallback(async () => {
     if (!applicationId) {
@@ -63,12 +66,24 @@ export const ImagesListPage = () => {
     if (!applicationId || fileList.length === 0 || !title.trim()) {
       return;
     }
+    const scheduledAtIso =
+      status === "SCHEDULED"
+        ? locale === "fa"
+          ? parseJalaliInputToIso(scheduledAtJalali)
+          : parseGregorianInputToIso(scheduledAtGregorian)
+        : null;
+    if (status === "SCHEDULED" && !scheduledAtIso) {
+      return;
+    }
     const payload = new FormData();
     payload.append("file", fileList[0]);
     payload.append("title", title.trim());
     payload.append("applicationId", applicationId);
     payload.append("status", status);
     payload.append("locale", locale);
+    if (status === "SCHEDULED" && scheduledAtIso) {
+      payload.append("scheduledAt", scheduledAtIso);
+    }
     await client.post("/api/v1/admin/images/upload", payload, {
       headers: { "Content-Type": "multipart/form-data" }
     });
@@ -76,6 +91,8 @@ export const ImagesListPage = () => {
     setFileList([]);
     setTitle("");
     setLocale(DEFAULT_CONTENT_LOCALE);
+    setScheduledAtGregorian("");
+    setScheduledAtJalali("");
     await fetchImages();
   };
 
@@ -176,6 +193,27 @@ export const ImagesListPage = () => {
           <Form.Item label="Language" required>
             <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
+          {status === "SCHEDULED" && (
+            <Form.Item
+              label={locale === "fa" ? "زمان انتشار" : "Publish datetime"}
+              required
+              extra={locale === "fa" ? "فرمت: 1405/01/15 14:30" : undefined}
+            >
+              {locale === "fa" ? (
+                <Input
+                  value={scheduledAtJalali}
+                  onChange={(event) => setScheduledAtJalali(event.target.value)}
+                  placeholder="1405/01/15 14:30"
+                />
+              ) : (
+                <Input
+                  type="datetime-local"
+                  value={scheduledAtGregorian}
+                  onChange={(event) => setScheduledAtGregorian(event.target.value)}
+                />
+              )}
+            </Form.Item>
+          )}
           <Form.Item label="File" required>
             <Upload
               beforeUpload={(file) => {

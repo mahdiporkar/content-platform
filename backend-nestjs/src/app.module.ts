@@ -46,6 +46,7 @@ import { DeliveryContentService } from './services/delivery-content.service';
 import { AdminCollectionService } from './services/admin-collection.service';
 import { AuditLogService } from './services/audit-log.service';
 import { AdminAnalyticsService } from './services/admin-analytics.service';
+import { ScheduledPublisherService } from './services/scheduled-publisher.service';
 
 @Module({
   imports: [
@@ -133,6 +134,7 @@ import { AdminAnalyticsService } from './services/admin-analytics.service';
     AuditLogService,
     SeedDataService,
     MinioService,
+    ScheduledPublisherService,
   ],
 })
 export class AppModule {}

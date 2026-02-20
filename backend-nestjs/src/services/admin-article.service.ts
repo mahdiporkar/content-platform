@@ -9,6 +9,7 @@ import { ArticleResponseDto } from '../dto/responses/article-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { ArticleEntity } from '../entities/article.entity';
 import { normalizeContentLocale } from '../common/content-locale.constants';
+import { resolvePublicationFields } from '../common/publishing';
 
 @Injectable()
 export class AdminArticleService {
@@ -49,6 +50,7 @@ export class AdminArticleService {
   }
 
   async create(request: ArticleUpsertRequestDto): Promise<ArticleResponseDto> {
+    const publication = resolvePublicationFields(request.status, request.scheduledAt);
     const article = this.articleRepo.create({
       id: uuidv4(),
       applicationId: request.applicationId,
@@ -63,8 +65,8 @@ export class AdminArticleService {
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
       gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
       status: request.status,
-      publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
-      scheduledAt: request.scheduledAt ? new Date(request.scheduledAt) : null,
+      publishedAt: publication.publishedAt,
+      scheduledAt: publication.scheduledAt,
     });
     const saved = await this.articleRepo.save(article);
     return this.mapArticle(saved);
@@ -75,6 +77,7 @@ export class AdminArticleService {
     if (!article) {
       throw new NotFoundException('Article not found.');
     }
+    const publication = resolvePublicationFields(request.status, request.scheduledAt, article.publishedAt);
     article.title = request.title.trim();
     article.description = request.description?.trim() || null;
     article.slug = request.slug.trim();
@@ -88,9 +91,8 @@ export class AdminArticleService {
       ? (request.gallery as unknown as Record<string, unknown>[])
       : null;
     article.status = request.status;
-    article.publishedAt =
-      request.status === ContentStatus.PUBLISHED ? article.publishedAt ?? new Date() : null;
-    article.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
+    article.publishedAt = publication.publishedAt;
+    article.scheduledAt = publication.scheduledAt;
     const saved = await this.articleRepo.save(article);
     return this.mapArticle(saved);
   }
@@ -102,6 +104,7 @@ export class AdminArticleService {
     }
     article.status = request.status;
     article.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
+    article.scheduledAt = null;
     const saved = await this.articleRepo.save(article);
     return this.mapArticle(saved);
   }

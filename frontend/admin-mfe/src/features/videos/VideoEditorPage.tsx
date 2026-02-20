@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Alert, Button, Card, Form, Input, Select, Space, Typography } from "antd";
+import { Alert, Button, Card, DatePicker, Form, Input, Select, Space, Typography } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta, Video } from "../../types";
@@ -24,6 +25,7 @@ export const VideoEditorPage = () => {
   const [description, setDescription] = useState(existingVideo?.description ?? "");
   const [status, setStatus] = useState<ContentStatus>(existingVideo?.status ?? "DRAFT");
   const [locale, setLocale] = useState<ContentLocale>((existingVideo?.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
+  const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(existingVideo?.scheduledAt ? dayjs(existingVideo.scheduledAt) : null);
   const [tags, setTags] = useState<string[]>(existingVideo?.tags ?? []);
   const [seo, setSeo] = useState<SeoMeta>(existingVideo?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(existingVideo?.gallery ?? []);
@@ -45,12 +47,21 @@ export const VideoEditorPage = () => {
     setGallery((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const scheduleLabelByLocale: Record<ContentLocale, string> = {
+    fa: "زمان انتشار",
+    en: "Publish datetime",
+    ar: "وقت النشر",
+    zh: "发布时间",
+    ru: "Дата публикации"
+  };
+
   const applyVideo = (next: Video) => {
     setVideo(next);
     setTitle(next.title);
     setDescription(next.description ?? "");
     setStatus(next.status);
     setLocale((next.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
+    setScheduledAt(next.scheduledAt ? dayjs(next.scheduledAt) : null);
     setTags(next.tags ?? []);
     setSeo(next.seo ?? {});
     setGallery(next.gallery ?? []);
@@ -84,6 +95,15 @@ export const VideoEditorPage = () => {
       setError("Title is required.");
       return;
     }
+    const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
+    if (status === "SCHEDULED" && !scheduledAtIso) {
+      setError(locale === "fa" ? "زمان انتشار را انتخاب کنید." : "Please select publish datetime.");
+      return;
+    }
+    if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
+      setError(locale === "fa" ? "زمان انتشار باید در آینده باشد." : "Publish datetime must be in the future.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -92,6 +112,7 @@ export const VideoEditorPage = () => {
         description: description.trim() || undefined,
         status,
         locale,
+        scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
         tags,
         seo,
         gallery
@@ -144,6 +165,20 @@ export const VideoEditorPage = () => {
           <Form.Item label="Language" required>
             <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
+          {status === "SCHEDULED" && (
+            <Form.Item
+              label={scheduleLabelByLocale[locale]}
+              required
+            >
+              <DatePicker
+                showTime={{ format: "HH:mm" }}
+                value={scheduledAt}
+                onChange={(value) => setScheduledAt(value)}
+                format={locale === "fa" ? "YYYY/MM/DD HH:mm" : "YYYY-MM-DD HH:mm"}
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          )}
           <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
             <Form.Item label="Tags">
               <Select

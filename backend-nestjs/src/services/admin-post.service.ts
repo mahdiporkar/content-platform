@@ -9,6 +9,7 @@ import { PostResponseDto } from '../dto/responses/post-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { PostEntity } from '../entities/post.entity';
 import { normalizeContentLocale } from '../common/content-locale.constants';
+import { resolvePublicationFields } from '../common/publishing';
 
 @Injectable()
 export class AdminPostService {
@@ -49,6 +50,7 @@ export class AdminPostService {
   }
 
   async create(request: PostUpsertRequestDto): Promise<PostResponseDto> {
+    const publication = resolvePublicationFields(request.status, request.scheduledAt);
     const post = this.postRepo.create({
       id: uuidv4(),
       applicationId: request.applicationId,
@@ -63,8 +65,8 @@ export class AdminPostService {
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
       gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
       status: request.status,
-      publishedAt: request.status === ContentStatus.PUBLISHED ? new Date() : null,
-      scheduledAt: request.scheduledAt ? new Date(request.scheduledAt) : null,
+      publishedAt: publication.publishedAt,
+      scheduledAt: publication.scheduledAt,
     });
     const saved = await this.postRepo.save(post);
     return this.mapPost(saved);
@@ -75,6 +77,7 @@ export class AdminPostService {
     if (!post) {
       throw new NotFoundException('Post not found.');
     }
+    const publication = resolvePublicationFields(request.status, request.scheduledAt, post.publishedAt);
     post.title = request.title.trim();
     post.description = request.description?.trim() || null;
     post.slug = request.slug.trim();
@@ -88,9 +91,8 @@ export class AdminPostService {
       ? (request.gallery as unknown as Record<string, unknown>[])
       : null;
     post.status = request.status;
-    post.publishedAt =
-      request.status === ContentStatus.PUBLISHED ? post.publishedAt ?? new Date() : null;
-    post.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
+    post.publishedAt = publication.publishedAt;
+    post.scheduledAt = publication.scheduledAt;
     const saved = await this.postRepo.save(post);
     return this.mapPost(saved);
   }
@@ -102,6 +104,7 @@ export class AdminPostService {
     }
     post.status = request.status;
     post.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
+    post.scheduledAt = null;
     const saved = await this.postRepo.save(post);
     return this.mapPost(saved);
   }

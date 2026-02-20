@@ -12,6 +12,7 @@ import { MinioService } from './minio.service';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
 import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
+import { resolvePublicationFields } from '../common/publishing';
 
 @Injectable()
 export class AdminImageService {
@@ -71,6 +72,7 @@ export class AdminImageService {
     gallery?: Record<string, unknown>[],
     locale?: string,
     altText?: string,
+    scheduledAt?: string,
   ): Promise<ImageResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -78,6 +80,7 @@ export class AdminImageService {
     if (locale && !isSupportedContentLocale(locale)) {
       throw new BadRequestException('Locale is not supported.');
     }
+    const publication = resolvePublicationFields(status, scheduledAt);
     const upload = await this.minioService.upload(applicationId, 'image', file);
     const image = this.imageRepo.create({
       id: uuidv4(),
@@ -89,7 +92,8 @@ export class AdminImageService {
       seo: seo ?? null,
       gallery: gallery ?? null,
       status,
-      publishedAt: status === ContentStatus.PUBLISHED ? new Date() : null,
+      publishedAt: publication.publishedAt,
+      scheduledAt: publication.scheduledAt,
       objectKey: upload.objectKey,
       contentType: upload.contentType,
       sizeBytes: upload.sizeBytes,
@@ -107,6 +111,7 @@ export class AdminImageService {
     }
     image.status = request.status;
     image.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
+    image.scheduledAt = null;
     const saved = await this.imageRepo.save(image);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
@@ -134,6 +139,7 @@ export class AdminImageService {
     if (!image) {
       throw new NotFoundException('Image not found.');
     }
+    const publication = resolvePublicationFields(request.status, request.scheduledAt, image.publishedAt);
     image.title = request.title.trim();
     image.description = request.description?.trim() || null;
     image.locale = normalizeContentLocale(request.locale);
@@ -146,8 +152,8 @@ export class AdminImageService {
       ? (request.gallery as unknown as Record<string, unknown>[])
       : null;
     image.status = request.status;
-    image.publishedAt = request.status === ContentStatus.PUBLISHED ? image.publishedAt ?? new Date() : null;
-    image.scheduledAt = request.scheduledAt ? new Date(request.scheduledAt) : null;
+    image.publishedAt = publication.publishedAt;
+    image.scheduledAt = publication.scheduledAt;
     const saved = await this.imageRepo.save(image);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);

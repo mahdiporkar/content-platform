@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Alert, Button, Card, Col, Form, Input, Row, Select, Space, Typography } from "antd";
+import { Alert, Button, Card, Col, DatePicker, Form, Input, Row, Select, Space, Typography } from "antd";
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
+import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, Post, SeoMeta } from "../../types";
@@ -38,6 +39,7 @@ export const PostEditorForm = ({
   const [gallery, setGallery] = useState<GalleryImage[]>(initialPost?.gallery ?? []);
   const [status, setStatus] = useState<ContentStatus>(initialPost?.status ?? "DRAFT");
   const [locale, setLocale] = useState<ContentLocale>((initialPost?.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
+  const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(initialPost?.scheduledAt ? dayjs(initialPost.scheduledAt) : null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -65,6 +67,14 @@ export const PostEditorForm = ({
     () => (mode === "create" ? "Create a new post draft." : "Edit and publish updates."),
     [mode]
   );
+
+  const scheduleLabelByLocale: Record<ContentLocale, string> = {
+    fa: "زمان انتشار",
+    en: "Publish datetime",
+    ar: "وقت النشر",
+    zh: "发布时间",
+    ru: "Дата публикации"
+  };
 
   const handleBannerUpload = async (file: File) => {
     if (!applicationId) {
@@ -96,9 +106,31 @@ export const PostEditorForm = ({
       setError("Application ID is required.");
       return;
     }
+    const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
+    if (status === "SCHEDULED" && !scheduledAtIso) {
+      setError(locale === "fa" ? "زمان انتشار را انتخاب کنید." : "Please select publish datetime.");
+      return;
+    }
+    if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
+      setError(locale === "fa" ? "زمان انتشار باید در آینده باشد." : "Publish datetime must be in the future.");
+      return;
+    }
     setSaving(true);
     setError(null);
-    const payload = { applicationId, title, description, slug, content, status, locale, bannerUrl, tags, seo, gallery };
+    const payload = {
+      applicationId,
+      title,
+      description,
+      slug,
+      content,
+      status,
+      locale,
+      scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
+      bannerUrl,
+      tags,
+      seo,
+      gallery
+    };
     try {
       if (mode === "create") {
         await client.post("/api/v1/admin/posts", payload);
@@ -158,6 +190,20 @@ export const PostEditorForm = ({
             </Form.Item>
           </Col>
         </Row>
+        {status === "SCHEDULED" && (
+          <Form.Item
+            label={scheduleLabelByLocale[locale]}
+            required
+          >
+            <DatePicker
+              showTime={{ format: "HH:mm" }}
+              value={scheduledAt}
+              onChange={(value) => setScheduledAt(value)}
+              format={locale === "fa" ? "YYYY/MM/DD HH:mm" : "YYYY-MM-DD HH:mm"}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+        )}
         <Form.Item label="Banner image">
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Space>

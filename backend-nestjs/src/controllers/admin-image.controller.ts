@@ -31,6 +31,7 @@ export class AdminImageController {
     @Body('gallery') gallery?: Record<string, unknown>[],
     @Body('locale') locale?: string,
     @Body('altText') altText?: string,
+    @Body('scheduledAt') scheduledAt?: string,
   ): Promise<ImageResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
     return await this.imageService.upload(
@@ -44,6 +45,7 @@ export class AdminImageController {
       gallery,
       locale,
       altText,
+      scheduledAt,
     );
   }
 
