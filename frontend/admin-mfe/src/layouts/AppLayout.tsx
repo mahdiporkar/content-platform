@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Button, Input, Layout, Menu, Select, Typography } from "antd";
+import { Button, Layout, Menu, Select, Typography } from "antd";
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -14,6 +14,8 @@ import {
 } from "@ant-design/icons";
 import { useTenant } from "../app/tenant";
 import { authStore } from "../app/auth";
+import client from "../api/client";
+import { Application } from "../types";
 import { type SupportedLocale, useI18n } from "../i18n";
 
 const { Sider, Content, Header } = Layout;
@@ -23,7 +25,13 @@ export const AppLayout = () => {
   const { locale, setLocale, t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const [appIdInput, setAppIdInput] = useState(applicationId);
+  const [applicationOptions, setApplicationOptions] = useState<Array<{ value: string; label: string }>>([]);
+
+  const tokenPayload = useMemo(() => authStore.getTokenPayload(), []);
+  const accessibleApplicationIds = useMemo(
+    () => Array.from(new Set((tokenPayload?.applicationIds || []).map((entry) => entry.trim()).filter(Boolean))),
+    [tokenPayload]
+  );
 
   const handleLogout = () => {
     authStore.clearToken();
@@ -31,8 +39,35 @@ export const AppLayout = () => {
   };
 
   useEffect(() => {
-    setAppIdInput(applicationId);
-  }, [applicationId]);
+    const fallbackOptions = accessibleApplicationIds.map((id) => ({ value: id, label: id }));
+    setApplicationOptions(fallbackOptions);
+
+    const canLoadApplications = tokenPayload?.role === "super_admin" || (tokenPayload?.systemPermissions || []).includes("applications.manage");
+    if (!canLoadApplications) {
+      return;
+    }
+
+    const loadApplications = async () => {
+      try {
+        const response = await client.get<Application[]>("/api/v1/admin/applications");
+        const allowedIds = tokenPayload?.role === "super_admin" ? null : new Set(accessibleApplicationIds);
+        const options = response.data
+          .filter((app) => !allowedIds || allowedIds.has(app.id))
+          .map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }));
+        setApplicationOptions(options.length > 0 ? options : fallbackOptions);
+      } catch {
+        setApplicationOptions(fallbackOptions);
+      }
+    };
+
+    void loadApplications();
+  }, [accessibleApplicationIds, tokenPayload?.role, tokenPayload?.systemPermissions]);
+
+  useEffect(() => {
+    if (!applicationId && applicationOptions.length > 0) {
+      setApplicationId(applicationOptions[0].value);
+    }
+  }, [applicationId, applicationOptions, setApplicationId]);
 
   const selectedKey = location.pathname.split("/")[1] || "posts";
 
@@ -81,15 +116,18 @@ export const AppLayout = () => {
           <Typography.Text strong className="sidebar-label">
             {t("app.applicationId")}
           </Typography.Text>
-          <Input
-            placeholder={t("app.applicationPlaceholder")}
-            value={appIdInput}
-            onChange={(event) => setAppIdInput(event.target.value)}
+          <Select
             size="small"
+            value={applicationId || undefined}
+            options={applicationOptions}
+            onChange={(value) => setApplicationId(value || "")}
+            placeholder={
+              applicationOptions.length > 0 ? t("app.applicationPlaceholder") : t("app.noAccessibleApplications")
+            }
+            disabled={applicationOptions.length === 0}
+            showSearch
+            optionFilterProp="label"
           />
-          <Button size="small" block onClick={() => setApplicationId(appIdInput || "")}>
-            {t("app.setApplication")}
-          </Button>
           <Button danger icon={<LogoutOutlined />} size="small" block onClick={handleLogout}>
             {t("app.logout")}
           </Button>

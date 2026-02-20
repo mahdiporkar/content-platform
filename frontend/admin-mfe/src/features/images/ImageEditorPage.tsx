@@ -1,25 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Form, Input, Select, Space, Typography } from "antd";
+import { Button, Card, DatePicker, Form, Input, Select, Space, Typography } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { ImageContent } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
-import { formatIsoToGregorianInput, formatIsoToJalaliInput, parseGregorianInputToIso, parseJalaliInputToIso } from "../../utils/scheduleDate";
 
 export const ImageEditorPage = () => {
   const navigate = useNavigate();
   const params = useParams();
   const [image, setImage] = useState<ImageContent | null>(null);
   const [loading, setLoading] = useState(false);
-  const [scheduledAtGregorian, setScheduledAtGregorian] = useState("");
-  const [scheduledAtJalali, setScheduledAtJalali] = useState("");
+  const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(null);
+
+  const scheduleLabelByLocale: Record<ContentLocale, string> = {
+    fa: "زمان انتشار",
+    en: "Publish datetime",
+    ar: "وقت النشر",
+    zh: "发布时间",
+    ru: "Дата публикации"
+  };
 
   const loadImage = async (id: string) => {
     setLoading(true);
     const response = await client.get<ImageContent>(`/api/v1/admin/images/${id}`);
     setImage(response.data);
-    setScheduledAtGregorian(formatIsoToGregorianInput(response.data.scheduledAt));
-    setScheduledAtJalali(formatIsoToJalaliInput(response.data.scheduledAt));
+    setScheduledAt(response.data.scheduledAt ? dayjs(response.data.scheduledAt) : null);
     setLoading(false);
   };
 
@@ -34,13 +40,11 @@ export const ImageEditorPage = () => {
     if (!image || !params.id) {
       return;
     }
-    const scheduledAtIso =
-      image.status === "SCHEDULED"
-        ? ((image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE) === "fa"
-          ? parseJalaliInputToIso(scheduledAtJalali)
-          : parseGregorianInputToIso(scheduledAtGregorian)
-        : null;
+    const scheduledAtIso = image.status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
     if (image.status === "SCHEDULED" && !scheduledAtIso) {
+      return;
+    }
+    if (image.status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
       return;
     }
     setLoading(true);
@@ -129,23 +133,16 @@ export const ImageEditorPage = () => {
         </Form.Item>
         {image.status === "SCHEDULED" && (
           <Form.Item
-            label={((image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE) === "fa" ? "زمان انتشار" : "Publish datetime"}
+            label={scheduleLabelByLocale[(image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE]}
             required
-            extra={((image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE) === "fa" ? "فرمت: 1405/01/15 14:30" : undefined}
           >
-            {((image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE) === "fa" ? (
-              <Input
-                value={scheduledAtJalali}
-                onChange={(event) => setScheduledAtJalali(event.target.value)}
-                placeholder="1405/01/15 14:30"
-              />
-            ) : (
-              <Input
-                type="datetime-local"
-                value={scheduledAtGregorian}
-                onChange={(event) => setScheduledAtGregorian(event.target.value)}
-              />
-            )}
+            <DatePicker
+              showTime={{ format: "HH:mm" }}
+              value={scheduledAt}
+              onChange={(value) => setScheduledAt(value)}
+              format={((image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE) === "fa" ? "YYYY/MM/DD HH:mm" : "YYYY-MM-DD HH:mm"}
+              style={{ width: "100%" }}
+            />
           </Form.Item>
         )}
         <Space>

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Form, Image, Input, Modal, Select, Space, Table, Typography, Upload } from "antd";
+import { Button, Card, DatePicker, Form, Image, Input, Modal, Select, Space, Table, Typography, Upload } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { UploadOutlined } from "@ant-design/icons";
+import { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { ImageContent } from "../../types";
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
-import { parseGregorianInputToIso, parseJalaliInputToIso } from "../../utils/scheduleDate";
 
 const resolveBackendOrigin = (): string => {
   const apiBase = (process.env.API_BASE_URL || "").trim();
@@ -43,8 +43,15 @@ export const ImagesListPage = () => {
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("DRAFT");
   const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
-  const [scheduledAtGregorian, setScheduledAtGregorian] = useState("");
-  const [scheduledAtJalali, setScheduledAtJalali] = useState("");
+  const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(null);
+
+  const scheduleLabelByLocale: Record<ContentLocale, string> = {
+    fa: "زمان انتشار",
+    en: "Publish datetime",
+    ar: "وقت النشر",
+    zh: "发布时间",
+    ru: "Дата публикации"
+  };
 
   const fetchImages = useCallback(async () => {
     if (!applicationId) {
@@ -66,13 +73,11 @@ export const ImagesListPage = () => {
     if (!applicationId || fileList.length === 0 || !title.trim()) {
       return;
     }
-    const scheduledAtIso =
-      status === "SCHEDULED"
-        ? locale === "fa"
-          ? parseJalaliInputToIso(scheduledAtJalali)
-          : parseGregorianInputToIso(scheduledAtGregorian)
-        : null;
+    const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
     if (status === "SCHEDULED" && !scheduledAtIso) {
+      return;
+    }
+    if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
       return;
     }
     const payload = new FormData();
@@ -91,8 +96,7 @@ export const ImagesListPage = () => {
     setFileList([]);
     setTitle("");
     setLocale(DEFAULT_CONTENT_LOCALE);
-    setScheduledAtGregorian("");
-    setScheduledAtJalali("");
+    setScheduledAt(null);
     await fetchImages();
   };
 
@@ -195,23 +199,16 @@ export const ImagesListPage = () => {
           </Form.Item>
           {status === "SCHEDULED" && (
             <Form.Item
-              label={locale === "fa" ? "زمان انتشار" : "Publish datetime"}
+              label={scheduleLabelByLocale[locale]}
               required
-              extra={locale === "fa" ? "فرمت: 1405/01/15 14:30" : undefined}
             >
-              {locale === "fa" ? (
-                <Input
-                  value={scheduledAtJalali}
-                  onChange={(event) => setScheduledAtJalali(event.target.value)}
-                  placeholder="1405/01/15 14:30"
-                />
-              ) : (
-                <Input
-                  type="datetime-local"
-                  value={scheduledAtGregorian}
-                  onChange={(event) => setScheduledAtGregorian(event.target.value)}
-                />
-              )}
+              <DatePicker
+                showTime={{ format: "HH:mm" }}
+                value={scheduledAt}
+                onChange={(value) => setScheduledAt(value)}
+                format={locale === "fa" ? "YYYY/MM/DD HH:mm" : "YYYY-MM-DD HH:mm"}
+                style={{ width: "100%" }}
+              />
             </Form.Item>
           )}
           <Form.Item label="File" required>
