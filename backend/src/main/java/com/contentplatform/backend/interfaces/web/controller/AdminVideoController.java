@@ -1,6 +1,7 @@
 package com.contentplatform.backend.interfaces.web.controller;
 
 import com.contentplatform.backend.application.dto.ChangeStatusCommand;
+import com.contentplatform.backend.application.dto.CreateVideoFromAssetCommand;
 import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UploadVideoCommand;
@@ -11,6 +12,7 @@ import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ChangeStatusRequest;
+import com.contentplatform.backend.interfaces.web.request.CreateVideoFromAssetRequest;
 import com.contentplatform.backend.interfaces.web.response.PageResponse;
 import com.contentplatform.backend.interfaces.web.response.VideoResponse;
 import jakarta.validation.Valid;
@@ -62,6 +64,25 @@ public class AdminVideoController {
             file.getInputStream()
         );
         VideoDto dto = videoUseCase.upload(command, allowed);
+        return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
+    }
+
+    @PostMapping("/create-from-asset")
+    public ResponseEntity<VideoResponse> createFromAsset(@Valid @RequestBody CreateVideoFromAssetRequest request) {
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(request.getApplicationId());
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
+        VideoDto dto = videoUseCase.createFromAsset(
+            new CreateVideoFromAssetCommand(
+                request.getApplicationId(),
+                request.getAssetId(),
+                request.getTitle(),
+                request.getDescription(),
+                request.getStatus(),
+                request.getLocale()
+            ),
+            allowed
+        );
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 

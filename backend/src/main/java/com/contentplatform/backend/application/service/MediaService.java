@@ -1,8 +1,10 @@
 package com.contentplatform.backend.application.service;
 
 import com.contentplatform.backend.application.dto.MediaUploadDto;
+import com.contentplatform.backend.application.dto.RegisterMediaAssetCommand;
 import com.contentplatform.backend.application.dto.UploadMediaCommand;
 import com.contentplatform.backend.application.exception.ForbiddenException;
+import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
 import com.contentplatform.backend.application.port.in.MediaUseCase;
 import com.contentplatform.backend.application.port.out.MediaStoragePort;
 import com.contentplatform.backend.application.port.out.MediaUploadResult;
@@ -16,6 +18,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import com.contentplatform.backend.domain.value.MediaAssetKind;
 
 @Service
 public class MediaService implements MediaUseCase {
@@ -23,15 +26,18 @@ public class MediaService implements MediaUseCase {
 
     private final MediaStoragePort mediaStoragePort;
     private final TimeProvider timeProvider;
+    private final MediaLibraryUseCase mediaLibraryUseCase;
     private final String bucket;
     private final String publicUrl;
 
     public MediaService(MediaStoragePort mediaStoragePort,
                         TimeProvider timeProvider,
+                        MediaLibraryUseCase mediaLibraryUseCase,
                         @Value("${minio.bucket}") String bucket,
                         @Value("${app.storage.public-url:${minio.url}}") String publicUrl) {
         this.mediaStoragePort = mediaStoragePort;
         this.timeProvider = timeProvider;
+        this.mediaLibraryUseCase = mediaLibraryUseCase;
         this.bucket = bucket;
         this.publicUrl = publicUrl;
     }
@@ -45,6 +51,17 @@ public class MediaService implements MediaUseCase {
             command.getInputStream(),
             command.getSizeBytes(),
             command.getContentType()
+        );
+        mediaLibraryUseCase.registerAsset(
+            new RegisterMediaAssetCommand(
+                command.getApplicationId(),
+                MediaAssetKind.fromNullable(command.getKind()),
+                result.objectKey(),
+                command.getOriginalFileName(),
+                result.contentType(),
+                result.sizeBytes()
+            ),
+            allowedApplicationIds
         );
         return new MediaUploadDto(result.objectKey(), result.sizeBytes(), result.contentType(), buildPublicUrl(objectKey));
     }

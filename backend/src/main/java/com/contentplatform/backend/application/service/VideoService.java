@@ -1,14 +1,17 @@
 package com.contentplatform.backend.application.service;
 
 import com.contentplatform.backend.application.dto.ChangeStatusCommand;
+import com.contentplatform.backend.application.dto.CreateVideoFromAssetCommand;
 import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
+import com.contentplatform.backend.application.dto.RegisterMediaAssetCommand;
 import com.contentplatform.backend.application.dto.UploadVideoCommand;
 import com.contentplatform.backend.application.dto.VideoDto;
 import com.contentplatform.backend.application.exception.BadRequestException;
 import com.contentplatform.backend.application.exception.ForbiddenException;
 import com.contentplatform.backend.application.exception.NotFoundException;
 import com.contentplatform.backend.application.mapper.ContentMapper;
+import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
 import com.contentplatform.backend.application.port.in.VideoUseCase;
 import com.contentplatform.backend.application.port.out.MediaStoragePort;
 import com.contentplatform.backend.application.port.out.MediaUploadResult;
@@ -17,6 +20,7 @@ import com.contentplatform.backend.application.port.out.TimeProvider;
 import com.contentplatform.backend.application.port.out.VideoRepository;
 import com.contentplatform.backend.domain.model.Video;
 import com.contentplatform.backend.domain.value.ContentLocale;
+import com.contentplatform.backend.domain.value.MediaAssetKind;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,17 +37,20 @@ public class VideoService implements VideoUseCase {
     private final MediaStoragePort mediaStoragePort;
     private final TimeProvider timeProvider;
     private final ContentMapper mapper;
+    private final MediaLibraryUseCase mediaLibraryUseCase;
     private final int presignExpirySeconds;
 
     public VideoService(VideoRepository videoRepository,
                         MediaStoragePort mediaStoragePort,
                         TimeProvider timeProvider,
                         ContentMapper mapper,
+                        MediaLibraryUseCase mediaLibraryUseCase,
                         @Value("${app.storage.presign-expiry-seconds}") int presignExpirySeconds) {
         this.videoRepository = videoRepository;
         this.mediaStoragePort = mediaStoragePort;
         this.timeProvider = timeProvider;
         this.mapper = mapper;
+        this.mediaLibraryUseCase = mediaLibraryUseCase;
         this.presignExpirySeconds = presignExpirySeconds;
     }
 
@@ -61,6 +68,17 @@ public class VideoService implements VideoUseCase {
             command.getSizeBytes(),
             command.getContentType()
         );
+        mediaLibraryUseCase.registerAsset(
+            new RegisterMediaAssetCommand(
+                command.getApplicationId(),
+                MediaAssetKind.VIDEO,
+                result.objectKey(),
+                command.getOriginalFileName(),
+                result.contentType(),
+                result.sizeBytes()
+            ),
+            allowedApplicationIds
+        );
         Instant publishedAt = command.getStatus() == ContentStatus.PUBLISHED ? now : null;
         Video video = new Video(
             UUID.randomUUID().toString(),
@@ -73,6 +91,36 @@ public class VideoService implements VideoUseCase {
             result.objectKey(),
             result.contentType(),
             result.sizeBytes(),
+            now,
+            now
+        );
+        return mapper.toVideoDto(videoRepository.save(video));
+    }
+
+    @Override
+    public VideoDto createFromAsset(CreateVideoFromAssetCommand command, List<String> allowedApplicationIds) {
+        enforceTenant(command.getApplicationId(), allowedApplicationIds);
+        if (command.getLocale() != null && !command.getLocale().isBlank() && !ContentLocale.isSupported(command.getLocale())) {
+            throw new BadRequestException("Locale is not supported");
+        }
+        var asset = mediaLibraryUseCase.getById(command.getAssetId(), command.getApplicationId(), allowedApplicationIds);
+        if (asset.kind() != MediaAssetKind.VIDEO) {
+            throw new BadRequestException("Selected asset is not a video");
+        }
+
+        Instant now = timeProvider.now();
+        Instant publishedAt = command.getStatus() == ContentStatus.PUBLISHED ? now : null;
+        Video video = new Video(
+            UUID.randomUUID().toString(),
+            command.getApplicationId(),
+            command.getTitle(),
+            command.getDescription(),
+            ContentLocale.normalizeOrDefault(command.getLocale()),
+            command.getStatus(),
+            publishedAt,
+            asset.objectKey(),
+            asset.contentType(),
+            asset.sizeBytes(),
             now,
             now
         );
