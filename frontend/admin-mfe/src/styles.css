@@ -98,6 +98,22 @@ a {
   color: var(--muted);
 }
 
+.sidebar-app-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar-app-select .ant-select-selector {
+  width: 100%;
+}
+
+.sidebar-app-select .ant-select-selection-item,
+.sidebar-app-select .ant-select-selection-placeholder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-header {
   background: var(--card);
   border-bottom: 1px solid var(--border);

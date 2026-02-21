@@ -117,6 +117,7 @@ export const AppLayout = () => {
             {t("app.applicationId")}
           </Typography.Text>
           <Select
+            className="sidebar-app-select"
             size="small"
             value={applicationId || undefined}
             options={applicationOptions}
