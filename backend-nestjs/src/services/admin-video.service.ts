@@ -13,6 +13,8 @@ import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
 import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
+import { MediaLibraryService } from './media-library.service';
+import { MediaAssetKind } from '../entities/media-asset.entity';
 
 @Injectable()
 export class AdminVideoService {
@@ -23,6 +25,7 @@ export class AdminVideoService {
     private readonly baseUrl: BaseUrlService,
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
+    private readonly mediaLibraryService: MediaLibraryService,
   ) {}
 
   private mapVideo(video: VideoEntity, application?: ApplicationEntity | null): VideoResponseDto {
@@ -84,6 +87,14 @@ export class AdminVideoService {
     }
     const publication = resolvePublicationFields(status, scheduledAt);
     const upload = await this.minioService.upload(applicationId, 'video', file);
+    await this.mediaLibraryService.registerAsset({
+      applicationId,
+      kind: MediaAssetKind.VIDEO,
+      objectKey: upload.objectKey,
+      contentType: upload.contentType,
+      sizeBytes: upload.sizeBytes,
+      originalName: file.originalname,
+    });
     const video = this.videoRepo.create({
       id: uuidv4(),
       applicationId,
@@ -99,6 +110,52 @@ export class AdminVideoService {
       objectKey: upload.objectKey,
       contentType: upload.contentType,
       sizeBytes: upload.sizeBytes,
+    });
+    const saved = await this.videoRepo.save(video);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapVideo(saved, application);
+  }
+
+  async createFromAsset(
+    assetId: string,
+    title: string,
+    description: string | undefined,
+    applicationId: string,
+    status: ContentStatus,
+    tags?: string[],
+    seo?: Record<string, unknown>,
+    gallery?: Record<string, unknown>[],
+    locale?: string,
+    scheduledAt?: string,
+  ): Promise<VideoResponseDto> {
+    if (!title?.trim()) {
+      throw new BadRequestException('Title is required.');
+    }
+    if (locale && !isSupportedContentLocale(locale)) {
+      throw new BadRequestException('Locale is not supported.');
+    }
+
+    const asset = await this.mediaLibraryService.getAssetForApplication(assetId, applicationId);
+    if (asset.kind !== MediaAssetKind.VIDEO) {
+      throw new BadRequestException('Selected asset is not a video.');
+    }
+
+    const publication = resolvePublicationFields(status, scheduledAt);
+    const video = this.videoRepo.create({
+      id: uuidv4(),
+      applicationId,
+      title: title.trim(),
+      description: description?.trim() || null,
+      locale: normalizeContentLocale(locale),
+      tags: this.normalizeTags(tags),
+      seo: seo ?? null,
+      gallery: gallery ?? null,
+      status,
+      publishedAt: publication.publishedAt,
+      scheduledAt: publication.scheduledAt,
+      objectKey: asset.objectKey,
+      contentType: asset.contentType,
+      sizeBytes: asset.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });

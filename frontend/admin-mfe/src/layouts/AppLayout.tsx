@@ -9,6 +9,7 @@ import {
   PictureOutlined,
   ReadOutlined,
   TeamOutlined,
+  FolderOpenOutlined,
   UnorderedListOutlined,
   VideoCameraOutlined
 } from "@ant-design/icons";
@@ -93,6 +94,7 @@ export const AppLayout = () => {
             { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
             { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
             { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
+            { key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") },
             { key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }
           ]}
           className="sidebar-menu"

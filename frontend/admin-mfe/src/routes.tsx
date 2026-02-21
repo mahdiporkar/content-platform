@@ -18,6 +18,7 @@ import { CollectionEditorPage } from "./features/collections/CollectionEditorPag
 import { ImagesListPage } from "./features/images/ImagesListPage";
 import { ImageEditorPage } from "./features/images/ImageEditorPage";
 import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
+import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -56,6 +57,7 @@ export const routes: RouteObject[] = [
       { path: "videos/upload", element: <VideoUploadPage /> },
       { path: "images", element: <ImagesListPage /> },
       { path: "images/:id", element: <ImageEditorPage /> },
+      { path: "media", element: <MediaLibraryPage /> },
       { path: "analytics", element: <AnalyticsDashboardPage /> }
     ]
   }

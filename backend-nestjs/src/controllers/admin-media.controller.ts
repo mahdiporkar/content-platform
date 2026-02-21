@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { ApplicationEntity } from '../entities/application.entity';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
+import { MediaLibraryService } from '../services/media-library.service';
+import { MediaAssetKind } from '../entities/media-asset.entity';
 
 @Controller('/api/v1/admin/media')
 export class AdminMediaController {
@@ -17,6 +19,7 @@ export class AdminMediaController {
   constructor(
     private readonly minioService: MinioService,
     private readonly baseUrl: BaseUrlService,
+    private readonly mediaLibraryService: MediaLibraryService,
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly access: AdminAuthorizationService,
@@ -42,6 +45,16 @@ export class AdminMediaController {
     );
     try {
       const result = await this.minioService.upload(applicationId, kind, file);
+      const normalizedKind: MediaAssetKind =
+        kind === MediaAssetKind.IMAGE || kind === MediaAssetKind.VIDEO ? kind : MediaAssetKind.FILE;
+      await this.mediaLibraryService.registerAsset({
+        applicationId,
+        kind: normalizedKind,
+        objectKey: result.objectKey,
+        contentType: result.contentType,
+        sizeBytes: result.sizeBytes,
+        originalName: file.originalname,
+      });
       const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
       const mediaUrl = application
         ? this.baseUrl.buildMediaUrl(application, result.objectKey)

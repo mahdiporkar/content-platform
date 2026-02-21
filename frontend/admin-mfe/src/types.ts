@@ -128,6 +128,21 @@ export type MediaUploadResponse = {
   mediaUrl?: string;
 };
 
+export type MediaAssetKind = "image" | "video" | "file";
+
+export type MediaAsset = {
+  id: string;
+  applicationId: string;
+  kind: MediaAssetKind;
+  objectKey: string;
+  originalName?: string | null;
+  contentType: string;
+  sizeBytes: number;
+  mediaUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ImageContent = {
   id: string;
   applicationId: string;

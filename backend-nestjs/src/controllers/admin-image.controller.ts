@@ -49,6 +49,37 @@ export class AdminImageController {
     );
   }
 
+  @Post('create-from-asset')
+  async createFromAsset(
+    @Req() request: Request,
+    @Body('assetId') assetId: string,
+    @Body('title') title: string,
+    @Body('description') description: string | undefined,
+    @Body('applicationId') applicationId: string,
+    @Body('status') status: ContentStatus,
+    @Body('tags') tags?: string[],
+    @Body('seo') seo?: Record<string, unknown>,
+    @Body('gallery') gallery?: Record<string, unknown>[],
+    @Body('locale') locale?: string,
+    @Body('altText') altText?: string,
+    @Body('scheduledAt') scheduledAt?: string,
+  ): Promise<ImageResponseDto> {
+    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
+    return await this.imageService.createFromAsset(
+      assetId,
+      title,
+      description,
+      applicationId,
+      status,
+      tags,
+      seo,
+      gallery,
+      locale,
+      altText,
+      scheduledAt,
+    );
+  }
+
   @Get(':id')
   async getById(@Req() request: Request, @Param('id') id: string): Promise<ImageResponseDto> {
     const applicationId = await this.imageService.getApplicationIdById(id);

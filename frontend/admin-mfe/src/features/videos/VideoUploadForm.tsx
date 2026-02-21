@@ -5,8 +5,9 @@ import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
 import { uploadMedia } from "../../api/media";
-import { ContentStatus, GalleryImage, SeoMeta } from "../../types";
+import { ContentStatus, GalleryImage, MediaAsset, SeoMeta } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { MediaPickerModal } from "../../components/MediaPickerModal";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -29,6 +30,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
+  const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
+  const [selectedVideoAsset, setSelectedVideoAsset] = useState<MediaAsset | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
@@ -60,7 +64,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       setError("Application ID is required.");
       return;
     }
-    if (!file) {
+    if (!file && !selectedVideoAsset) {
       setError("Choose a video file to upload.");
       return;
     }
@@ -75,32 +79,47 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     }
     setUploading(true);
     setError(null);
-    const payload = new FormData();
-    payload.append("file", file);
-    payload.append("title", title);
-    payload.append("description", description);
-    payload.append("applicationId", applicationId);
-    payload.append("status", status);
-    payload.append("locale", locale);
-    if (status === "SCHEDULED" && scheduledAtIso) {
-      payload.append("scheduledAt", scheduledAtIso);
-    }
-    if (tags.length > 0) {
-      payload.append("tags", JSON.stringify(tags));
-    }
-    if (Object.keys(seo).length > 0) {
-      payload.append("seo", JSON.stringify(seo));
-    }
-    if (gallery.length > 0) {
-      payload.append("gallery", JSON.stringify(gallery));
-    }
-
     try {
-      await client.post("/api/v1/admin/videos/upload", payload, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      if (file) {
+        const payload = new FormData();
+        payload.append("file", file);
+        payload.append("title", title);
+        payload.append("description", description);
+        payload.append("applicationId", applicationId);
+        payload.append("status", status);
+        payload.append("locale", locale);
+        if (status === "SCHEDULED" && scheduledAtIso) {
+          payload.append("scheduledAt", scheduledAtIso);
+        }
+        if (tags.length > 0) {
+          payload.append("tags", JSON.stringify(tags));
+        }
+        if (Object.keys(seo).length > 0) {
+          payload.append("seo", JSON.stringify(seo));
+        }
+        if (gallery.length > 0) {
+          payload.append("gallery", JSON.stringify(gallery));
+        }
+        await client.post("/api/v1/admin/videos/upload", payload, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+      } else if (selectedVideoAsset) {
+        await client.post("/api/v1/admin/videos/create-from-asset", {
+          assetId: selectedVideoAsset.id,
+          title,
+          description,
+          applicationId,
+          status,
+          locale,
+          scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
+          tags,
+          seo,
+          gallery
+        });
+      }
       setFile(null);
       setFileList([]);
+      setSelectedVideoAsset(null);
       onSuccess?.();
     } catch (err) {
       setError("Upload failed. Check the fields and try again.");
@@ -113,6 +132,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     const selected = nextFileList[0]?.originFileObj;
     setFile(selected ?? null);
     setFileList(nextFileList);
+    if (selected) {
+      setSelectedVideoAsset(null);
+    }
   };
 
   return (
@@ -164,6 +186,16 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
           required
           help="Maximum file size: 500MB. Supported formats: MP4, WebM, MOV"
         >
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Button onClick={() => setVideoPickerOpen(true)} disabled={!applicationId}>
+              Choose from File Manager
+            </Button>
+            {selectedVideoAsset && (
+              <Typography.Text type="secondary">
+                Selected: {selectedVideoAsset.originalName || selectedVideoAsset.objectKey}
+              </Typography.Text>
+            )}
+          </Space>
           <Upload
             beforeUpload={() => false}
             maxCount={1}
@@ -172,7 +204,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
             onChange={({ fileList }) => handleFileChange(fileList)}
           >
             <Button icon={<UploadOutlined />} size="large" block>
-              {fileList.length === 0 ? "Select Video File" : "Change Video File"}
+            {fileList.length === 0 ? "Select Video File" : "Change Video File"}
             </Button>
           </Upload>
           {fileList.length > 0 && (
@@ -287,6 +319,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
               <Button onClick={() => galleryInputRef.current?.click()} disabled={!applicationId}>
                 Upload image
               </Button>
+              <Button onClick={() => setGalleryPickerOpen(true)} disabled={!applicationId}>
+                Add from File Manager
+              </Button>
               <input
                 ref={galleryInputRef}
                 type="file"
@@ -340,7 +375,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       </Form>
 
       <Space>
-        <Button type="primary" onClick={handleUpload} loading={uploading} size="large" disabled={!file}>
+        <Button type="primary" onClick={handleUpload} loading={uploading} size="large" disabled={!file && !selectedVideoAsset}>
           {uploading ? "Uploading..." : "Upload Video"}
         </Button>
         {onCancel && (
@@ -349,6 +384,30 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
           </Button>
         )}
       </Space>
+      <MediaPickerModal
+        open={videoPickerOpen}
+        applicationId={applicationId}
+        allowedKinds={["video"]}
+        title="Select video from File Manager"
+        onCancel={() => setVideoPickerOpen(false)}
+        onSelect={(asset) => {
+          setSelectedVideoAsset(asset);
+          setFile(null);
+          setFileList([]);
+          setVideoPickerOpen(false);
+        }}
+      />
+      <MediaPickerModal
+        open={galleryPickerOpen}
+        applicationId={applicationId}
+        allowedKinds={["image"]}
+        title="Select gallery image"
+        onCancel={() => setGalleryPickerOpen(false)}
+        onSelect={(asset) => {
+          setGallery((prev) => [...prev, { url: asset.mediaUrl, alt: asset.originalName ?? "", caption: "" }]);
+          setGalleryPickerOpen(false);
+        }}
+      />
     </Card>
   );
 };

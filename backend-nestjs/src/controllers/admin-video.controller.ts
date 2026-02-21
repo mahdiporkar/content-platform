@@ -73,6 +73,38 @@ export class AdminVideoController {
     );
   }
 
+  @Post('create-from-asset')
+  async createFromAsset(
+    @Req() request: Request,
+    @Body('assetId') assetId: string,
+    @Body('title') title: string,
+    @Body('description') description: string | undefined,
+    @Body('applicationId') applicationId: string,
+    @Body('status') status: ContentStatus,
+    @Body('tags') tagsRaw?: string,
+    @Body('seo') seoRaw?: string,
+    @Body('gallery') galleryRaw?: string,
+    @Body('locale') locale?: string,
+    @Body('scheduledAt') scheduledAt?: string,
+  ): Promise<VideoResponseDto> {
+    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
+    const tags = this.parseJson<string[]>(tagsRaw);
+    const seo = this.parseJson<Record<string, unknown>>(seoRaw);
+    const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
+    return await this.videoService.createFromAsset(
+      assetId,
+      title,
+      description,
+      applicationId,
+      status,
+      tags,
+      seo,
+      gallery,
+      locale,
+      scheduledAt,
+    );
+  }
+
   @Patch(':id/status')
   async changeStatus(
     @Req() request: Request,

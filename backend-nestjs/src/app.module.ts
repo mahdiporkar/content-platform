@@ -8,6 +8,7 @@ import { AdminPostController } from './controllers/admin-post.controller';
 import { AdminArticleController } from './controllers/admin-article.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
+import { AdminMediaLibraryController } from './controllers/admin-media-library.controller';
 import { AdminUserController } from './controllers/admin-user.controller';
 import { AdminCollectionController } from './controllers/admin-collection.controller';
 import { AdminAppCollectionController } from './controllers/admin-app-collection.controller';
@@ -33,6 +34,7 @@ import { CollectionEntity } from './entities/collection.entity';
 import { CollectionItemEntity } from './entities/collection-item.entity';
 import { AuditLogEntity } from './entities/audit-log.entity';
 import { ViewEventEntity } from './entities/view-event.entity';
+import { MediaAssetEntity } from './entities/media-asset.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
@@ -47,6 +49,7 @@ import { AdminCollectionService } from './services/admin-collection.service';
 import { AuditLogService } from './services/audit-log.service';
 import { AdminAnalyticsService } from './services/admin-analytics.service';
 import { ScheduledPublisherService } from './services/scheduled-publisher.service';
+import { MediaLibraryService } from './services/media-library.service';
 
 @Module({
   imports: [
@@ -80,6 +83,7 @@ import { ScheduledPublisherService } from './services/scheduled-publisher.servic
             CollectionItemEntity,
             AuditLogEntity,
             ViewEventEntity,
+            MediaAssetEntity,
           ],
           synchronize: true,
         };
@@ -97,6 +101,7 @@ import { ScheduledPublisherService } from './services/scheduled-publisher.servic
       CollectionItemEntity,
       AuditLogEntity,
       ViewEventEntity,
+      MediaAssetEntity,
     ]),
   ],
   controllers: [
@@ -109,6 +114,7 @@ import { ScheduledPublisherService } from './services/scheduled-publisher.servic
     AdminVideoController,
     AdminImageController,
     AdminMediaController,
+    AdminMediaLibraryController,
     AdminUserController,
     AdminAnalyticsController,
     DeliveryContentController,
@@ -134,6 +140,7 @@ import { ScheduledPublisherService } from './services/scheduled-publisher.servic
     AuditLogService,
     SeedDataService,
     MinioService,
+    MediaLibraryService,
     ScheduledPublisherService,
   ],
 })

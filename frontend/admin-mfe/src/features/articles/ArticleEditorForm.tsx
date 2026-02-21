@@ -7,6 +7,7 @@ import { uploadMedia } from "../../api/media";
 import { Article, ContentStatus, GalleryImage, SeoMeta } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { MediaPickerModal } from "../../components/MediaPickerModal";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -44,6 +45,8 @@ export const ArticleEditorForm = ({
   const [error, setError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
+  const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -214,6 +217,9 @@ export const ArticleEditorForm = ({
               >
                 {bannerUploading ? "Uploading..." : "Upload"}
               </Button>
+              <Button onClick={() => setBannerPickerOpen(true)} disabled={!applicationId || bannerUploading}>
+                Choose from File Manager
+              </Button>
               {bannerUrl && (
                 <Button danger icon={<DeleteOutlined />} onClick={() => setBannerUrl("")} />
               )}
@@ -340,6 +346,9 @@ export const ArticleEditorForm = ({
               <Button onClick={() => galleryInputRef.current?.click()} disabled={!applicationId}>
                 Upload image
               </Button>
+              <Button onClick={() => setGalleryPickerOpen(true)} disabled={!applicationId}>
+                Add from File Manager
+              </Button>
               <input
                 ref={galleryInputRef}
                 type="file"
@@ -402,6 +411,28 @@ export const ArticleEditorForm = ({
           </Button>
         )}
       </Space>
+      <MediaPickerModal
+        open={bannerPickerOpen}
+        applicationId={applicationId}
+        allowedKinds={["image"]}
+        title="Select banner image"
+        onCancel={() => setBannerPickerOpen(false)}
+        onSelect={(asset) => {
+          setBannerUrl(asset.mediaUrl);
+          setBannerPickerOpen(false);
+        }}
+      />
+      <MediaPickerModal
+        open={galleryPickerOpen}
+        applicationId={applicationId}
+        allowedKinds={["image"]}
+        title="Select gallery image"
+        onCancel={() => setGalleryPickerOpen(false)}
+        onSelect={(asset) => {
+          setGallery((prev) => [...prev, { url: asset.mediaUrl, alt: asset.originalName ?? "", caption: "" }]);
+          setGalleryPickerOpen(false);
+        }}
+      />
     </Card>
   );
 };

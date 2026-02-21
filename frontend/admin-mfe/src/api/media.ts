@@ -1,5 +1,5 @@
 import client from "./client";
-import type { MediaUploadResponse } from "../types";
+import type { MediaAsset, MediaUploadResponse, PageResponse } from "../types";
 
 export type MediaKind = "image" | "video" | "file";
 
@@ -15,6 +15,27 @@ export const uploadMedia = async (
 
   const response = await client.post<MediaUploadResponse>("/api/v1/admin/media/upload", payload, {
     headers: { "Content-Type": "multipart/form-data" }
+  });
+  return response.data;
+};
+
+type ListMediaAssetsParams = {
+  applicationId: string;
+  kind?: MediaKind;
+  search?: string;
+  page?: number;
+  size?: number;
+};
+
+export const listMediaAssets = async (params: ListMediaAssetsParams): Promise<PageResponse<MediaAsset>> => {
+  const response = await client.get<PageResponse<MediaAsset>>("/api/v1/admin/media/library", {
+    params: {
+      applicationId: params.applicationId,
+      kind: params.kind,
+      search: params.search,
+      page: params.page ?? 0,
+      size: params.size ?? 24
+    }
   });
   return response.data;
 };

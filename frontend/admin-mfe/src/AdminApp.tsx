@@ -25,6 +25,7 @@ import { CollectionEditorPage } from "./features/collections/CollectionEditorPag
 import { ImagesListPage } from "./features/images/ImagesListPage";
 import { ImageEditorPage } from "./features/images/ImageEditorPage";
 import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
+import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 import { I18nProvider, type SupportedLocale, useI18n } from "./i18n";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
@@ -96,6 +97,7 @@ const LocalizedAdminApp = () => {
             <Route path="videos/upload" element={<VideoUploadPage />} />
             <Route path="images" element={<ImagesListPage />} />
             <Route path="images/:id" element={<ImageEditorPage />} />
+            <Route path="media" element={<MediaLibraryPage />} />
             <Route path="analytics" element={<AnalyticsDashboardPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

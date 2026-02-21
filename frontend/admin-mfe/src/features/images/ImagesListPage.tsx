@@ -5,9 +5,10 @@ import type { ColumnsType } from "antd/es/table";
 import { UploadOutlined } from "@ant-design/icons";
 import { type Dayjs } from "dayjs";
 import client from "../../api/client";
-import { ImageContent } from "../../types";
+import { ImageContent, MediaAsset } from "../../types";
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { MediaPickerModal } from "../../components/MediaPickerModal";
 
 const resolveBackendOrigin = (): string => {
   const apiBase = (process.env.API_BASE_URL || "").trim();
@@ -44,6 +45,8 @@ export const ImagesListPage = () => {
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("DRAFT");
   const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
   const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);
 
   const scheduleLabelByLocale: Record<ContentLocale, string> = {
     fa: "زمان انتشار",
@@ -70,7 +73,7 @@ export const ImagesListPage = () => {
   }, [fetchImages]);
 
   const handleUpload = async () => {
-    if (!applicationId || fileList.length === 0 || !title.trim()) {
+    if (!applicationId || (!selectedAsset && fileList.length === 0) || !title.trim()) {
       return;
     }
     const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
@@ -80,20 +83,32 @@ export const ImagesListPage = () => {
     if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
       return;
     }
-    const payload = new FormData();
-    payload.append("file", fileList[0]);
-    payload.append("title", title.trim());
-    payload.append("applicationId", applicationId);
-    payload.append("status", status);
-    payload.append("locale", locale);
-    if (status === "SCHEDULED" && scheduledAtIso) {
-      payload.append("scheduledAt", scheduledAtIso);
+    if (selectedAsset) {
+      await client.post("/api/v1/admin/images/create-from-asset", {
+        assetId: selectedAsset.id,
+        title: title.trim(),
+        applicationId,
+        status,
+        locale,
+        scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined
+      });
+    } else {
+      const payload = new FormData();
+      payload.append("file", fileList[0]);
+      payload.append("title", title.trim());
+      payload.append("applicationId", applicationId);
+      payload.append("status", status);
+      payload.append("locale", locale);
+      if (status === "SCHEDULED" && scheduledAtIso) {
+        payload.append("scheduledAt", scheduledAtIso);
+      }
+      await client.post("/api/v1/admin/images/upload", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
     }
-    await client.post("/api/v1/admin/images/upload", payload, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
     setUploadOpen(false);
     setFileList([]);
+    setSelectedAsset(null);
     setTitle("");
     setLocale(DEFAULT_CONTENT_LOCALE);
     setScheduledAt(null);
@@ -173,7 +188,11 @@ export const ImagesListPage = () => {
 
       <Modal
         open={uploadOpen}
-        onCancel={() => setUploadOpen(false)}
+        onCancel={() => {
+          setUploadOpen(false);
+          setSelectedAsset(null);
+          setFileList([]);
+        }}
         onOk={handleUpload}
         okText="Upload"
         title="Upload Image"
@@ -212,9 +231,20 @@ export const ImagesListPage = () => {
             </Form.Item>
           )}
           <Form.Item label="File" required>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Button onClick={() => setPickerOpen(true)} disabled={!applicationId}>
+                Choose from File Manager
+              </Button>
+              {selectedAsset && (
+                <Typography.Text type="secondary">
+                  Selected: {selectedAsset.originalName || selectedAsset.objectKey}
+                </Typography.Text>
+              )}
+            </Space>
             <Upload
               beforeUpload={(file) => {
                 setFileList([file]);
+                setSelectedAsset(null);
                 return false;
               }}
               onRemove={() => setFileList([])}
@@ -225,6 +255,18 @@ export const ImagesListPage = () => {
           </Form.Item>
         </Form>
       </Modal>
+      <MediaPickerModal
+        open={pickerOpen}
+        applicationId={applicationId || ""}
+        allowedKinds={["image"]}
+        title="Select image from File Manager"
+        onCancel={() => setPickerOpen(false)}
+        onSelect={(asset) => {
+          setSelectedAsset(asset);
+          setFileList([]);
+          setPickerOpen(false);
+        }}
+      />
     </Card>
   );
 };
