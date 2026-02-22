@@ -33,6 +33,7 @@ export const AppLayout = () => {
     () => Array.from(new Set((tokenPayload?.applicationIds || []).map((entry) => entry.trim()).filter(Boolean))),
     [tokenPayload]
   );
+  const canSeeMediaManagerMenu = useMemo(() => tokenPayload?.role === "super_admin", [tokenPayload?.role]);
 
   const handleLogout = () => {
     authStore.clearToken();
@@ -71,6 +72,17 @@ export const AppLayout = () => {
   }, [applicationId, applicationOptions, setApplicationId]);
 
   const selectedKey = location.pathname.split("/")[1] || "posts";
+  const menuItems = [
+    { key: "applications", icon: <AppstoreOutlined />, label: t("menu.applications") },
+    { key: "users", icon: <TeamOutlined />, label: t("menu.users") },
+    { key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") },
+    { key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") },
+    { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
+    { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
+    { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
+    ...(canSeeMediaManagerMenu ? [{ key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") }] : []),
+    { key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }
+  ];
 
   return (
     <Layout className="app-shell">
@@ -86,17 +98,7 @@ export const AppLayout = () => {
           mode="inline"
           selectedKeys={[selectedKey]}
           onClick={({ key }) => navigate(`/${key}`)}
-          items={[
-            { key: "applications", icon: <AppstoreOutlined />, label: t("menu.applications") },
-            { key: "users", icon: <TeamOutlined />, label: t("menu.users") },
-            { key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") },
-            { key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") },
-            { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
-            { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
-            { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
-            { key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") },
-            { key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }
-          ]}
+          items={menuItems}
           className="sidebar-menu"
         />
         <div className="sidebar-footer">

@@ -68,11 +68,8 @@ export class MediaLifecycleService {
     if (asset.state === MediaAssetState.PURGED) {
       throw new ConflictException('Purged asset cannot be moved to trash.');
     }
+    // Moving to trash is always allowed. Reference checks are enforced at purge time.
     await this.mediaReferenceService.ensureReferencesForAsset(applicationId, id);
-    const refCount = await this.mediaRefRepo.count({ where: { applicationId, mediaAssetId: id } });
-    if (refCount > 0) {
-      throw new ConflictException('Referenced media cannot be moved to trash.');
-    }
     asset.state = MediaAssetState.TRASH;
     asset.trashedAt = new Date();
     asset.deletedByUserId = actorId ?? null;

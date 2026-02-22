@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Modal, Select, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Modal, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
 import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import axios from "axios";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
-import { ContentStatus, PageResponse, Video } from "../../types";
+import { ContentStatus, ContentUsage, PageResponse, Video } from "../../types";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
@@ -62,6 +63,11 @@ export const VideoListPage = () => {
   const [loading, setLoading] = useState(false);
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
   const [activePreviewUrl, setActivePreviewUrl] = useState<string | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [usageOpen, setUsageOpen] = useState(false);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [usageItems, setUsageItems] = useState<ContentUsage[]>([]);
+  const [usageTargetTitle, setUsageTargetTitle] = useState<string>("");
 
   const fetchVideos = async () => {
     if (!applicationId) {
@@ -79,6 +85,39 @@ export const VideoListPage = () => {
   useEffect(() => {
     fetchVideos();
   }, [applicationId, status]);
+
+  const openUsage = async (video: Video) => {
+    setUsageTargetTitle(video.title);
+    setUsageOpen(true);
+    setUsageLoading(true);
+    setUsageItems([]);
+    try {
+      const response = await client.get<ContentUsage[]>(`/api/v1/admin/videos/${video.id}/usages`);
+      setUsageItems(response.data);
+    } catch {
+      messageApi.error("Failed to load usage list.");
+    } finally {
+      setUsageLoading(false);
+    }
+  };
+
+  const handleDelete = async (video: Video) => {
+    try {
+      await client.delete(`/api/v1/admin/videos/${video.id}`);
+      messageApi.success("Video record deleted.");
+      await fetchVideos();
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        const messageText =
+          typeof error.response.data === "object" && error.response.data && "message" in error.response.data
+            ? String((error.response.data as { message?: unknown }).message || "")
+            : "";
+        messageApi.warning(messageText || "This video cannot be deleted because its file is used in other content.");
+        return;
+      }
+      messageApi.error("Failed to delete video.");
+    }
+  };
 
   const columns = useMemo<ColumnsType<Video>>(
     () => [
@@ -132,14 +171,63 @@ export const VideoListPage = () => {
       {
         title: "Actions",
         key: "actions",
-        width: "10%",
+        width: "22%",
         render: (_, video) => (
+          <Space size="small">
+            <Button type="text" onClick={() => void openUsage(video)}>
+              Usage
+            </Button>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
+            >
+              Edit
+            </Button>
+            <Popconfirm
+              title="Delete this video record?"
+              description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => void handleDelete(video)}
+            >
+              <Button danger type="text">
+                Delete
+              </Button>
+            </Popconfirm>
+          </Space>
+        )
+      }
+    ],
+    [handleDelete, navigate, openUsage]
+  );
+
+  const usageColumns = useMemo<ColumnsType<ContentUsage>>(
+    () => [
+      { title: "Type", dataIndex: "refType", width: 110 },
+      {
+        title: "Title",
+        key: "title",
+        render: (_, usage) => usage.title || usage.refId
+      },
+      { title: "Field", dataIndex: "refField", width: 120 },
+      {
+        title: "Open",
+        key: "open",
+        width: 110,
+        render: (_, usage) => (
           <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
+            type="link"
+            disabled={!usage.routePath}
+            onClick={() => {
+              if (!usage.routePath) {
+                return;
+              }
+              setUsageOpen(false);
+              navigate(usage.routePath);
+            }}
           >
-            Edit
+            Go
           </Button>
         )
       }
@@ -149,6 +237,7 @@ export const VideoListPage = () => {
 
   return (
     <Card className="page-card">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
@@ -238,6 +327,23 @@ export const VideoListPage = () => {
         ) : (
           <Typography.Text type="secondary">Preview URL is not available for this video.</Typography.Text>
         )}
+      </Modal>
+
+      <Modal
+        open={usageOpen}
+        title={`Usage${usageTargetTitle ? ` - ${usageTargetTitle}` : ""}`}
+        onCancel={() => setUsageOpen(false)}
+        footer={<Button onClick={() => setUsageOpen(false)}>Close</Button>}
+        width={900}
+      >
+        <Table
+          rowKey={(row) => `${row.refType}-${row.refId}-${row.refField}`}
+          dataSource={usageItems}
+          columns={usageColumns}
+          loading={usageLoading}
+          pagination={false}
+          locale={{ emptyText: "No usage found. This file is not used elsewhere." }}
+        />
       </Modal>
     </Card>
   );

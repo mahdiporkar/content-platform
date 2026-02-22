@@ -144,7 +144,7 @@ export const MediaPickerModal = ({
       title={title}
       width={920}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <Space wrap>

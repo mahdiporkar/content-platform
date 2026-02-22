@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +17,7 @@ import { MediaLibraryService } from './media-library.service';
 import { MediaAssetKind } from '../entities/media-asset.entity';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
+import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
 
 @Injectable()
 export class AdminImageService {
@@ -67,6 +68,18 @@ export class AdminImageService {
     return normalized.length > 0 ? normalized : null;
   }
 
+  private async syncImageMediaReference(image: ImageEntity): Promise<void> {
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: image.applicationId,
+      refType: MediaReferenceType.IMAGE,
+      refId: image.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: image.objectKey,
+    });
+  }
+
   async upload(
     file: Express.Multer.File,
     title: string,
@@ -114,15 +127,7 @@ export class AdminImageService {
       altText: altText?.trim() || null,
     });
     const saved = await this.imageRepo.save(image);
-    await this.mediaReferenceService.syncContentReferences({
-      applicationId: saved.applicationId,
-      refType: MediaReferenceType.IMAGE,
-      refId: saved.id,
-      bannerKey: null,
-      bannerUrl: null,
-      galleryUrls: [],
-      content: saved.objectKey,
-    });
+    await this.syncImageMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
   }
@@ -171,15 +176,7 @@ export class AdminImageService {
       altText: altText?.trim() || null,
     });
     const saved = await this.imageRepo.save(image);
-    await this.mediaReferenceService.syncContentReferences({
-      applicationId: saved.applicationId,
-      refType: MediaReferenceType.IMAGE,
-      refId: saved.id,
-      bannerKey: null,
-      bannerUrl: null,
-      galleryUrls: [],
-      content: saved.objectKey,
-    });
+    await this.syncImageMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
   }
@@ -193,6 +190,7 @@ export class AdminImageService {
     image.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
     image.scheduledAt = null;
     const saved = await this.imageRepo.save(image);
+    await this.syncImageMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
   }
@@ -212,6 +210,17 @@ export class AdminImageService {
     }
     const application = await this.applicationRepo.findOne({ where: { id: image.applicationId } });
     return this.mapImage(image, application);
+  }
+
+  async listUsages(id: string): Promise<ContentUsageResponseDto[]> {
+    const image = await this.imageRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    if (!image) {
+      throw new NotFoundException('Image not found.');
+    }
+    return await this.mediaReferenceService.listUsagesForObjectKey(image.applicationId, image.objectKey, {
+      refType: MediaReferenceType.IMAGE,
+      refId: image.id,
+    });
   }
 
   async update(id: string, request: ImageUpdateRequestDto): Promise<ImageResponseDto> {
@@ -235,8 +244,29 @@ export class AdminImageService {
     image.publishedAt = publication.publishedAt;
     image.scheduledAt = publication.scheduledAt;
     const saved = await this.imageRepo.save(image);
+    await this.syncImageMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
+  }
+
+  async delete(id: string): Promise<void> {
+    const image = await this.imageRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    if (!image) {
+      throw new NotFoundException('Image not found.');
+    }
+    const usages = await this.mediaReferenceService.listUsagesForObjectKey(image.applicationId, image.objectKey, {
+      refType: MediaReferenceType.IMAGE,
+      refId: image.id,
+    });
+    if (usages.length > 0) {
+      throw new ConflictException({
+        message: 'Image cannot be deleted because its file is used in other content.',
+        usageCount: usages.length,
+        usages: usages.slice(0, 10),
+      });
+    }
+    await this.mediaReferenceService.removeAllForRef(image.applicationId, MediaReferenceType.IMAGE, image.id);
+    await this.imageRepo.delete({ id: image.id });
   }
 
   async list(

@@ -8,6 +8,8 @@ import { PostEntity } from '../entities/post.entity';
 import { ArticleEntity } from '../entities/article.entity';
 import { ImageEntity } from '../entities/image.entity';
 import { VideoEntity } from '../entities/video.entity';
+import { CollectionEntity } from '../entities/collection.entity';
+import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
 
 @Injectable()
 export class MediaReferenceService {
@@ -24,6 +26,8 @@ export class MediaReferenceService {
     private readonly imageRepo: Repository<ImageEntity>,
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
+    @InjectRepository(CollectionEntity)
+    private readonly collectionRepo: Repository<CollectionEntity>,
   ) {}
 
   async addReference(
@@ -79,6 +83,31 @@ export class MediaReferenceService {
       order: { createdAt: 'DESC' },
       take: limit,
     });
+  }
+
+  async findAssetByObjectKey(applicationId: string, objectKey: string): Promise<MediaAssetEntity | null> {
+    return await this.mediaAssetRepo.findOne({ where: { applicationId, objectKey } });
+  }
+
+  async listUsagesForObjectKey(
+    applicationId: string,
+    objectKey: string,
+    exclude?: { refType: MediaReferenceType; refId: string },
+  ): Promise<ContentUsageResponseDto[]> {
+    const asset = await this.findAssetByObjectKey(applicationId, objectKey);
+    if (!asset) {
+      return [];
+    }
+    await this.ensureReferencesForAsset(applicationId, asset.id);
+    const refs = await this.mediaRefRepo.find({
+      where: { applicationId, mediaAssetId: asset.id },
+      order: { createdAt: 'DESC' },
+      take: 200,
+    });
+    const filtered = exclude
+      ? refs.filter((entry) => !(entry.refType === exclude.refType && entry.refId === exclude.refId))
+      : refs;
+    return await this.resolveUsages(filtered);
   }
 
   async addReferencesByObjectKeys(
@@ -181,6 +210,98 @@ export class MediaReferenceService {
       if (video.objectKey === target) {
         await this.addReference(applicationId, mediaAssetId, MediaReferenceType.VIDEO, video.id, 'content');
       }
+    }
+  }
+
+  private async resolveUsages(refs: MediaReferenceEntity[]): Promise<ContentUsageResponseDto[]> {
+    if (refs.length === 0) {
+      return [];
+    }
+    const idsByType = new Map<MediaReferenceType, string[]>();
+    for (const ref of refs) {
+      const current = idsByType.get(ref.refType) || [];
+      current.push(ref.refId);
+      idsByType.set(ref.refType, current);
+    }
+
+    const [posts, articles, images, videos, collections] = await Promise.all([
+      this.loadEntityTitles(this.postRepo, idsByType.get(MediaReferenceType.POST), ['id', 'title']),
+      this.loadEntityTitles(this.articleRepo, idsByType.get(MediaReferenceType.ARTICLE), ['id', 'title']),
+      this.loadEntityTitles(this.imageRepo, idsByType.get(MediaReferenceType.IMAGE), ['id', 'title']),
+      this.loadEntityTitles(this.videoRepo, idsByType.get(MediaReferenceType.VIDEO), ['id', 'title']),
+      this.loadEntityTitles(this.collectionRepo, idsByType.get(MediaReferenceType.GALLERY), ['id', 'title']),
+    ]);
+
+    return refs.map(
+      (entry) =>
+        new ContentUsageResponseDto(
+          entry.refType,
+          entry.refId,
+          entry.refField,
+          this.resolveUsageTitle(entry.refType, entry.refId, { posts, articles, images, videos, collections }),
+          this.resolveUsageRoute(entry.refType, entry.refId),
+          entry.createdAt.toISOString(),
+        ),
+    );
+  }
+
+  private async loadEntityTitles<T extends { id: string; title?: string | null }>(
+    repo: Repository<T>,
+    ids: string[] | undefined,
+    select: Array<keyof T>,
+  ): Promise<Map<string, string>> {
+    const uniqueIds = Array.from(new Set((ids || []).filter(Boolean)));
+    if (uniqueIds.length === 0) {
+      return new Map();
+    }
+    const rows = await repo.find({
+      where: { id: uniqueIds as any },
+      select: select as any,
+    });
+    return new Map(rows.map((row) => [String(row.id), row.title ? String(row.title) : String(row.id)]));
+  }
+
+  private resolveUsageTitle(
+    refType: MediaReferenceType,
+    refId: string,
+    maps: {
+      posts: Map<string, string>;
+      articles: Map<string, string>;
+      images: Map<string, string>;
+      videos: Map<string, string>;
+      collections: Map<string, string>;
+    },
+  ): string | null {
+    switch (refType) {
+      case MediaReferenceType.POST:
+        return maps.posts.get(refId) || null;
+      case MediaReferenceType.ARTICLE:
+        return maps.articles.get(refId) || null;
+      case MediaReferenceType.IMAGE:
+        return maps.images.get(refId) || null;
+      case MediaReferenceType.VIDEO:
+        return maps.videos.get(refId) || null;
+      case MediaReferenceType.GALLERY:
+        return maps.collections.get(refId) || null;
+      default:
+        return null;
+    }
+  }
+
+  private resolveUsageRoute(refType: MediaReferenceType, refId: string): string | null {
+    switch (refType) {
+      case MediaReferenceType.POST:
+        return `/posts/${refId}`;
+      case MediaReferenceType.ARTICLE:
+        return `/articles/${refId}`;
+      case MediaReferenceType.IMAGE:
+        return `/images/${refId}`;
+      case MediaReferenceType.VIDEO:
+        return `/videos/${refId}`;
+      case MediaReferenceType.GALLERY:
+        return `/collections/${refId}`;
+      default:
+        return null;
     }
   }
 

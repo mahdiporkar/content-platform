@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Image, Input, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { listMediaAssets, trashMediaAsset, type MediaKind } from "../../api/media";
 import { useTenant } from "../../app/tenant";
@@ -127,30 +128,54 @@ export const MediaLibraryPage = () => {
         title: "Actions",
         key: "actions",
         width: 140,
-        render: (_, asset) => (
-          <Popconfirm
-            title="Move this file to trash?"
-            okText="Move to Trash"
-            okButtonProps={{ danger: true }}
-            disabled={asset.state === "TRASH" || asset.state === "PURGED"}
-            onConfirm={async () => {
-              if (!applicationId) {
-                return;
-              }
-              try {
-                await trashMediaAsset(asset.id, applicationId);
-                messageApi.success("File moved to trash.");
-                await fetchItems();
-              } catch {
-                messageApi.error("Failed to move file to trash.");
-              }
-            }}
-          >
-            <Button danger type="text" disabled={asset.state === "TRASH" || asset.state === "PURGED"}>
+        render: (_, asset) => {
+          const isStateLocked = asset.state === "TRASH" || asset.state === "PURGED";
+          const trashDisabled = isStateLocked;
+          const trashDisabledReason = asset.state === "TRASH"
+              ? "This file is already in trash."
+              : asset.state === "PURGED"
+                ? "This file is already purged."
+                : undefined;
+
+          const button = (
+            <Button danger type="text" disabled={trashDisabled} title={trashDisabledReason}>
               Trash
             </Button>
-          </Popconfirm>
-        )
+          );
+
+          if (trashDisabled) {
+            return button;
+          }
+
+          return (
+            <Popconfirm
+              title="Move this file to trash?"
+              okText="Move to Trash"
+              okButtonProps={{ danger: true }}
+              onConfirm={async () => {
+                if (!applicationId) {
+                  return;
+                }
+                try {
+                  await trashMediaAsset(asset.id, applicationId);
+                  messageApi.success("File moved to trash.");
+                  await fetchItems();
+                } catch (error) {
+                  if (axios.isAxiosError(error) && error.response?.status === 409) {
+                    messageApi.warning(
+                      "This file is used in content (even DRAFT items count as usage) and cannot be moved to trash."
+                    );
+                    await fetchItems();
+                    return;
+                  }
+                  messageApi.error("Failed to move file to trash.");
+                }
+              }}
+            >
+              {button}
+            </Popconfirm>
+          );
+        }
       }
     ],
     [applicationId, fetchItems, messageApi]

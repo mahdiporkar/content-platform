@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -21,6 +22,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { VideoUpdateRequestDto } from '../dto/requests/video-update-request.dto';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
+import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
 
 @Controller('/api/v1/admin/videos')
 export class AdminVideoController {
@@ -115,11 +117,26 @@ export class AdminVideoController {
     return await this.videoService.changeStatus(id, body);
   }
 
+  @Get(':id/usages')
+  async listUsages(@Req() request: Request, @Param('id') id: string): Promise<ContentUsageResponseDto[]> {
+    const applicationId = await this.videoService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
+    return await this.videoService.listUsages(id);
+  }
+
   @Get(':id')
   async getById(@Req() request: Request, @Param('id') id: string): Promise<VideoResponseDto> {
     const applicationId = await this.videoService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     return await this.videoService.getById(id);
+  }
+
+  @Delete(':id')
+  async delete(@Req() request: Request, @Param('id') id: string): Promise<{ success: true }> {
+    const applicationId = await this.videoService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
+    await this.videoService.delete(id);
+    return { success: true };
   }
 
   @Put(':id')

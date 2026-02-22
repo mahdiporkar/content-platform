@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminImageService } from '../services/admin-image.service';
@@ -9,6 +9,7 @@ import { ImageResponseDto } from '../dto/responses/image-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
+import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
 
 @Controller('/api/v1/admin/images')
 export class AdminImageController {
@@ -80,11 +81,26 @@ export class AdminImageController {
     );
   }
 
+  @Get(':id/usages')
+  async listUsages(@Req() request: Request, @Param('id') id: string): Promise<ContentUsageResponseDto[]> {
+    const applicationId = await this.imageService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
+    return await this.imageService.listUsages(id);
+  }
+
   @Get(':id')
   async getById(@Req() request: Request, @Param('id') id: string): Promise<ImageResponseDto> {
     const applicationId = await this.imageService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
     return await this.imageService.getById(id);
+  }
+
+  @Delete(':id')
+  async delete(@Req() request: Request, @Param('id') id: string): Promise<{ success: true }> {
+    const applicationId = await this.imageService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
+    await this.imageService.delete(id);
+    return { success: true };
   }
 
   @Put(':id')

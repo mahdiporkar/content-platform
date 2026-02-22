@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +17,7 @@ import { MediaLibraryService } from './media-library.service';
 import { MediaAssetKind } from '../entities/media-asset.entity';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
+import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
 
 @Injectable()
 export class AdminVideoService {
@@ -70,6 +71,18 @@ export class AdminVideoService {
     return normalized.length > 0 ? normalized : null;
   }
 
+  private async syncVideoMediaReference(video: VideoEntity): Promise<void> {
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: video.applicationId,
+      refType: MediaReferenceType.VIDEO,
+      refId: video.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: video.objectKey,
+    });
+  }
+
   async upload(
     file: Express.Multer.File,
     title: string,
@@ -115,15 +128,7 @@ export class AdminVideoService {
       sizeBytes: upload.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
-    await this.mediaReferenceService.syncContentReferences({
-      applicationId: saved.applicationId,
-      refType: MediaReferenceType.VIDEO,
-      refId: saved.id,
-      bannerKey: null,
-      bannerUrl: null,
-      galleryUrls: [],
-      content: saved.objectKey,
-    });
+    await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
   }
@@ -170,15 +175,7 @@ export class AdminVideoService {
       sizeBytes: asset.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
-    await this.mediaReferenceService.syncContentReferences({
-      applicationId: saved.applicationId,
-      refType: MediaReferenceType.VIDEO,
-      refId: saved.id,
-      bannerKey: null,
-      bannerUrl: null,
-      galleryUrls: [],
-      content: saved.objectKey,
-    });
+    await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
   }
@@ -192,6 +189,7 @@ export class AdminVideoService {
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
     video.scheduledAt = null;
     const saved = await this.videoRepo.save(video);
+    await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
   }
@@ -211,6 +209,17 @@ export class AdminVideoService {
     }
     const application = await this.applicationRepo.findOne({ where: { id: video.applicationId } });
     return this.mapVideo(video, application);
+  }
+
+  async listUsages(id: string): Promise<ContentUsageResponseDto[]> {
+    const video = await this.videoRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    return await this.mediaReferenceService.listUsagesForObjectKey(video.applicationId, video.objectKey, {
+      refType: MediaReferenceType.VIDEO,
+      refId: video.id,
+    });
   }
 
   async update(id: string, request: VideoUpdateRequestDto): Promise<VideoResponseDto> {
@@ -236,8 +245,29 @@ export class AdminVideoService {
     video.publishedAt = publication.publishedAt;
     video.scheduledAt = publication.scheduledAt;
     const saved = await this.videoRepo.save(video);
+    await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
+  }
+
+  async delete(id: string): Promise<void> {
+    const video = await this.videoRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    const usages = await this.mediaReferenceService.listUsagesForObjectKey(video.applicationId, video.objectKey, {
+      refType: MediaReferenceType.VIDEO,
+      refId: video.id,
+    });
+    if (usages.length > 0) {
+      throw new ConflictException({
+        message: 'Video cannot be deleted because its file is used in other content.',
+        usageCount: usages.length,
+        usages: usages.slice(0, 10),
+      });
+    }
+    await this.mediaReferenceService.removeAllForRef(video.applicationId, MediaReferenceType.VIDEO, video.id);
+    await this.videoRepo.delete({ id: video.id });
   }
 
   async list(

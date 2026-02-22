@@ -159,6 +159,15 @@ export type MediaReference = {
   createdAt: string;
 };
 
+export type ContentUsage = {
+  refType: string;
+  refId: string;
+  refField: string;
+  title: string | null;
+  routePath: string | null;
+  createdAt: string;
+};
+
 export type ImageContent = {
   id: string;
   applicationId: string;
