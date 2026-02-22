@@ -52,11 +52,26 @@ export class MinioService {
     return await this.client.statObject(this.bucket, objectKey);
   }
 
+  getDefaultBucket(): string {
+    return this.bucket;
+  }
+
   async getObject(objectKey: string, offset?: number, length?: number) {
     if (offset !== undefined && length !== undefined) {
       return await this.client.getPartialObject(this.bucket, objectKey, offset, length);
     }
     return await this.client.getObject(this.bucket, objectKey);
+  }
+
+  async deleteObject(objectKey: string, bucket?: string): Promise<void> {
+    await this.client.removeObject(bucket || this.bucket, objectKey);
+  }
+
+  async deleteObjects(objectKeys: string[], bucket?: string): Promise<void> {
+    const targetBucket = bucket || this.bucket;
+    for (const key of objectKeys) {
+      await this.client.removeObject(targetBucket, key);
+    }
   }
 
   private buildObjectKey(applicationId: string, kind: string | undefined, originalName: string | undefined) {

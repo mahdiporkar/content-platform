@@ -5,6 +5,7 @@ import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
 import com.contentplatform.backend.domain.value.MediaAssetKind;
+import com.contentplatform.backend.domain.value.MediaAssetState;
 import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.response.MediaAssetResponse;
@@ -29,13 +30,21 @@ public class AdminMediaLibraryController {
     @GetMapping
     public ResponseEntity<PageResponse<MediaAssetResponse>> list(@RequestParam String applicationId,
                                                                  @RequestParam(required = false) MediaAssetKind kind,
+                                                                 @RequestParam(required = false) MediaAssetState state,
                                                                  @RequestParam(required = false) String search,
                                                                  @RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "30") int size) {
         SecurityUtils.requireServicePermission(ServicePermission.MEDIA_MANAGE);
         SecurityUtils.requireApplicationAccess(applicationId);
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
-        PageResult<MediaAssetDto> result = mediaLibraryUseCase.list(applicationId, kind, search, new PageRequest(page, size), allowed);
+        PageResult<MediaAssetDto> result = mediaLibraryUseCase.list(
+            applicationId,
+            kind,
+            state,
+            search,
+            new PageRequest(page, size),
+            allowed
+        );
         List<MediaAssetResponse> items = result.getItems().stream()
             .map(this::toResponse)
             .toList();
@@ -46,12 +55,21 @@ public class AdminMediaLibraryController {
         return new MediaAssetResponse(
             dto.id(),
             dto.applicationId(),
+            dto.ownerUserId(),
             dto.kind(),
+            dto.state(),
+            dto.bucket(),
             dto.objectKey(),
             dto.originalName(),
             dto.contentType(),
             dto.sizeBytes(),
             dto.url(),
+            dto.trashedAt(),
+            dto.purgedAt(),
+            dto.deletedByUserId(),
+            dto.pinned(),
+            dto.refCount(),
+            dto.canPurge(),
             dto.createdAt(),
             dto.updatedAt()
         );

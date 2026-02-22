@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,7 +43,7 @@ class PublicContentControllerIT {
     @Test
     void listPostsReturnsOnlyPublishedContent() throws Exception {
         String applicationId = "app-1";
-        applicationRepository.save(new ApplicationEntity(applicationId, "Demo App"));
+        applicationRepository.save(new ApplicationEntity(applicationId, "Demo App", null, null, List.of()));
 
         postRepository.save(new PostEntity(
             "post-1",
@@ -50,6 +51,7 @@ class PublicContentControllerIT {
             "Published title",
             "published-title",
             "content",
+            "en",
             ContentStatus.PUBLISHED,
             Instant.parse("2024-01-01T00:00:00Z"),
             Instant.parse("2024-01-01T00:00:00Z"),
@@ -62,6 +64,7 @@ class PublicContentControllerIT {
             "Draft title",
             "draft-title",
             "content",
+            "en",
             ContentStatus.DRAFT,
             null,
             Instant.parse("2024-01-02T00:00:00Z"),

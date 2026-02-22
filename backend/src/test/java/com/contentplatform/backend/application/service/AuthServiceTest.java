@@ -15,6 +15,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AuthServiceTest {
 
@@ -28,7 +30,8 @@ class AuthServiceTest {
             java.util.List.of(SystemPermission.APPLICATIONS_MANAGE),
             java.util.List.of(ServicePermission.POSTS_MANAGE)
         );
-        AdminUserRepository repository = email -> Optional.of(user);
+        AdminUserRepository repository = mock(AdminUserRepository.class);
+        when(repository.findByEmail("admin@example.com")).thenReturn(Optional.of(user));
         PasswordHasher passwordHasher = (raw, hashed) -> true;
         TokenProvider tokenProvider = adminUser -> "token-123";
 
@@ -49,7 +52,8 @@ class AuthServiceTest {
             java.util.List.of(SystemPermission.APPLICATIONS_MANAGE),
             java.util.List.of(ServicePermission.POSTS_MANAGE)
         );
-        AdminUserRepository repository = email -> Optional.of(user);
+        AdminUserRepository repository = mock(AdminUserRepository.class);
+        when(repository.findByEmail("admin@example.com")).thenReturn(Optional.of(user));
         PasswordHasher passwordHasher = (raw, hashed) -> false;
         TokenProvider tokenProvider = adminUser -> "token-123";
 

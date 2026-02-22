@@ -1,6 +1,7 @@
 package com.contentplatform.backend.interfaces.web.error;
 
 import com.contentplatform.backend.application.exception.BadRequestException;
+import com.contentplatform.backend.application.exception.ConflictException;
 import com.contentplatform.backend.application.exception.ForbiddenException;
 import com.contentplatform.backend.application.exception.NotFoundException;
 import com.contentplatform.backend.application.exception.UnauthorizedException;
@@ -44,6 +45,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI(), List.of());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), List.of());
     }
 
     @ExceptionHandler(Exception.class)

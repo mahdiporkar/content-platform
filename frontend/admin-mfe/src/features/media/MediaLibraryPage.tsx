@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Card, Image, Input, Select, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Image, Input, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { listMediaAssets, type MediaKind } from "../../api/media";
+import { useNavigate } from "react-router-dom";
+import { listMediaAssets, trashMediaAsset, type MediaKind } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import type { MediaAsset } from "../../types";
 
@@ -15,9 +16,11 @@ const toSizeLabel = (sizeBytes: number): string => {
 };
 
 export const MediaLibraryPage = () => {
+  const navigate = useNavigate();
   const { applicationId } = useTenant();
   const [items, setItems] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState<MediaKind | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -35,6 +38,7 @@ export const MediaLibraryPage = () => {
       const response = await listMediaAssets({
         applicationId,
         kind,
+        state: "ACTIVE",
         search: search.trim() || undefined,
         page: page - 1,
         size: pageSize
@@ -94,6 +98,16 @@ export const MediaLibraryPage = () => {
         render: (value: MediaKind) => <Tag>{value.toUpperCase()}</Tag>
       },
       {
+        title: "State",
+        dataIndex: "state",
+        width: 110,
+        render: (value?: MediaAsset["state"]) => {
+          const state = value ?? "ACTIVE";
+          const color = state === "ACTIVE" ? "green" : state === "TRASH" ? "orange" : "red";
+          return <Tag color={color}>{state}</Tag>;
+        }
+      },
+      {
         title: "Size",
         dataIndex: "sizeBytes",
         width: 120,
@@ -108,13 +122,43 @@ export const MediaLibraryPage = () => {
             Open
           </a>
         )
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: 140,
+        render: (_, asset) => (
+          <Popconfirm
+            title="Move this file to trash?"
+            okText="Move to Trash"
+            okButtonProps={{ danger: true }}
+            disabled={asset.state === "TRASH" || asset.state === "PURGED"}
+            onConfirm={async () => {
+              if (!applicationId) {
+                return;
+              }
+              try {
+                await trashMediaAsset(asset.id, applicationId);
+                messageApi.success("File moved to trash.");
+                await fetchItems();
+              } catch {
+                messageApi.error("Failed to move file to trash.");
+              }
+            }}
+          >
+            <Button danger type="text" disabled={asset.state === "TRASH" || asset.state === "PURGED"}>
+              Trash
+            </Button>
+          </Popconfirm>
+        )
       }
     ],
-    []
+    [applicationId, fetchItems, messageApi]
   );
 
   return (
     <Card className="page-card">
+      {contextHolder}
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
@@ -127,6 +171,7 @@ export const MediaLibraryPage = () => {
       </div>
       <div className="page-actions">
         <Space wrap>
+          <Button onClick={() => navigate("/media/safety")}>Trash & Safety</Button>
           <Input.Search
             placeholder="Search by filename or path"
             allowClear
@@ -150,7 +195,7 @@ export const MediaLibraryPage = () => {
             options={[
               { value: "image", label: "Image" },
               { value: "video", label: "Video" },
-              { value: "file", label: "File" }
+              { value: "other", label: "File" }
             ]}
           />
           <Button onClick={() => void fetchItems()} loading={loading}>

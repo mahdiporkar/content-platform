@@ -15,6 +15,8 @@ import { isSupportedContentLocale, normalizeContentLocale } from '../common/cont
 import { resolvePublicationFields } from '../common/publishing';
 import { MediaLibraryService } from './media-library.service';
 import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaReferenceService } from './media-reference.service';
+import { MediaReferenceType } from '../entities/media-reference.entity';
 
 @Injectable()
 export class AdminImageService {
@@ -26,6 +28,7 @@ export class AdminImageService {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly mediaLibraryService: MediaLibraryService,
+    private readonly mediaReferenceService: MediaReferenceService,
   ) {}
 
   private mapImage(image: ImageEntity, application?: ApplicationEntity | null): ImageResponseDto {
@@ -111,6 +114,15 @@ export class AdminImageService {
       altText: altText?.trim() || null,
     });
     const saved = await this.imageRepo.save(image);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.IMAGE,
+      refId: saved.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: saved.objectKey,
+    });
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
   }
@@ -159,6 +171,15 @@ export class AdminImageService {
       altText: altText?.trim() || null,
     });
     const saved = await this.imageRepo.save(image);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.IMAGE,
+      refId: saved.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: saved.objectKey,
+    });
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapImage(saved, application);
   }

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApplicationEntity } from '../entities/application.entity';
-import { MediaAssetEntity, MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaAssetEntity, MediaAssetKind, MediaAssetState } from '../entities/media-asset.entity';
 import { BaseUrlService } from './base-url.service';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
@@ -12,6 +12,7 @@ import { VideoEntity } from '../entities/video.entity';
 type ListAssetsParams = {
   applicationId: string;
   kind?: MediaAssetKind;
+  state?: MediaAssetState;
   search?: string;
   page: number;
   size: number;
@@ -24,6 +25,8 @@ type RegisterAssetParams = {
   contentType: string;
   sizeBytes: number;
   originalName?: string | null;
+  ownerUserId?: string | null;
+  bucket?: string;
 };
 
 @Injectable()
@@ -49,16 +52,24 @@ export class MediaLibraryService {
       existing.contentType = params.contentType;
       existing.sizeBytes = params.sizeBytes;
       existing.originalName = params.originalName?.trim() || existing.originalName || null;
+      existing.ownerUserId = params.ownerUserId ?? existing.ownerUserId ?? null;
+      existing.state = existing.state || MediaAssetState.ACTIVE;
+      existing.bucket = params.bucket || existing.bucket || 'media';
       return await this.mediaAssetRepo.save(existing);
     }
 
     const entity = this.mediaAssetRepo.create({
       applicationId: params.applicationId,
+      ownerUserId: params.ownerUserId ?? null,
       kind: params.kind,
+      state: MediaAssetState.ACTIVE,
+      bucket: params.bucket || 'media',
       objectKey: params.objectKey,
       originalName: params.originalName?.trim() || null,
       contentType: params.contentType,
       sizeBytes: params.sizeBytes,
+      pinned: false,
+      metadata: null,
     });
     return await this.mediaAssetRepo.save(entity);
   }
@@ -72,6 +83,9 @@ export class MediaLibraryService {
     const query = this.mediaAssetRepo
       .createQueryBuilder('asset')
       .where('asset.application_id = :applicationId', { applicationId: params.applicationId });
+
+    const state = params.state ?? MediaAssetState.ACTIVE;
+    query.andWhere('asset.state = :state', { state });
 
     if (params.kind) {
       query.andWhere('asset.kind = :kind', { kind: params.kind });
@@ -152,13 +166,19 @@ export class MediaLibraryService {
       asset.id,
       asset.applicationId,
       asset.kind,
+      asset.state,
       asset.objectKey,
       asset.originalName ?? null,
       asset.contentType,
       asset.sizeBytes,
       mediaUrl,
+      asset.trashedAt ? asset.trashedAt.toISOString() : null,
+      asset.purgedAt ? asset.purgedAt.toISOString() : null,
+      asset.pinned ?? false,
       asset.createdAt.toISOString(),
       asset.updatedAt.toISOString(),
+      undefined,
+      undefined,
     );
   }
 }

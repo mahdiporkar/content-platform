@@ -3,16 +3,21 @@ package com.contentplatform.backend.domain.value;
 public enum MediaAssetKind {
     IMAGE,
     VIDEO,
-    FILE;
+    FILE,
+    OTHER;
 
     public static MediaAssetKind fromNullable(String kind) {
         if (kind == null || kind.isBlank()) {
-            return FILE;
+            return OTHER;
+        }
+        String normalized = kind.trim().toUpperCase();
+        if ("FILE".equals(normalized)) {
+            return OTHER;
         }
         try {
-            return MediaAssetKind.valueOf(kind.trim().toUpperCase());
+            return MediaAssetKind.valueOf(normalized);
         } catch (IllegalArgumentException ex) {
-            return FILE;
+            return OTHER;
         }
     }
 }

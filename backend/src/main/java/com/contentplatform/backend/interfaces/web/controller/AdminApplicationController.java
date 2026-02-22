@@ -2,6 +2,7 @@ package com.contentplatform.backend.interfaces.web.controller;
 
 import com.contentplatform.backend.application.dto.ApplicationDto;
 import com.contentplatform.backend.application.dto.CreateApplicationCommand;
+import com.contentplatform.backend.application.dto.GalleryImageDto;
 import com.contentplatform.backend.application.dto.UpdateApplicationCommand;
 import com.contentplatform.backend.application.port.in.ApplicationUseCase;
 import com.contentplatform.backend.domain.value.SystemPermission;
@@ -53,7 +54,13 @@ public class AdminApplicationController {
     public ResponseEntity<ApplicationResponse> create(@Valid @RequestBody ApplicationUpsertRequest request) {
         SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.create(
-            new CreateApplicationCommand(request.getId(), request.getName(), request.getWebsiteUrl())
+            new CreateApplicationCommand(
+                request.getId(),
+                request.getName(),
+                request.getWebsiteUrl(),
+                request.getApiToken(),
+                mapGallery(request)
+            )
         );
         return ResponseEntity.ok(mapper.toApplicationResponse(dto));
     }
@@ -62,7 +69,13 @@ public class AdminApplicationController {
     public ResponseEntity<ApplicationResponse> update(@PathVariable String id, @Valid @RequestBody ApplicationUpsertRequest request) {
         SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.update(
-            new UpdateApplicationCommand(id, request.getName(), request.getWebsiteUrl())
+            new UpdateApplicationCommand(
+                id,
+                request.getName(),
+                request.getWebsiteUrl(),
+                request.getApiToken(),
+                mapGallery(request)
+            )
         );
         return ResponseEntity.ok(mapper.toApplicationResponse(dto));
     }
@@ -72,5 +85,14 @@ public class AdminApplicationController {
         SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         applicationUseCase.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private List<GalleryImageDto> mapGallery(ApplicationUpsertRequest request) {
+        if (request.getGallery() == null) {
+            return List.of();
+        }
+        return request.getGallery().stream()
+            .map(image -> new GalleryImageDto(image.getUrl(), image.getAlt(), image.getCaption()))
+            .toList();
     }
 }

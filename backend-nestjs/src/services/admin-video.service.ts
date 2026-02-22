@@ -15,6 +15,8 @@ import { isSupportedContentLocale, normalizeContentLocale } from '../common/cont
 import { resolvePublicationFields } from '../common/publishing';
 import { MediaLibraryService } from './media-library.service';
 import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaReferenceService } from './media-reference.service';
+import { MediaReferenceType } from '../entities/media-reference.entity';
 
 @Injectable()
 export class AdminVideoService {
@@ -26,6 +28,7 @@ export class AdminVideoService {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly mediaLibraryService: MediaLibraryService,
+    private readonly mediaReferenceService: MediaReferenceService,
   ) {}
 
   private mapVideo(video: VideoEntity, application?: ApplicationEntity | null): VideoResponseDto {
@@ -112,6 +115,15 @@ export class AdminVideoService {
       sizeBytes: upload.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.VIDEO,
+      refId: saved.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: saved.objectKey,
+    });
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
   }
@@ -158,6 +170,15 @@ export class AdminVideoService {
       sizeBytes: asset.sizeBytes,
     });
     const saved = await this.videoRepo.save(video);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.VIDEO,
+      refId: saved.id,
+      bannerKey: null,
+      bannerUrl: null,
+      galleryUrls: [],
+      content: saved.objectKey,
+    });
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
   }

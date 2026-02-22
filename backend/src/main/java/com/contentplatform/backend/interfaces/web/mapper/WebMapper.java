@@ -32,7 +32,19 @@ public class WebMapper {
     }
 
     public ApplicationResponse toApplicationResponse(ApplicationDto dto) {
-        return new ApplicationResponse(dto.getId(), dto.getName(), dto.getWebsiteUrl());
+        return new ApplicationResponse(
+            dto.getId(),
+            dto.getName(),
+            dto.getApiToken(),
+            dto.getWebsiteUrl(),
+            dto.getGallery().stream()
+                .map(image -> new com.contentplatform.backend.interfaces.web.response.GalleryImageResponse(
+                    image.getUrl(),
+                    image.getAlt(),
+                    image.getCaption()
+                ))
+                .toList()
+        );
     }
 
     public ArticleResponse toArticleResponse(ArticleDto dto) {

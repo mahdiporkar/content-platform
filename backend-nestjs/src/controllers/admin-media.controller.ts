@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Param, Post, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../services/minio.service';
@@ -11,6 +11,11 @@ import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
 import { MediaLibraryService } from '../services/media-library.service';
 import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaAssetState } from '../entities/media-asset.entity';
+import { MediaLifecycleService } from '../services/media-lifecycle.service';
+import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
+import { PageResponseDto } from '../dto/page-response.dto';
+import { MediaReferenceResponseDto } from '../dto/responses/media-reference-response.dto';
 
 @Controller('/api/v1/admin/media')
 export class AdminMediaController {
@@ -23,6 +28,7 @@ export class AdminMediaController {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly access: AdminAuthorizationService,
+    private readonly lifecycle: MediaLifecycleService,
   ) {}
 
   @Post('upload')
@@ -44,12 +50,19 @@ export class AdminMediaController {
       `Upload request: app=${applicationId || 'missing'} kind=${kind || 'file'} file=${file?.originalname || 'none'}`,
     );
     try {
+      const user = this.access.getUser(request);
       const result = await this.minioService.upload(applicationId, kind, file);
       const normalizedKind: MediaAssetKind =
-        kind === MediaAssetKind.IMAGE || kind === MediaAssetKind.VIDEO ? kind : MediaAssetKind.FILE;
+        kind === 'image'
+          ? MediaAssetKind.IMAGE
+          : kind === 'video'
+            ? MediaAssetKind.VIDEO
+            : MediaAssetKind.OTHER;
       await this.mediaLibraryService.registerAsset({
         applicationId,
+        ownerUserId: user.sub,
         kind: normalizedKind,
+        bucket: this.minioService.getDefaultBucket(),
         objectKey: result.objectKey,
         contentType: result.contentType,
         sizeBytes: result.sizeBytes,
@@ -64,5 +77,41 @@ export class AdminMediaController {
       this.logger.error('Upload failed', error instanceof Error ? error.stack : String(error));
       throw error;
     }
+  }
+
+  @Get()
+  async listForAdmin(
+    @Req() request: Request,
+    @Query('applicationId') applicationId: string,
+    @Query('state') state: MediaAssetState = MediaAssetState.TRASH,
+    @Query('page') page = '0',
+    @Query('size') size = '30',
+  ): Promise<PageResponseDto<MediaAssetResponseDto>> {
+    this.access.assertSuperAdmin(request);
+    this.access.assertApplicationAccess(request, applicationId);
+    return await this.lifecycle.listForAdmin(applicationId, state, Number(page), Number(size));
+  }
+
+  @Get(':id/references')
+  async references(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Query('applicationId') applicationId: string,
+  ): Promise<MediaReferenceResponseDto[]> {
+    this.access.assertSuperAdmin(request);
+    this.access.assertApplicationAccess(request, applicationId);
+    return await this.lifecycle.getReferences(applicationId, id);
+  }
+
+  @Delete(':id/purge')
+  async purge(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Query('applicationId') applicationId: string,
+  ): Promise<MediaAssetResponseDto> {
+    this.access.assertSuperAdmin(request);
+    this.access.assertApplicationAccess(request, applicationId);
+    const user = this.access.getUser(request);
+    return await this.lifecycle.purgeAsSuperAdmin(applicationId, id, user.sub, user.email);
   }
 }

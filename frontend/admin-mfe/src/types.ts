@@ -134,13 +134,29 @@ export type MediaAsset = {
   id: string;
   applicationId: string;
   kind: MediaAssetKind;
+  state?: "ACTIVE" | "TRASH" | "PURGED";
   objectKey: string;
   originalName?: string | null;
   contentType: string;
   sizeBytes: number;
   mediaUrl: string;
+  trashedAt?: string | null;
+  purgedAt?: string | null;
+  pinned?: boolean;
+  refCount?: number;
+  canPurge?: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type MediaReference = {
+  id: string;
+  applicationId: string;
+  mediaAssetId: string;
+  refType: string;
+  refId: string;
+  refField: string;
+  createdAt: string;
 };
 
 export type ImageContent = {

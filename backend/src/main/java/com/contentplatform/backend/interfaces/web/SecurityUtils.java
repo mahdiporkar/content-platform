@@ -25,6 +25,15 @@ public final class SecurityUtils {
         return Collections.emptyList();
     }
 
+    public static String userIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            JwtUser user = (JwtUser) jwtAuth.getPrincipal();
+            return user.subject();
+        }
+        return null;
+    }
+
     public static List<SystemPermission> getSystemPermissions() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
@@ -56,6 +65,21 @@ public final class SecurityUtils {
             return true;
         }
         return permissions.contains(permission);
+    }
+
+    public static boolean isSuperAdmin() {
+        List<SystemPermission> permissions = getSystemPermissions();
+        if (permissions.isEmpty()) {
+            return true;
+        }
+        return permissions.contains(SystemPermission.APPLICATIONS_MANAGE)
+            && permissions.contains(SystemPermission.USERS_MANAGE);
+    }
+
+    public static void requireSuperAdmin() {
+        if (!isSuperAdmin()) {
+            throw new ForbiddenException("Super admin permission required");
+        }
     }
 
     public static void requireServicePermission(ServicePermission permission) {

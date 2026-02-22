@@ -1,0 +1,5 @@
+com/contentplatform/backend/interfaces/web/controller/PublicContentControllerIT.class
+com/contentplatform/backend/application/service/PostServiceTest$InMemoryPostRepository.class
+com/contentplatform/backend/application/service/PostServiceTest.class
+com/contentplatform/backend/application/service/AuthServiceTest.class
+com/contentplatform/backend/application/service/MediaLibraryServiceTest.class

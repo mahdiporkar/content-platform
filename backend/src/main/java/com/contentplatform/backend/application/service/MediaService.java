@@ -55,7 +55,9 @@ public class MediaService implements MediaUseCase {
         mediaLibraryUseCase.registerAsset(
             new RegisterMediaAssetCommand(
                 command.getApplicationId(),
+                null,
                 MediaAssetKind.fromNullable(command.getKind()),
+                bucket,
                 result.objectKey(),
                 command.getOriginalFileName(),
                 result.contentType(),

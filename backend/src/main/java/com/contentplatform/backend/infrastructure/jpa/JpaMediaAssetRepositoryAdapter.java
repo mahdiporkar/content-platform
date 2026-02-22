@@ -4,6 +4,7 @@ import com.contentplatform.backend.application.port.out.MediaAssetRepository;
 import com.contentplatform.backend.application.port.out.PageSlice;
 import com.contentplatform.backend.domain.model.MediaAsset;
 import com.contentplatform.backend.domain.value.MediaAssetKind;
+import com.contentplatform.backend.domain.value.MediaAssetState;
 import com.contentplatform.backend.infrastructure.jpa.entity.MediaAssetEntity;
 import com.contentplatform.backend.infrastructure.jpa.repository.MediaAssetJpaRepository;
 import org.springframework.data.domain.Page;
@@ -32,15 +33,21 @@ public class JpaMediaAssetRepositoryAdapter implements MediaAssetRepository {
     }
 
     @Override
+    public Optional<MediaAsset> findByIdForUpdate(String id) {
+        return repository.findByIdForUpdate(id).map(this::toDomain);
+    }
+
+    @Override
     public Optional<MediaAsset> findByApplicationIdAndObjectKey(String applicationId, String objectKey) {
         return repository.findByApplicationIdAndObjectKey(applicationId, objectKey).map(this::toDomain);
     }
 
     @Override
-    public PageSlice<MediaAsset> findByApplicationId(String applicationId, MediaAssetKind kind, String search, int page, int size) {
+    public PageSlice<MediaAsset> findByApplicationId(String applicationId, MediaAssetKind kind, MediaAssetState state, String search, int page, int size) {
         Page<MediaAssetEntity> result = repository.searchByApplicationId(
             applicationId,
             kind,
+            state,
             search == null || search.isBlank() ? null : search.trim(),
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
@@ -57,11 +64,19 @@ public class JpaMediaAssetRepositoryAdapter implements MediaAssetRepository {
         return new MediaAssetEntity(
             mediaAsset.getId(),
             mediaAsset.getApplicationId(),
+            mediaAsset.getOwnerUserId(),
             mediaAsset.getKind(),
+            mediaAsset.getState(),
+            mediaAsset.getBucket(),
             mediaAsset.getObjectKey(),
             mediaAsset.getOriginalName(),
             mediaAsset.getContentType(),
             mediaAsset.getSizeBytes(),
+            mediaAsset.getTrashedAt(),
+            mediaAsset.getPurgedAt(),
+            mediaAsset.getDeletedByUserId(),
+            mediaAsset.isPinned(),
+            mediaAsset.getMetadata(),
             mediaAsset.getCreatedAt(),
             mediaAsset.getUpdatedAt()
         );
@@ -71,11 +86,19 @@ public class JpaMediaAssetRepositoryAdapter implements MediaAssetRepository {
         return new MediaAsset(
             entity.getId(),
             entity.getApplicationId(),
+            entity.getOwnerUserId(),
             entity.getKind(),
+            entity.getState(),
+            entity.getBucket(),
             entity.getObjectKey(),
             entity.getOriginalName(),
             entity.getContentType(),
             entity.getSizeBytes(),
+            entity.getTrashedAt(),
+            entity.getPurgedAt(),
+            entity.getDeletedByUserId(),
+            entity.isPinned(),
+            entity.getMetadata(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

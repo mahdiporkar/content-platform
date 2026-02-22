@@ -10,12 +10,15 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { ArticleEntity } from '../entities/article.entity';
 import { normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
+import { MediaReferenceService } from './media-reference.service';
+import { MediaReferenceType } from '../entities/media-reference.entity';
 
 @Injectable()
 export class AdminArticleService {
   constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepo: Repository<ArticleEntity>,
+    private readonly mediaReferenceService: MediaReferenceService,
   ) {}
 
   private mapArticle(article: ArticleEntity): ArticleResponseDto {
@@ -69,6 +72,15 @@ export class AdminArticleService {
       scheduledAt: publication.scheduledAt,
     });
     const saved = await this.articleRepo.save(article);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.ARTICLE,
+      refId: saved.id,
+      bannerKey: saved.bannerKey,
+      bannerUrl: saved.bannerUrl,
+      galleryUrls: (saved.gallery || []).map((entry) => String((entry as Record<string, unknown>).url || '')).filter(Boolean),
+      content: saved.content,
+    });
     return this.mapArticle(saved);
   }
 
@@ -94,6 +106,15 @@ export class AdminArticleService {
     article.publishedAt = publication.publishedAt;
     article.scheduledAt = publication.scheduledAt;
     const saved = await this.articleRepo.save(article);
+    await this.mediaReferenceService.syncContentReferences({
+      applicationId: saved.applicationId,
+      refType: MediaReferenceType.ARTICLE,
+      refId: saved.id,
+      bannerKey: saved.bannerKey,
+      bannerUrl: saved.bannerUrl,
+      galleryUrls: (saved.gallery || []).map((entry) => String((entry as Record<string, unknown>).url || '')).filter(Boolean),
+      content: saved.content,
+    });
     return this.mapArticle(saved);
   }
 

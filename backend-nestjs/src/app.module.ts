@@ -16,6 +16,7 @@ import { AdminImageController } from './controllers/admin-image.controller';
 import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
 import { DeliveryContentController } from './controllers/delivery-content.controller';
 import { MediaGatewayController } from './controllers/media-gateway.controller';
+import { MediaController } from './controllers/media.controller';
 import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
@@ -35,6 +36,8 @@ import { CollectionItemEntity } from './entities/collection-item.entity';
 import { AuditLogEntity } from './entities/audit-log.entity';
 import { ViewEventEntity } from './entities/view-event.entity';
 import { MediaAssetEntity } from './entities/media-asset.entity';
+import { MediaVariantEntity } from './entities/media-variant.entity';
+import { MediaReferenceEntity } from './entities/media-reference.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
@@ -50,6 +53,9 @@ import { AuditLogService } from './services/audit-log.service';
 import { AdminAnalyticsService } from './services/admin-analytics.service';
 import { ScheduledPublisherService } from './services/scheduled-publisher.service';
 import { MediaLibraryService } from './services/media-library.service';
+import { MediaReferenceService } from './services/media-reference.service';
+import { MediaLifecycleService } from './services/media-lifecycle.service';
+import { MinioStorageProvider } from './services/minio-storage.provider';
 
 @Module({
   imports: [
@@ -84,6 +90,8 @@ import { MediaLibraryService } from './services/media-library.service';
             AuditLogEntity,
             ViewEventEntity,
             MediaAssetEntity,
+            MediaVariantEntity,
+            MediaReferenceEntity,
           ],
           synchronize: true,
         };
@@ -102,6 +110,8 @@ import { MediaLibraryService } from './services/media-library.service';
       AuditLogEntity,
       ViewEventEntity,
       MediaAssetEntity,
+      MediaVariantEntity,
+      MediaReferenceEntity,
     ]),
   ],
   controllers: [
@@ -119,6 +129,7 @@ import { MediaLibraryService } from './services/media-library.service';
     AdminAnalyticsController,
     DeliveryContentController,
     MediaGatewayController,
+    MediaController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -140,7 +151,11 @@ import { MediaLibraryService } from './services/media-library.service';
     AuditLogService,
     SeedDataService,
     MinioService,
+    MinioStorageProvider,
     MediaLibraryService,
+    MediaReferenceService,
+    MediaLifecycleService,
+    { provide: 'STORAGE_PROVIDER', useExisting: MinioStorageProvider },
     ScheduledPublisherService,
   ],
 })

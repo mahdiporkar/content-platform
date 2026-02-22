@@ -4,7 +4,7 @@ import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
-import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaAssetKind, MediaAssetState } from '../entities/media-asset.entity';
 import { MediaLibraryService } from '../services/media-library.service';
 
 @Controller('/api/v1/admin/media/library')
@@ -18,7 +18,8 @@ export class AdminMediaLibraryController {
   async list(
     @Req() request: Request,
     @Query('applicationId') applicationId: string,
-    @Query('kind') kind?: MediaAssetKind,
+    @Query('kind') kind?: string,
+    @Query('state') state: MediaAssetState = MediaAssetState.ACTIVE,
     @Query('search') search?: string,
     @Query('page') page = '0',
     @Query('size') size = '30',
@@ -30,10 +31,15 @@ export class AdminMediaLibraryController {
       ServicePermission.VIDEOS_MANAGE,
     ]);
     this.access.assertApplicationAccess(request, applicationId);
-    const kindValue = kind && Object.values(MediaAssetKind).includes(kind) ? kind : undefined;
+    const normalizedKind = kind?.trim().toUpperCase();
+    const kindValue =
+      normalizedKind && Object.values(MediaAssetKind).includes(normalizedKind as MediaAssetKind)
+        ? (normalizedKind as MediaAssetKind)
+        : undefined;
     return await this.mediaLibraryService.listAssets({
       applicationId,
       kind: kindValue,
+      state,
       search,
       page: Number(page),
       size: Number(size),

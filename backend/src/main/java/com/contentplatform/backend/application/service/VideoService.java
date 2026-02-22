@@ -21,6 +21,8 @@ import com.contentplatform.backend.application.port.out.VideoRepository;
 import com.contentplatform.backend.domain.model.Video;
 import com.contentplatform.backend.domain.value.ContentLocale;
 import com.contentplatform.backend.domain.value.MediaAssetKind;
+import com.contentplatform.backend.domain.value.MediaReferenceType;
+import com.contentplatform.backend.domain.value.MediaAssetState;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -68,17 +70,6 @@ public class VideoService implements VideoUseCase {
             command.getSizeBytes(),
             command.getContentType()
         );
-        mediaLibraryUseCase.registerAsset(
-            new RegisterMediaAssetCommand(
-                command.getApplicationId(),
-                MediaAssetKind.VIDEO,
-                result.objectKey(),
-                command.getOriginalFileName(),
-                result.contentType(),
-                result.sizeBytes()
-            ),
-            allowedApplicationIds
-        );
         Instant publishedAt = command.getStatus() == ContentStatus.PUBLISHED ? now : null;
         Video video = new Video(
             UUID.randomUUID().toString(),
@@ -94,7 +85,22 @@ public class VideoService implements VideoUseCase {
             now,
             now
         );
-        return mapper.toVideoDto(videoRepository.save(video));
+        Video saved = videoRepository.save(video);
+        var asset = mediaLibraryUseCase.registerAsset(
+            new RegisterMediaAssetCommand(
+                saved.getApplicationId(),
+                null,
+                MediaAssetKind.VIDEO,
+                "media",
+                saved.getObjectKey(),
+                command.getOriginalFileName(),
+                saved.getContentType(),
+                saved.getSizeBytes()
+            ),
+            allowedApplicationIds
+        );
+        mediaLibraryUseCase.addReference(saved.getApplicationId(), asset.id(), MediaReferenceType.VIDEO, saved.getId(), "objectKey");
+        return mapper.toVideoDto(saved);
     }
 
     @Override
@@ -106,6 +112,9 @@ public class VideoService implements VideoUseCase {
         var asset = mediaLibraryUseCase.getById(command.getAssetId(), command.getApplicationId(), allowedApplicationIds);
         if (asset.kind() != MediaAssetKind.VIDEO) {
             throw new BadRequestException("Selected asset is not a video");
+        }
+        if (asset.state() == MediaAssetState.PURGED) {
+            throw new BadRequestException("Purged asset cannot be used");
         }
 
         Instant now = timeProvider.now();
@@ -124,7 +133,9 @@ public class VideoService implements VideoUseCase {
             now,
             now
         );
-        return mapper.toVideoDto(videoRepository.save(video));
+        Video saved = videoRepository.save(video);
+        mediaLibraryUseCase.addReference(saved.getApplicationId(), asset.id(), MediaReferenceType.VIDEO, saved.getId(), "objectKey");
+        return mapper.toVideoDto(saved);
     }
 
     @Override

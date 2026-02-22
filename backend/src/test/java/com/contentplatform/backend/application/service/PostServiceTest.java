@@ -33,7 +33,8 @@ class PostServiceTest {
             "Hello",
             "hello",
             "content",
-            ContentStatus.PUBLISHED
+            ContentStatus.PUBLISHED,
+            "en"
         );
 
         PostDto dto = service.create(command, List.of("app-1"));
@@ -54,7 +55,8 @@ class PostServiceTest {
             "Hello",
             "hello",
             "content",
-            ContentStatus.DRAFT
+            ContentStatus.DRAFT,
+            "en"
         );
 
         assertThrows(ForbiddenException.class, () -> service.create(command, List.of("other-app")));
