@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ChangeStatusRequestDto } from '../dto/requests/change-status-request.dto';
 import { VideoUpdateRequestDto } from '../dto/requests/video-update-request.dto';
@@ -14,7 +14,7 @@ import { ApplicationEntity } from '../entities/application.entity';
 import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
 import { MediaLibraryService } from './media-library.service';
-import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaAssetKind, MediaAssetState } from '../entities/media-asset.entity';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
 import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
@@ -58,6 +58,7 @@ export class AdminVideoService {
       video.altText ?? null,
       video.createdAt.toISOString(),
       video.updatedAt.toISOString(),
+      video.deletedAt ? video.deletedAt.toISOString() : null,
       mediaUrl,
       mediaUrl,
     );
@@ -185,6 +186,9 @@ export class AdminVideoService {
     if (!video) {
       throw new NotFoundException('Video not found.');
     }
+    if (video.deletedAt) {
+      throw new ConflictException('Deleted video cannot change status. Restore it first.');
+    }
     video.status = request.status;
     video.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
     video.scheduledAt = null;
@@ -211,10 +215,32 @@ export class AdminVideoService {
     return this.mapVideo(video, application);
   }
 
+  async restore(id: string): Promise<VideoResponseDto> {
+    const video = await this.videoRepo.findOne({ where: { id } });
+    if (!video) {
+      throw new NotFoundException('Video not found.');
+    }
+    if (!video.deletedAt) {
+      throw new ConflictException('Video is not in trash.');
+    }
+    const asset = await this.mediaReferenceService.findAssetByObjectKey(video.applicationId, video.objectKey);
+    if (asset?.state === MediaAssetState.PURGED) {
+      throw new ConflictException('Cannot restore video because the file has been physically deleted.');
+    }
+    video.deletedAt = null;
+    const saved = await this.videoRepo.save(video);
+    await this.syncVideoMediaReference(saved);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapVideo(saved, application);
+  }
+
   async listUsages(id: string): Promise<ContentUsageResponseDto[]> {
     const video = await this.videoRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
     if (!video) {
       throw new NotFoundException('Video not found.');
+    }
+    if (video.deletedAt) {
+      throw new ConflictException('Deleted video cannot be edited. Restore it first.');
     }
     return await this.mediaReferenceService.listUsagesForObjectKey(video.applicationId, video.objectKey, {
       refType: MediaReferenceType.VIDEO,
@@ -251,9 +277,12 @@ export class AdminVideoService {
   }
 
   async delete(id: string): Promise<void> {
-    const video = await this.videoRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    const video = await this.videoRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey', 'deletedAt'] });
     if (!video) {
       throw new NotFoundException('Video not found.');
+    }
+    if (video.deletedAt) {
+      return;
     }
     const usages = await this.mediaReferenceService.listUsagesForObjectKey(video.applicationId, video.objectKey, {
       refType: MediaReferenceType.VIDEO,
@@ -267,7 +296,7 @@ export class AdminVideoService {
       });
     }
     await this.mediaReferenceService.removeAllForRef(video.applicationId, MediaReferenceType.VIDEO, video.id);
-    await this.videoRepo.delete({ id: video.id });
+    await this.videoRepo.update({ id: video.id }, { deletedAt: new Date() });
   }
 
   async list(
@@ -275,19 +304,37 @@ export class AdminVideoService {
     status: ContentStatus | undefined,
     page: number,
     size: number,
+    deleted = false,
   ): Promise<PageResponseDto<VideoResponseDto>> {
     const pageNumber = Math.max(0, page);
     const pageSize = Math.max(1, size);
     const where = status ? { applicationId, status } : { applicationId };
     const [items, total] = await this.videoRepo.findAndCount({
-      where,
+      where: deleted
+        ? (status ? { applicationId, status, deletedAt: Not(IsNull()) } : { applicationId, deletedAt: Not(IsNull()) })
+        : (status ? { applicationId, status, deletedAt: IsNull() } : { applicationId, deletedAt: IsNull() }),
       order: { publishedAt: 'DESC', createdAt: 'DESC' },
       skip: pageNumber * pageSize,
       take: pageSize,
     });
 
     const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
-    const mapped = items.map((video) => this.mapVideo(video, application));
-    return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    let visibleItems = items;
+    if (deleted) {
+      const filtered: VideoEntity[] = [];
+      for (const video of items) {
+        const asset = await this.mediaReferenceService.findAssetByObjectKey(video.applicationId, video.objectKey);
+        if (asset?.state === MediaAssetState.PURGED) {
+          continue;
+        }
+        filtered.push(video);
+      }
+      visibleItems = filtered;
+    }
+    const mapped = visibleItems.map((video) => this.mapVideo(video, application));
+    return new PageResponseDto(mapped, deleted ? mapped.length : total, Math.ceil((deleted ? mapped.length : total) / pageSize), pageNumber, pageSize);
   }
 }

@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ChangeStatusRequestDto } from '../dto/requests/change-status-request.dto';
 import { ImageUpdateRequestDto } from '../dto/requests/image-update-request.dto';
@@ -14,7 +14,7 @@ import { ApplicationEntity } from '../entities/application.entity';
 import { isSupportedContentLocale, normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
 import { MediaLibraryService } from './media-library.service';
-import { MediaAssetKind } from '../entities/media-asset.entity';
+import { MediaAssetKind, MediaAssetState } from '../entities/media-asset.entity';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
 import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
@@ -56,6 +56,7 @@ export class AdminImageService {
       image.altText ?? null,
       image.createdAt.toISOString(),
       image.updatedAt.toISOString(),
+      image.deletedAt ? image.deletedAt.toISOString() : null,
       mediaUrl,
     );
   }
@@ -186,6 +187,9 @@ export class AdminImageService {
     if (!image) {
       throw new NotFoundException('Image not found.');
     }
+    if (image.deletedAt) {
+      throw new ConflictException('Deleted image cannot change status. Restore it first.');
+    }
     image.status = request.status;
     image.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
     image.scheduledAt = null;
@@ -212,6 +216,25 @@ export class AdminImageService {
     return this.mapImage(image, application);
   }
 
+  async restore(id: string): Promise<ImageResponseDto> {
+    const image = await this.imageRepo.findOne({ where: { id } });
+    if (!image) {
+      throw new NotFoundException('Image not found.');
+    }
+    if (!image.deletedAt) {
+      throw new ConflictException('Image is not in trash.');
+    }
+    const asset = await this.mediaReferenceService.findAssetByObjectKey(image.applicationId, image.objectKey);
+    if (asset?.state === MediaAssetState.PURGED) {
+      throw new ConflictException('Cannot restore image because the file has been physically deleted.');
+    }
+    image.deletedAt = null;
+    const saved = await this.imageRepo.save(image);
+    await this.syncImageMediaReference(saved);
+    const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
+    return this.mapImage(saved, application);
+  }
+
   async listUsages(id: string): Promise<ContentUsageResponseDto[]> {
     const image = await this.imageRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
     if (!image) {
@@ -227,6 +250,9 @@ export class AdminImageService {
     const image = await this.imageRepo.findOne({ where: { id } });
     if (!image) {
       throw new NotFoundException('Image not found.');
+    }
+    if (image.deletedAt) {
+      throw new ConflictException('Deleted image cannot be edited. Restore it first.');
     }
     const publication = resolvePublicationFields(request.status, request.scheduledAt, image.publishedAt);
     image.title = request.title.trim();
@@ -250,9 +276,12 @@ export class AdminImageService {
   }
 
   async delete(id: string): Promise<void> {
-    const image = await this.imageRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey'] });
+    const image = await this.imageRepo.findOne({ where: { id }, select: ['id', 'applicationId', 'objectKey', 'deletedAt'] });
     if (!image) {
       throw new NotFoundException('Image not found.');
+    }
+    if (image.deletedAt) {
+      return;
     }
     const usages = await this.mediaReferenceService.listUsagesForObjectKey(image.applicationId, image.objectKey, {
       refType: MediaReferenceType.IMAGE,
@@ -266,7 +295,7 @@ export class AdminImageService {
       });
     }
     await this.mediaReferenceService.removeAllForRef(image.applicationId, MediaReferenceType.IMAGE, image.id);
-    await this.imageRepo.delete({ id: image.id });
+    await this.imageRepo.update({ id: image.id }, { deletedAt: new Date() });
   }
 
   async list(
@@ -274,18 +303,35 @@ export class AdminImageService {
     status: ContentStatus | undefined,
     page: number,
     size: number,
+    deleted = false,
   ): Promise<PageResponseDto<ImageResponseDto>> {
     const pageNumber = Math.max(0, page);
     const pageSize = Math.max(1, size);
-    const where = status ? { applicationId, status } : { applicationId };
     const [items, total] = await this.imageRepo.findAndCount({
-      where,
+      where: deleted
+        ? (status ? { applicationId, status, deletedAt: Not(IsNull()) } : { applicationId, deletedAt: Not(IsNull()) })
+        : (status ? { applicationId, status, deletedAt: IsNull() } : { applicationId, deletedAt: IsNull() }),
       order: { publishedAt: 'DESC', createdAt: 'DESC' },
       skip: pageNumber * pageSize,
       take: pageSize,
     });
     const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
-    const mapped = items.map((image) => this.mapImage(image, application));
-    return new PageResponseDto(mapped, total, Math.ceil(total / pageSize), pageNumber, pageSize);
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    let visibleItems = items;
+    if (deleted) {
+      const filtered: ImageEntity[] = [];
+      for (const image of items) {
+        const asset = await this.mediaReferenceService.findAssetByObjectKey(image.applicationId, image.objectKey);
+        if (asset?.state === MediaAssetState.PURGED) {
+          continue;
+        }
+        filtered.push(image);
+      }
+      visibleItems = filtered;
+    }
+    const mapped = visibleItems.map((image) => this.mapImage(image, application));
+    return new PageResponseDto(mapped, deleted ? mapped.length : total, Math.ceil((deleted ? mapped.length : total) / pageSize), pageNumber, pageSize);
   }
 }

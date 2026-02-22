@@ -68,6 +68,7 @@ export const ImagesListPage = () => {
   const [usageLoading, setUsageLoading] = useState(false);
   const [usageItems, setUsageItems] = useState<ContentUsage[]>([]);
   const [usageTargetTitle, setUsageTargetTitle] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"active" | "trash">("active");
 
   const scheduleLabelByLocale: Record<ContentLocale, string> = {
     fa: "زمان انتشار",
@@ -83,11 +84,11 @@ export const ImagesListPage = () => {
     }
     setLoading(true);
     const response = await client.get<{ items: ImageContent[] }>("/api/v1/admin/images", {
-      params: { applicationId }
+      params: { applicationId, deleted: viewMode === "trash" }
     });
     setImages(response.data.items);
     setLoading(false);
-  }, [applicationId]);
+  }, [applicationId, viewMode]);
 
   useEffect(() => {
     fetchImages();
@@ -123,6 +124,24 @@ export const ImagesListPage = () => {
         return;
       }
       messageApi.error("Failed to delete image.");
+    }
+  };
+
+  const handleRestore = async (image: ImageContent) => {
+    try {
+      await client.post(`/api/v1/admin/images/${image.id}/restore`);
+      messageApi.success("Image restored.");
+      await fetchImages();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const messageText =
+          typeof error.response?.data === "object" && error.response?.data && "message" in error.response.data
+            ? String((error.response.data as { message?: unknown }).message || "")
+            : "";
+        messageApi.warning(messageText || "Failed to restore image.");
+        return;
+      }
+      messageApi.error("Failed to restore image.");
     }
   };
 
@@ -216,25 +235,33 @@ export const ImagesListPage = () => {
             <Button type="text" onClick={() => void openUsage(image)}>
               Usage
             </Button>
-            <Button type="text" onClick={() => navigate(`/images/${image.id}`)}>
-              Edit
-            </Button>
-            <Popconfirm
-              title="Delete this image record?"
-              description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => void handleDelete(image)}
-            >
-              <Button danger type="text">
-                Delete
+            {viewMode === "active" ? (
+              <>
+                <Button type="text" onClick={() => navigate(`/images/${image.id}`)}>
+                  Edit
+                </Button>
+                <Popconfirm
+                  title="Delete this image record?"
+                  description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => void handleDelete(image)}
+                >
+                  <Button danger type="text">
+                    Delete
+                  </Button>
+                </Popconfirm>
+              </>
+            ) : (
+              <Button type="text" onClick={() => void handleRestore(image)}>
+                Restore
               </Button>
-            </Popconfirm>
+            )}
           </Space>
         )
       }
     ],
-    [handleDelete, navigate, openUsage]
+    [handleDelete, handleRestore, navigate, openUsage, viewMode]
   );
 
   const usageColumns = useMemo<ColumnsType<ContentUsage>>(
@@ -282,9 +309,17 @@ export const ImagesListPage = () => {
         </div>
       </div>
       <div className="page-actions">
-        <Button type="primary" onClick={() => setUploadOpen(true)} disabled={!applicationId}>
-          Upload Image
-        </Button>
+        <Space>
+          <Button type={viewMode === "active" ? "primary" : "default"} onClick={() => setViewMode("active")}>
+            Images
+          </Button>
+          <Button type={viewMode === "trash" ? "primary" : "default"} onClick={() => setViewMode("trash")}>
+            Trash
+          </Button>
+          <Button type="primary" onClick={() => setUploadOpen(true)} disabled={!applicationId || viewMode === "trash"}>
+            Upload Image
+          </Button>
+        </Space>
       </div>
       <Table rowKey="id" dataSource={images} columns={columns} loading={loading} pagination={false} />
 

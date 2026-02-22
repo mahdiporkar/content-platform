@@ -68,6 +68,7 @@ export const VideoListPage = () => {
   const [usageLoading, setUsageLoading] = useState(false);
   const [usageItems, setUsageItems] = useState<ContentUsage[]>([]);
   const [usageTargetTitle, setUsageTargetTitle] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"active" | "trash">("active");
 
   const fetchVideos = async () => {
     if (!applicationId) {
@@ -76,7 +77,7 @@ export const VideoListPage = () => {
     }
     setLoading(true);
     const response = await client.get<PageResponse<Video>>("/api/v1/admin/videos", {
-      params: { applicationId, status: status || undefined }
+      params: { applicationId, status: status || undefined, deleted: viewMode === "trash" }
     });
     setVideos(response.data.items);
     setLoading(false);
@@ -84,7 +85,7 @@ export const VideoListPage = () => {
 
   useEffect(() => {
     fetchVideos();
-  }, [applicationId, status]);
+  }, [applicationId, status, viewMode]);
 
   const openUsage = async (video: Video) => {
     setUsageTargetTitle(video.title);
@@ -116,6 +117,24 @@ export const VideoListPage = () => {
         return;
       }
       messageApi.error("Failed to delete video.");
+    }
+  };
+
+  const handleRestore = async (video: Video) => {
+    try {
+      await client.post(`/api/v1/admin/videos/${video.id}/restore`);
+      messageApi.success("Video restored.");
+      await fetchVideos();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const messageText =
+          typeof error.response?.data === "object" && error.response?.data && "message" in error.response.data
+            ? String((error.response.data as { message?: unknown }).message || "")
+            : "";
+        messageApi.warning(messageText || "Failed to restore video.");
+        return;
+      }
+      messageApi.error("Failed to restore video.");
     }
   };
 
@@ -177,29 +196,37 @@ export const VideoListPage = () => {
             <Button type="text" onClick={() => void openUsage(video)}>
               Usage
             </Button>
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
-            >
-              Edit
-            </Button>
-            <Popconfirm
-              title="Delete this video record?"
-              description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => void handleDelete(video)}
-            >
-              <Button danger type="text">
-                Delete
+            {viewMode === "active" ? (
+              <>
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
+                >
+                  Edit
+                </Button>
+                <Popconfirm
+                  title="Delete this video record?"
+                  description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => void handleDelete(video)}
+                >
+                  <Button danger type="text">
+                    Delete
+                  </Button>
+                </Popconfirm>
+              </>
+            ) : (
+              <Button type="text" onClick={() => void handleRestore(video)}>
+                Restore
               </Button>
-            </Popconfirm>
+            )}
           </Space>
         )
       }
     ],
-    [handleDelete, navigate, openUsage]
+    [handleDelete, handleRestore, navigate, openUsage, viewMode]
   );
 
   const usageColumns = useMemo<ColumnsType<ContentUsage>>(
@@ -249,7 +276,13 @@ export const VideoListPage = () => {
 
       <div className="page-actions">
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/videos/upload")}>
+          <Button type={viewMode === "active" ? "primary" : "default"} onClick={() => setViewMode("active")}>
+            Videos
+          </Button>
+          <Button type={viewMode === "trash" ? "primary" : "default"} onClick={() => setViewMode("trash")}>
+            Trash
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/videos/upload")} disabled={viewMode === "trash"}>
             Upload Video
           </Button>
           <Select

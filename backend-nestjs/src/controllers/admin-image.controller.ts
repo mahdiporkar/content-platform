@@ -103,6 +103,13 @@ export class AdminImageController {
     return { success: true };
   }
 
+  @Post(':id/restore')
+  async restore(@Req() request: Request, @Param('id') id: string): Promise<ImageResponseDto> {
+    const applicationId = await this.imageService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
+    return await this.imageService.restore(id);
+  }
+
   @Put(':id')
   async update(
     @Req() request: Request,
@@ -129,10 +136,11 @@ export class AdminImageController {
     @Req() request: Request,
     @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
+    @Query('deleted') deleted = 'false',
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<ImageResponseDto>> {
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
-    return await this.imageService.list(applicationId, status, Number(page), Number(size));
+    return await this.imageService.list(applicationId, status, Number(page), Number(size), deleted === 'true');
   }
 }

@@ -24,6 +24,7 @@ export class VideoResponseDto {
     public altText: string | null,
     public createdAt: string,
     public updatedAt: string,
+    public deletedAt: string | null,
     public mediaUrl: string | null,
     public presignedUrl: string | null,
   ) {}

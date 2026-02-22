@@ -139,6 +139,13 @@ export class AdminVideoController {
     return { success: true };
   }
 
+  @Post(':id/restore')
+  async restore(@Req() request: Request, @Param('id') id: string): Promise<VideoResponseDto> {
+    const applicationId = await this.videoService.getApplicationIdById(id);
+    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
+    return await this.videoService.restore(id);
+  }
+
   @Put(':id')
   async update(
     @Req() request: Request,
@@ -155,10 +162,11 @@ export class AdminVideoController {
     @Req() request: Request,
     @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
+    @Query('deleted') deleted = 'false',
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<VideoResponseDto>> {
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
-    return await this.videoService.list(applicationId, status, Number(page), Number(size));
+    return await this.videoService.list(applicationId, status, Number(page), Number(size), deleted === 'true');
   }
 }

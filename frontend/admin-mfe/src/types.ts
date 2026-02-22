@@ -116,6 +116,7 @@ export type Video = {
   altText?: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   mediaUrl?: string | null;
   presignedUrl?: string | null;
 };
@@ -189,6 +190,7 @@ export type ImageContent = {
   altText?: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   mediaUrl?: string | null;
 };
 

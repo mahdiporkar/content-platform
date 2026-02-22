@@ -198,15 +198,23 @@ export class MediaReferenceService {
       }
     }
 
-    const images = await this.imageRepo.find({ where: { applicationId }, select: ['id', 'objectKey'] });
+    const images = await this.imageRepo.find({ where: { applicationId }, select: ['id', 'objectKey', 'deletedAt'] });
     for (const image of images) {
+      if (image.deletedAt) {
+        await this.removeReference(applicationId, mediaAssetId, MediaReferenceType.IMAGE, image.id, 'content');
+        continue;
+      }
       if (image.objectKey === target) {
         await this.addReference(applicationId, mediaAssetId, MediaReferenceType.IMAGE, image.id, 'content');
       }
     }
 
-    const videos = await this.videoRepo.find({ where: { applicationId }, select: ['id', 'objectKey'] });
+    const videos = await this.videoRepo.find({ where: { applicationId }, select: ['id', 'objectKey', 'deletedAt'] });
     for (const video of videos) {
+      if (video.deletedAt) {
+        await this.removeReference(applicationId, mediaAssetId, MediaReferenceType.VIDEO, video.id, 'content');
+        continue;
+      }
       if (video.objectKey === target) {
         await this.addReference(applicationId, mediaAssetId, MediaReferenceType.VIDEO, video.id, 'content');
       }
