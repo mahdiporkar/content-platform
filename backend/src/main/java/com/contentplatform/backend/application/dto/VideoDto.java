@@ -17,6 +17,7 @@ public class VideoDto {
     private final long sizeBytes;
     private final Instant createdAt;
     private final Instant updatedAt;
+    private final Instant deletedAt;
 
     public VideoDto(String id,
                     String applicationId,
@@ -29,7 +30,8 @@ public class VideoDto {
                     String contentType,
                     long sizeBytes,
                     Instant createdAt,
-                    Instant updatedAt) {
+                    Instant updatedAt,
+                    Instant deletedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
@@ -42,6 +44,7 @@ public class VideoDto {
         this.sizeBytes = sizeBytes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     public String getId() {
@@ -90,5 +93,9 @@ public class VideoDto {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }

@@ -2,6 +2,7 @@ package com.contentplatform.backend.interfaces.web.controller;
 
 import com.contentplatform.backend.application.dto.ChangeStatusCommand;
 import com.contentplatform.backend.application.dto.CreateVideoFromAssetCommand;
+import com.contentplatform.backend.application.dto.MediaReferenceDto;
 import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UploadVideoCommand;
@@ -14,10 +15,12 @@ import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.request.ChangeStatusRequest;
 import com.contentplatform.backend.interfaces.web.request.CreateVideoFromAssetRequest;
 import com.contentplatform.backend.interfaces.web.response.PageResponse;
+import com.contentplatform.backend.interfaces.web.response.MediaReferenceResponse;
 import com.contentplatform.backend.interfaces.web.response.VideoResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -98,11 +101,50 @@ public class AdminVideoController {
     @GetMapping
     public ResponseEntity<PageResponse<VideoResponse>> list(@RequestParam String applicationId,
                                                             @RequestParam(required = false) ContentStatus status,
+                                                            @RequestParam(defaultValue = "false") boolean deleted,
                                                             @RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "10") int size) {
         SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
         SecurityUtils.requireApplicationAccess(applicationId);
-        PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size));
+        PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size), deleted);
         return ResponseEntity.ok(mapper.toVideoPage(result, video -> videoUseCase.getPresignedUrl(video.getObjectKey())));
+    }
+
+    @GetMapping("/{id}/usages")
+    public ResponseEntity<List<MediaReferenceResponse>> usages(@PathVariable String id,
+                                                               @RequestParam String applicationId) {
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
+        List<MediaReferenceDto> refs = videoUseCase.listUsages(id, applicationId, allowed);
+        return ResponseEntity.ok(refs.stream().map(entry -> new MediaReferenceResponse(
+            entry.id(),
+            entry.applicationId(),
+            entry.mediaAssetId(),
+            entry.refType(),
+            entry.refId(),
+            entry.refField(),
+            entry.createdAt()
+        )).toList());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<VideoResponse> delete(@PathVariable String id,
+                                                @RequestParam String applicationId) {
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
+        VideoDto dto = videoUseCase.delete(id, applicationId, allowed);
+        return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<VideoResponse> restore(@PathVariable String id,
+                                                 @RequestParam String applicationId) {
+        SecurityUtils.requireServicePermission(ServicePermission.VIDEOS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
+        VideoDto dto = videoUseCase.restore(id, applicationId, allowed);
+        return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 }

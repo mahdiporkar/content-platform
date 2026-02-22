@@ -53,7 +53,8 @@ public class ContentMapper {
             video.getContentType(),
             video.getSizeBytes(),
             video.getCreatedAt(),
-            video.getUpdatedAt()
+            video.getUpdatedAt(),
+            video.getDeletedAt()
         );
     }
 }

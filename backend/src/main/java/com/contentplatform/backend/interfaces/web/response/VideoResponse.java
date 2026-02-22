@@ -17,6 +17,7 @@ public class VideoResponse {
     private final long sizeBytes;
     private final Instant createdAt;
     private final Instant updatedAt;
+    private final Instant deletedAt;
     private final String presignedUrl;
 
     public VideoResponse(String id,
@@ -31,6 +32,7 @@ public class VideoResponse {
                          long sizeBytes,
                          Instant createdAt,
                          Instant updatedAt,
+                         Instant deletedAt,
                          String presignedUrl) {
         this.id = id;
         this.applicationId = applicationId;
@@ -44,6 +46,7 @@ public class VideoResponse {
         this.sizeBytes = sizeBytes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
         this.presignedUrl = presignedUrl;
     }
 
@@ -93,6 +96,10 @@ public class VideoResponse {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 
     public String getPresignedUrl() {

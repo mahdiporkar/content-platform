@@ -32,8 +32,26 @@ public class JpaVideoRepositoryAdapter implements VideoRepository {
     }
 
     @Override
+    public Optional<Video> findByApplicationIdAndObjectKey(String applicationId, String objectKey) {
+        return repository.findAllByApplicationId(applicationId).stream()
+            .filter(entry -> objectKey.equals(entry.getObjectKey()))
+            .findFirst()
+            .map(this::toDomain);
+    }
+
+    @Override
     public PageSlice<Video> findByApplicationIdAndStatus(String applicationId, ContentStatus status, int page, int size) {
-        Page<VideoEntity> result = repository.findByApplicationIdAndStatus(
+        Page<VideoEntity> result = repository.findByApplicationIdAndStatusAndDeletedAtIsNull(
+            applicationId,
+            status,
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"))
+        );
+        return toPageSlice(result);
+    }
+
+    @Override
+    public PageSlice<Video> findDeletedByApplicationIdAndStatus(String applicationId, ContentStatus status, int page, int size) {
+        Page<VideoEntity> result = repository.findByApplicationIdAndStatusAndDeletedAtIsNotNull(
             applicationId,
             status,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"))
@@ -43,7 +61,16 @@ public class JpaVideoRepositoryAdapter implements VideoRepository {
 
     @Override
     public PageSlice<Video> findByApplicationId(String applicationId, int page, int size) {
-        Page<VideoEntity> result = repository.findByApplicationId(
+        Page<VideoEntity> result = repository.findByApplicationIdAndDeletedAtIsNull(
+            applicationId,
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"))
+        );
+        return toPageSlice(result);
+    }
+
+    @Override
+    public PageSlice<Video> findDeletedByApplicationId(String applicationId, int page, int size) {
+        Page<VideoEntity> result = repository.findByApplicationIdAndDeletedAtIsNotNull(
             applicationId,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"))
         );
@@ -73,7 +100,8 @@ public class JpaVideoRepositoryAdapter implements VideoRepository {
             video.getContentType(),
             video.getSizeBytes(),
             video.getCreatedAt(),
-            video.getUpdatedAt()
+            video.getUpdatedAt(),
+            video.getDeletedAt()
         );
     }
 
@@ -90,7 +118,8 @@ public class JpaVideoRepositoryAdapter implements VideoRepository {
             entity.getContentType(),
             entity.getSizeBytes(),
             entity.getCreatedAt(),
-            entity.getUpdatedAt()
+            entity.getUpdatedAt(),
+            entity.getDeletedAt()
         );
     }
 }

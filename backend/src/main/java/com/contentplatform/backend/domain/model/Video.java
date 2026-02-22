@@ -18,6 +18,7 @@ public class Video {
     private final long sizeBytes;
     private final Instant createdAt;
     private final Instant updatedAt;
+    private final Instant deletedAt;
 
     public Video(String id,
                  String applicationId,
@@ -30,7 +31,8 @@ public class Video {
                  String contentType,
                  long sizeBytes,
                  Instant createdAt,
-                 Instant updatedAt) {
+                 Instant updatedAt,
+                 Instant deletedAt) {
         this.id = Objects.requireNonNull(id, "id must not be null");
         this.applicationId = Objects.requireNonNull(applicationId, "applicationId must not be null");
         this.title = Objects.requireNonNull(title, "title must not be null");
@@ -43,6 +45,7 @@ public class Video {
         this.sizeBytes = sizeBytes;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt must not be null");
+        this.deletedAt = deletedAt;
     }
 
     public String getId() {
@@ -91,5 +94,9 @@ public class Video {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }

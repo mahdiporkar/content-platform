@@ -76,6 +76,7 @@ public class WebMapper {
             dto.getSizeBytes(),
             dto.getCreatedAt(),
             dto.getUpdatedAt(),
+            dto.getDeletedAt(),
             presignedUrl
         );
     }

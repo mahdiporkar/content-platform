@@ -51,12 +51,15 @@ public class VideoEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     protected VideoEntity() {
     }
 
     public VideoEntity(String id, String applicationId, String title, String description, String locale,
                        ContentStatus status, Instant publishedAt, String objectKey,
-                       String contentType, long sizeBytes, Instant createdAt, Instant updatedAt) {
+                       String contentType, long sizeBytes, Instant createdAt, Instant updatedAt, Instant deletedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
@@ -69,6 +72,7 @@ public class VideoEntity {
         this.sizeBytes = sizeBytes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     public String getId() {
@@ -117,5 +121,9 @@ public class VideoEntity {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }

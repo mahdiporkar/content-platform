@@ -8,6 +8,9 @@ import java.util.Optional;
 public interface VideoRepository {
     Video save(Video video);
     Optional<Video> findById(String id);
+    Optional<Video> findByApplicationIdAndObjectKey(String applicationId, String objectKey);
     PageSlice<Video> findByApplicationIdAndStatus(String applicationId, ContentStatus status, int page, int size);
     PageSlice<Video> findByApplicationId(String applicationId, int page, int size);
+    PageSlice<Video> findDeletedByApplicationIdAndStatus(String applicationId, ContentStatus status, int page, int size);
+    PageSlice<Video> findDeletedByApplicationId(String applicationId, int page, int size);
 }

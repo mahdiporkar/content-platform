@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface VideoJpaRepository extends JpaRepository<VideoEntity, String> {
-    Page<VideoEntity> findByApplicationId(String applicationId, Pageable pageable);
-    Page<VideoEntity> findByApplicationIdAndStatus(String applicationId, ContentStatus status, Pageable pageable);
+    Page<VideoEntity> findByApplicationIdAndDeletedAtIsNull(String applicationId, Pageable pageable);
+    Page<VideoEntity> findByApplicationIdAndStatusAndDeletedAtIsNull(String applicationId, ContentStatus status, Pageable pageable);
+    Page<VideoEntity> findByApplicationIdAndDeletedAtIsNotNull(String applicationId, Pageable pageable);
+    Page<VideoEntity> findByApplicationIdAndStatusAndDeletedAtIsNotNull(String applicationId, ContentStatus status, Pageable pageable);
     List<VideoEntity> findAllByApplicationId(String applicationId);
 }

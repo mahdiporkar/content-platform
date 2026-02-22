@@ -78,7 +78,7 @@ public class PublicContentController {
                                                                    @RequestParam(defaultValue = "PUBLISHED") ContentStatus status,
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "10") int size) {
-        PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size));
+        PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size), false);
         return ResponseEntity.ok(mapper.toVideoPage(result, video -> videoUseCase.getPresignedUrl(video.getObjectKey())));
     }
 }
