@@ -39,6 +39,9 @@ public class ArticleEntity {
     @Column(name = "published_at")
     private Instant publishedAt;
 
+    @Column(name = "reading_time_minutes", nullable = false)
+    private int readingTimeMinutes;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -49,7 +52,7 @@ public class ArticleEntity {
     }
 
     public ArticleEntity(String id, String applicationId, String title, String slug, String content, String locale,
-                         ContentStatus status, Instant publishedAt, Instant createdAt, Instant updatedAt) {
+                         ContentStatus status, Instant publishedAt, int readingTimeMinutes, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
@@ -58,6 +61,7 @@ public class ArticleEntity {
         this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
+        this.readingTimeMinutes = readingTimeMinutes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -92,6 +96,10 @@ public class ArticleEntity {
 
     public Instant getPublishedAt() {
         return publishedAt;
+    }
+
+    public int getReadingTimeMinutes() {
+        return readingTimeMinutes;
     }
 
     public Instant getCreatedAt() {

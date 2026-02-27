@@ -17,6 +17,7 @@ export class ArticleResponseDto {
     public status: ContentStatus,
     public publishedAt: string | null,
     public scheduledAt: string | null,
+    public readingTimeMinutes: number,
     public viewCount: number,
     public createdAt: string,
     public updatedAt: string,

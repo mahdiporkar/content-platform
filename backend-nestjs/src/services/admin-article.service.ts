@@ -10,6 +10,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { ArticleEntity } from '../entities/article.entity';
 import { normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
+import { calculateReadingTimeMinutes } from '../common/reading-time';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
 
@@ -38,6 +39,7 @@ export class AdminArticleService {
       article.status,
       article.publishedAt ? article.publishedAt.toISOString() : null,
       article.scheduledAt ? article.scheduledAt.toISOString() : null,
+      article.readingTimeMinutes ?? 0,
       article.viewCount ?? 0,
       article.createdAt.toISOString(),
       article.updatedAt.toISOString(),
@@ -70,6 +72,7 @@ export class AdminArticleService {
       status: request.status,
       publishedAt: publication.publishedAt,
       scheduledAt: publication.scheduledAt,
+      readingTimeMinutes: calculateReadingTimeMinutes(request.content),
     });
     const saved = await this.articleRepo.save(article);
     await this.mediaReferenceService.syncContentReferences({
@@ -105,6 +108,7 @@ export class AdminArticleService {
     article.status = request.status;
     article.publishedAt = publication.publishedAt;
     article.scheduledAt = publication.scheduledAt;
+    article.readingTimeMinutes = calculateReadingTimeMinutes(request.content);
     const saved = await this.articleRepo.save(article);
     await this.mediaReferenceService.syncContentReferences({
       applicationId: saved.applicationId,

@@ -60,6 +60,9 @@ export class ArticleEntity {
   })
   viewCount!: number;
 
+  @Column({ name: 'reading_time_minutes', type: 'integer', default: 0 })
+  readingTimeMinutes!: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

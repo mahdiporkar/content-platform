@@ -13,11 +13,12 @@ public class ArticleResponse {
     private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
+    private final int readingTimeMinutes;
     private final Instant createdAt;
     private final Instant updatedAt;
 
     public ArticleResponse(String id, String applicationId, String title, String slug, String content, String locale,
-                           ContentStatus status, Instant publishedAt, Instant createdAt, Instant updatedAt) {
+                           ContentStatus status, Instant publishedAt, int readingTimeMinutes, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.applicationId = applicationId;
         this.title = title;
@@ -26,6 +27,7 @@ public class ArticleResponse {
         this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
+        this.readingTimeMinutes = readingTimeMinutes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -60,6 +62,10 @@ public class ArticleResponse {
 
     public Instant getPublishedAt() {
         return publishedAt;
+    }
+
+    public int getReadingTimeMinutes() {
+        return readingTimeMinutes;
     }
 
     public Instant getCreatedAt() {

@@ -13,6 +13,7 @@ public class PostDto {
     private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
+    private final int readingTimeMinutes;
     private final Instant createdAt;
     private final Instant updatedAt;
 
@@ -24,6 +25,7 @@ public class PostDto {
                    String locale,
                    ContentStatus status,
                    Instant publishedAt,
+                   int readingTimeMinutes,
                    Instant createdAt,
                    Instant updatedAt) {
         this.id = id;
@@ -34,6 +36,7 @@ public class PostDto {
         this.locale = locale;
         this.status = status;
         this.publishedAt = publishedAt;
+        this.readingTimeMinutes = readingTimeMinutes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -68,6 +71,10 @@ public class PostDto {
 
     public Instant getPublishedAt() {
         return publishedAt;
+    }
+
+    public int getReadingTimeMinutes() {
+        return readingTimeMinutes;
     }
 
     public Instant getCreatedAt() {

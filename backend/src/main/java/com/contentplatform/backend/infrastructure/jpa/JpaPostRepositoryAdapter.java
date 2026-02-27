@@ -75,6 +75,7 @@ public class JpaPostRepositoryAdapter implements PostRepository {
             post.getLocale(),
             post.getStatus(),
             post.getPublishedAt(),
+            post.getReadingTimeMinutes(),
             post.getCreatedAt(),
             post.getUpdatedAt()
         );
@@ -90,6 +91,7 @@ public class JpaPostRepositoryAdapter implements PostRepository {
             entity.getLocale(),
             entity.getStatus(),
             entity.getPublishedAt(),
+            entity.getReadingTimeMinutes(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

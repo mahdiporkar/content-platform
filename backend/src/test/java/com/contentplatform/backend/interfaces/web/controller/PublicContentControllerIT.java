@@ -54,6 +54,7 @@ class PublicContentControllerIT {
             "en",
             ContentStatus.PUBLISHED,
             Instant.parse("2024-01-01T00:00:00Z"),
+            1,
             Instant.parse("2024-01-01T00:00:00Z"),
             Instant.parse("2024-01-01T00:00:00Z")
         ));
@@ -67,6 +68,7 @@ class PublicContentControllerIT {
             "en",
             ContentStatus.DRAFT,
             null,
+            1,
             Instant.parse("2024-01-02T00:00:00Z"),
             Instant.parse("2024-01-02T00:00:00Z")
         ));

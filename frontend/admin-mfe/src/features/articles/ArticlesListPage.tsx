@@ -6,6 +6,7 @@ import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { Article, ContentStatus, PageResponse } from "../../types";
+import { formatReadingTime, resolveReadingTimeMinutes } from "../../utils/readingTime";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
@@ -60,21 +61,28 @@ export const ArticlesListPage = () => {
         render: (value?: string | null) => value || "fa"
       },
       {
+        title: "Read Time",
+        key: "readingTimeMinutes",
+        width: "10%",
+        render: (_, article) =>
+          formatReadingTime(resolveReadingTimeMinutes(article.content, article.readingTimeMinutes))
+      },
+      {
         title: "Status",
         dataIndex: "status",
-        width: "15%",
+        width: "12%",
         render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
       },
       {
         title: "Updated",
         dataIndex: "updatedAt",
-        width: "15%",
+        width: "13%",
         render: (value: string) => new Date(value).toLocaleString()
       },
       {
         title: "Actions",
         key: "actions",
-        width: "15%",
+        width: "10%",
         render: (_, article) => (
           <Button
             type="text"

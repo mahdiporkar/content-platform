@@ -14,6 +14,7 @@ public class Post {
     private final String locale;
     private final ContentStatus status;
     private final Instant publishedAt;
+    private final int readingTimeMinutes;
     private final Instant createdAt;
     private final Instant updatedAt;
 
@@ -25,6 +26,7 @@ public class Post {
                 String locale,
                 ContentStatus status,
                 Instant publishedAt,
+                int readingTimeMinutes,
                 Instant createdAt,
                 Instant updatedAt) {
         this.id = Objects.requireNonNull(id, "id must not be null");
@@ -35,6 +37,7 @@ public class Post {
         this.locale = Objects.requireNonNull(locale, "locale must not be null");
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.publishedAt = publishedAt;
+        this.readingTimeMinutes = readingTimeMinutes;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt must not be null");
     }
@@ -69,6 +72,10 @@ public class Post {
 
     public Instant getPublishedAt() {
         return publishedAt;
+    }
+
+    public int getReadingTimeMinutes() {
+        return readingTimeMinutes;
     }
 
     public Instant getCreatedAt() {

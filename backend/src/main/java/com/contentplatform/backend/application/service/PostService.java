@@ -21,9 +21,15 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class PostService implements PostUseCase {
+    private static final int AVERAGE_WORDS_PER_MINUTE = 200;
+    private static final Pattern HTML_TAG_PATTERN = Pattern.compile("<[^>]*>");
+    private static final Pattern MARKDOWN_SYMBOLS_PATTERN = Pattern.compile("[`*_#>\\-\\[\\]()!]");
+    private static final Pattern WORD_PATTERN = Pattern.compile("[A-Za-z0-9\\u0600-\\u06FF]+");
+
     private final PostRepository postRepository;
     private final TimeProvider timeProvider;
     private final ContentMapper mapper;
@@ -39,6 +45,7 @@ public class PostService implements PostUseCase {
         enforceTenant(command.getApplicationId(), allowedApplicationIds);
         Instant now = timeProvider.now();
         Instant publishedAt = command.getStatus() == ContentStatus.PUBLISHED ? now : null;
+        int readingTimeMinutes = calculateReadingTimeMinutes(command.getContent());
         Post post = new Post(
             UUID.randomUUID().toString(),
             command.getApplicationId(),
@@ -48,6 +55,7 @@ public class PostService implements PostUseCase {
             ContentLocale.normalizeOrDefault(command.getLocale()),
             command.getStatus(),
             publishedAt,
+            readingTimeMinutes,
             now,
             now
         );
@@ -60,6 +68,7 @@ public class PostService implements PostUseCase {
         Post existing = postRepository.findById(command.getId())
             .orElseThrow(() -> new NotFoundException("Post not found"));
         Instant publishedAt = resolvePublishedAt(existing.getStatus(), command.getStatus(), existing.getPublishedAt());
+        int readingTimeMinutes = calculateReadingTimeMinutes(command.getContent());
         Post updated = new Post(
             existing.getId(),
             command.getApplicationId(),
@@ -69,6 +78,7 @@ public class PostService implements PostUseCase {
             ContentLocale.normalizeOrDefault(command.getLocale()),
             command.getStatus(),
             publishedAt,
+            readingTimeMinutes,
             existing.getCreatedAt(),
             timeProvider.now()
         );
@@ -90,6 +100,7 @@ public class PostService implements PostUseCase {
             existing.getLocale(),
             command.getStatus(),
             publishedAt,
+            existing.getReadingTimeMinutes(),
             existing.getCreatedAt(),
             timeProvider.now()
         );
@@ -134,5 +145,31 @@ public class PostService implements PostUseCase {
             return null;
         }
         return currentPublishedAt;
+    }
+
+    private int calculateReadingTimeMinutes(String content) {
+        if (content == null || content.isBlank()) {
+            return 0;
+        }
+
+        String plainText = HTML_TAG_PATTERN.matcher(content).replaceAll(" ");
+        plainText = MARKDOWN_SYMBOLS_PATTERN.matcher(plainText).replaceAll(" ");
+        plainText = plainText.replaceAll("\\s+", " ").trim();
+
+        if (plainText.isEmpty()) {
+            return 0;
+        }
+
+        int words = 0;
+        var matcher = WORD_PATTERN.matcher(plainText);
+        while (matcher.find()) {
+            words++;
+        }
+
+        if (words == 0) {
+            return 0;
+        }
+
+        return Math.max(1, (int) Math.ceil((double) words / AVERAGE_WORDS_PER_MINUTE));
     }
 }

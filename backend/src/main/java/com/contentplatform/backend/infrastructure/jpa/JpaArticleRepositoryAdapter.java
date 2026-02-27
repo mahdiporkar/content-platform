@@ -75,6 +75,7 @@ public class JpaArticleRepositoryAdapter implements ArticleRepository {
             article.getLocale(),
             article.getStatus(),
             article.getPublishedAt(),
+            article.getReadingTimeMinutes(),
             article.getCreatedAt(),
             article.getUpdatedAt()
         );
@@ -90,6 +91,7 @@ public class JpaArticleRepositoryAdapter implements ArticleRepository {
             entity.getLocale(),
             entity.getStatus(),
             entity.getPublishedAt(),
+            entity.getReadingTimeMinutes(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

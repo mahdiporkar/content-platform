@@ -8,6 +8,7 @@ import { ContentStatus, GalleryImage, Post, SeoMeta } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
+import { formatReadingTime, resolveReadingTimeMinutes } from "../../utils/readingTime";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -69,6 +70,10 @@ export const PostEditorForm = ({
   const subtitle = useMemo(
     () => (mode === "create" ? "Create a new post draft." : "Edit and publish updates."),
     [mode]
+  );
+  const readingTimeText = useMemo(
+    () => formatReadingTime(resolveReadingTimeMinutes(content, initialPost?.readingTimeMinutes)),
+    [content, initialPost?.readingTimeMinutes]
   );
 
   const scheduleLabelByLocale: Record<ContentLocale, string> = {
@@ -246,6 +251,9 @@ export const PostEditorForm = ({
         </Form.Item>
         <Form.Item label="Content">
           <ContentEditor applicationId={applicationId} value={content} onChange={setContent} />
+        </Form.Item>
+        <Form.Item label="Estimated read time">
+          <Typography.Text>{readingTimeText}</Typography.Text>
         </Form.Item>
 
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>

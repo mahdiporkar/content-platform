@@ -8,6 +8,7 @@ import { Article, ContentStatus, GalleryImage, SeoMeta } from "../../types";
 import { ContentEditor } from "../../components/ContentEditor";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
+import { formatReadingTime, resolveReadingTimeMinutes } from "../../utils/readingTime";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -69,6 +70,10 @@ export const ArticleEditorForm = ({
   const subtitle = useMemo(
     () => (mode === "create" ? "Write a new article." : "Edit and publish long-form content."),
     [mode]
+  );
+  const readingTimeText = useMemo(
+    () => formatReadingTime(resolveReadingTimeMinutes(content, initialArticle?.readingTimeMinutes)),
+    [content, initialArticle?.readingTimeMinutes]
   );
 
   const scheduleLabelByLocale: Record<ContentLocale, string> = {
@@ -246,6 +251,9 @@ export const ArticleEditorForm = ({
         </Form.Item>
         <Form.Item label="Content">
           <ContentEditor applicationId={applicationId} value={content} onChange={setContent} />
+        </Form.Item>
+        <Form.Item label="Estimated read time">
+          <Typography.Text>{readingTimeText}</Typography.Text>
         </Form.Item>
 
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>

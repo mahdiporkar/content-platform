@@ -20,6 +20,7 @@ public class ContentMapper {
             post.getLocale(),
             post.getStatus(),
             post.getPublishedAt(),
+            post.getReadingTimeMinutes(),
             post.getCreatedAt(),
             post.getUpdatedAt()
         );
@@ -35,6 +36,7 @@ public class ContentMapper {
             article.getLocale(),
             article.getStatus(),
             article.getPublishedAt(),
+            article.getReadingTimeMinutes(),
             article.getCreatedAt(),
             article.getUpdatedAt()
         );

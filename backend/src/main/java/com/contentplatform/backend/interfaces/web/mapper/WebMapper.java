@@ -26,6 +26,7 @@ public class WebMapper {
             dto.getLocale(),
             dto.getStatus(),
             dto.getPublishedAt(),
+            dto.getReadingTimeMinutes(),
             dto.getCreatedAt(),
             dto.getUpdatedAt()
         );
@@ -57,6 +58,7 @@ public class WebMapper {
             dto.getLocale(),
             dto.getStatus(),
             dto.getPublishedAt(),
+            dto.getReadingTimeMinutes(),
             dto.getCreatedAt(),
             dto.getUpdatedAt()
         );

@@ -67,6 +67,7 @@ export type Post = {
   status: ContentStatus;
   publishedAt?: string | null;
   scheduledAt?: string | null;
+  readingTimeMinutes?: number;
   viewCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -88,6 +89,7 @@ export type Article = {
   status: ContentStatus;
   publishedAt?: string | null;
   scheduledAt?: string | null;
+  readingTimeMinutes?: number;
   viewCount?: number;
   createdAt: string;
   updatedAt: string;

@@ -15,6 +15,7 @@ export class DeliveryContentResponseDto {
     public publishedAt: string | null,
     public scheduledAt: string | null,
     public viewCount: number,
+    public readingTimeMinutes: number | null,
     public mediaUrl: string | null,
     public posterUrl: string | null,
     public durationSeconds: number | null,

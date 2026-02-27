@@ -10,6 +10,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { PostEntity } from '../entities/post.entity';
 import { normalizeContentLocale } from '../common/content-locale.constants';
 import { resolvePublicationFields } from '../common/publishing';
+import { calculateReadingTimeMinutes } from '../common/reading-time';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
 
@@ -38,6 +39,7 @@ export class AdminPostService {
       post.status,
       post.publishedAt ? post.publishedAt.toISOString() : null,
       post.scheduledAt ? post.scheduledAt.toISOString() : null,
+      post.readingTimeMinutes ?? 0,
       post.viewCount ?? 0,
       post.createdAt.toISOString(),
       post.updatedAt.toISOString(),
@@ -70,6 +72,7 @@ export class AdminPostService {
       status: request.status,
       publishedAt: publication.publishedAt,
       scheduledAt: publication.scheduledAt,
+      readingTimeMinutes: calculateReadingTimeMinutes(request.content),
     });
     const saved = await this.postRepo.save(post);
     await this.mediaReferenceService.syncContentReferences({
@@ -105,6 +108,7 @@ export class AdminPostService {
     post.status = request.status;
     post.publishedAt = publication.publishedAt;
     post.scheduledAt = publication.scheduledAt;
+    post.readingTimeMinutes = calculateReadingTimeMinutes(request.content);
     const saved = await this.postRepo.save(post);
     await this.mediaReferenceService.syncContentReferences({
       applicationId: saved.applicationId,
