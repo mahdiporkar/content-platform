@@ -8,6 +8,7 @@ import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UploadVideoCommand;
 import com.contentplatform.backend.application.dto.VideoDto;
 import com.contentplatform.backend.application.port.in.VideoUseCase;
+import com.contentplatform.backend.application.service.SitemapService;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
@@ -38,10 +39,12 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/videos")
 public class AdminVideoController {
     private final VideoUseCase videoUseCase;
+    private final SitemapService sitemapService;
     private final WebMapper mapper;
 
-    public AdminVideoController(VideoUseCase videoUseCase, WebMapper mapper) {
+    public AdminVideoController(VideoUseCase videoUseCase, SitemapService sitemapService, WebMapper mapper) {
         this.videoUseCase = videoUseCase;
+        this.sitemapService = sitemapService;
         this.mapper = mapper;
     }
 
@@ -67,6 +70,7 @@ public class AdminVideoController {
             file.getInputStream()
         );
         VideoDto dto = videoUseCase.upload(command, allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(applicationId);
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
@@ -86,6 +90,7 @@ public class AdminVideoController {
             ),
             allowed
         );
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
@@ -95,6 +100,7 @@ public class AdminVideoController {
         SecurityUtils.requireApplicationAccess(request.getApplicationId());
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         VideoDto dto = videoUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
@@ -135,6 +141,7 @@ public class AdminVideoController {
         SecurityUtils.requireApplicationAccess(applicationId);
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
         VideoDto dto = videoUseCase.delete(id, applicationId, allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(applicationId);
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 
@@ -145,6 +152,7 @@ public class AdminVideoController {
         SecurityUtils.requireApplicationAccess(applicationId);
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
         VideoDto dto = videoUseCase.restore(id, applicationId, allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(applicationId);
         return ResponseEntity.ok(mapper.toVideoResponse(dto, videoUseCase.getPresignedUrl(dto.getObjectKey())));
     }
 }

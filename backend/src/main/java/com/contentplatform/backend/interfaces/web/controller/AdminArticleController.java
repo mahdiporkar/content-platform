@@ -7,6 +7,7 @@ import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.UpdateArticleCommand;
 import com.contentplatform.backend.application.port.in.ArticleUseCase;
+import com.contentplatform.backend.application.service.SitemapService;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
@@ -33,10 +34,12 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/articles")
 public class AdminArticleController {
     private final ArticleUseCase articleUseCase;
+    private final SitemapService sitemapService;
     private final WebMapper mapper;
 
-    public AdminArticleController(ArticleUseCase articleUseCase, WebMapper mapper) {
+    public AdminArticleController(ArticleUseCase articleUseCase, SitemapService sitemapService, WebMapper mapper) {
         this.articleUseCase = articleUseCase;
+        this.sitemapService = sitemapService;
         this.mapper = mapper;
     }
 
@@ -56,6 +59,7 @@ public class AdminArticleController {
             ),
             allowed
         );
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toArticleResponse(dto));
     }
 
@@ -76,6 +80,7 @@ public class AdminArticleController {
             ),
             allowed
         );
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toArticleResponse(dto));
     }
 
@@ -85,6 +90,7 @@ public class AdminArticleController {
         SecurityUtils.requireApplicationAccess(request.getApplicationId());
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         ArticleDto dto = articleUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toArticleResponse(dto));
     }
 

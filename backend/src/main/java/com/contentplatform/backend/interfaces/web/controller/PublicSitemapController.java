@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/public/{tenant}")
+@RequestMapping({"/public/{tenant}", "/api/v1/public/{tenant}"})
 public class PublicSitemapController {
     private final SitemapService sitemapService;
 
@@ -29,4 +29,3 @@ public class PublicSitemapController {
         return ResponseEntity.ok(sitemapService.getPublicSitemapXml(tenant, type, index));
     }
 }
-

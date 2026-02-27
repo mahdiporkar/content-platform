@@ -7,6 +7,7 @@ import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.PostDto;
 import com.contentplatform.backend.application.dto.UpdatePostCommand;
 import com.contentplatform.backend.application.port.in.PostUseCase;
+import com.contentplatform.backend.application.service.SitemapService;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
@@ -33,10 +34,12 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/posts")
 public class AdminPostController {
     private final PostUseCase postUseCase;
+    private final SitemapService sitemapService;
     private final WebMapper mapper;
 
-    public AdminPostController(PostUseCase postUseCase, WebMapper mapper) {
+    public AdminPostController(PostUseCase postUseCase, SitemapService sitemapService, WebMapper mapper) {
         this.postUseCase = postUseCase;
+        this.sitemapService = sitemapService;
         this.mapper = mapper;
     }
 
@@ -56,6 +59,7 @@ public class AdminPostController {
             ),
             allowed
         );
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toPostResponse(dto));
     }
 
@@ -76,6 +80,7 @@ public class AdminPostController {
             ),
             allowed
         );
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toPostResponse(dto));
     }
 
@@ -85,6 +90,7 @@ public class AdminPostController {
         SecurityUtils.requireApplicationAccess(request.getApplicationId());
         List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(request.getApplicationId());
         PostDto dto = postUseCase.changeStatus(new ChangeStatusCommand(id, request.getApplicationId(), request.getStatus()), allowed);
+        sitemapService.invalidateTenantCacheIfOnPublish(request.getApplicationId());
         return ResponseEntity.ok(mapper.toPostResponse(dto));
     }
 
