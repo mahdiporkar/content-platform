@@ -127,7 +127,7 @@ export const MediaLibraryPage = () => {
       {
         title: "Actions",
         key: "actions",
-        width: 140,
+        width: 220,
         render: (_, asset) => {
           const isStateLocked = asset.state === "TRASH" || asset.state === "PURGED";
           const trashDisabled = isStateLocked;
@@ -144,41 +144,53 @@ export const MediaLibraryPage = () => {
           );
 
           if (trashDisabled) {
-            return button;
+            return (
+              <Space>
+                <Button type="text" onClick={() => navigate(`/media/${asset.id}/variants`)}>
+                  Variants
+                </Button>
+                {button}
+              </Space>
+            );
           }
 
           return (
-            <Popconfirm
-              title="Move this file to trash?"
-              okText="Move to Trash"
-              okButtonProps={{ danger: true }}
-              onConfirm={async () => {
-                if (!applicationId) {
-                  return;
-                }
-                try {
-                  await trashMediaAsset(asset.id, applicationId);
-                  messageApi.success("File moved to trash.");
-                  await fetchItems();
-                } catch (error) {
-                  if (axios.isAxiosError(error) && error.response?.status === 409) {
-                    messageApi.warning(
-                      "This file is used in content (even DRAFT items count as usage) and cannot be moved to trash."
-                    );
-                    await fetchItems();
+            <Space>
+              <Button type="text" onClick={() => navigate(`/media/${asset.id}/variants`)}>
+                Variants
+              </Button>
+              <Popconfirm
+                title="Move this file to trash?"
+                okText="Move to Trash"
+                okButtonProps={{ danger: true }}
+                onConfirm={async () => {
+                  if (!applicationId) {
                     return;
                   }
-                  messageApi.error("Failed to move file to trash.");
-                }
-              }}
-            >
-              {button}
-            </Popconfirm>
+                  try {
+                    await trashMediaAsset(asset.id, applicationId);
+                    messageApi.success("File moved to trash.");
+                    await fetchItems();
+                  } catch (error) {
+                    if (axios.isAxiosError(error) && error.response?.status === 409) {
+                      messageApi.warning(
+                        "This file is used in content (even DRAFT items count as usage) and cannot be moved to trash."
+                      );
+                      await fetchItems();
+                      return;
+                    }
+                    messageApi.error("Failed to move file to trash.");
+                  }
+                }}
+              >
+                {button}
+              </Popconfirm>
+            </Space>
           );
         }
       }
     ],
-    [applicationId, fetchItems, messageApi]
+    [applicationId, fetchItems, messageApi, navigate]
   );
 
   return (

@@ -20,6 +20,7 @@ import { ImageEditorPage } from "./features/images/ImageEditorPage";
 import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
 import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 import { MediaSafetyPage } from "./features/media/MediaSafetyPage";
+import { MediaVariantsPage } from "./features/media/MediaVariantsPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -59,6 +60,7 @@ export const routes: RouteObject[] = [
       { path: "images", element: <ImagesListPage /> },
       { path: "images/:id", element: <ImageEditorPage /> },
       { path: "media", element: <MediaLibraryPage /> },
+      { path: "media/:id/variants", element: <MediaVariantsPage /> },
       { path: "media/safety", element: <MediaSafetyPage /> },
       { path: "analytics", element: <AnalyticsDashboardPage /> }
     ]

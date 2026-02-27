@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button, Card, DatePicker, Form, Input, Select, Space, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
+import { resolveMediaAssetByObjectKey } from "../../api/media";
 import { ImageContent } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
@@ -63,6 +64,18 @@ export const ImageEditorPage = () => {
     });
     setLoading(false);
     navigate("/images");
+  };
+
+  const openVariants = async () => {
+    if (!image?.objectKey || !image.applicationId) {
+      return;
+    }
+    try {
+      const asset = await resolveMediaAssetByObjectKey(image.objectKey, image.applicationId);
+      navigate(`/media/${asset.id}/variants`);
+    } catch {
+      // no-op
+    }
   };
 
   if (!image) {
@@ -146,6 +159,9 @@ export const ImageEditorPage = () => {
           </Form.Item>
         )}
         <Space>
+          <Button onClick={() => void openVariants()} disabled={!image}>
+            Manage Variants
+          </Button>
           <Button type="primary" htmlType="submit" loading={loading}>
             Save
           </Button>

@@ -4,8 +4,16 @@ import type { UploadFile } from "antd";
 import { UploadOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
-import { uploadMedia } from "../../api/media";
-import { ContentStatus, GalleryImage, MediaAsset, SeoMeta } from "../../types";
+import { addMediaVariant, resolveMediaAssetByObjectKey, uploadMedia } from "../../api/media";
+import {
+  ContentStatus,
+  GalleryImage,
+  MediaAsset,
+  MediaVariantDevice,
+  MediaVariantPurpose,
+  MediaVariantSizeKey,
+  SeoMeta
+} from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
 
@@ -15,6 +23,13 @@ type Props = {
   applicationId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+};
+
+type VariantDraft = {
+  file: File | null;
+  purpose: MediaVariantPurpose;
+  sizeKey?: MediaVariantSizeKey;
+  device?: MediaVariantDevice;
 };
 
 export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) => {
@@ -33,6 +48,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [videoPickerOpen, setVideoPickerOpen] = useState(false);
   const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
   const [selectedVideoAsset, setSelectedVideoAsset] = useState<MediaAsset | null>(null);
+  const [variants, setVariants] = useState<VariantDraft[]>([]);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
@@ -80,6 +96,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     setUploading(true);
     setError(null);
     try {
+      let createdObjectKey: string | null = null;
       if (file) {
         const payload = new FormData();
         payload.append("file", file);
@@ -100,11 +117,12 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         if (gallery.length > 0) {
           payload.append("gallery", JSON.stringify(gallery));
         }
-        await client.post("/api/v1/admin/videos/upload", payload, {
+        const response = await client.post<{ objectKey: string }>("/api/v1/admin/videos/upload", payload, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+        createdObjectKey = response.data.objectKey;
       } else if (selectedVideoAsset) {
-        await client.post("/api/v1/admin/videos/create-from-asset", {
+        const response = await client.post<{ objectKey: string }>("/api/v1/admin/videos/create-from-asset", {
           assetId: selectedVideoAsset.id,
           title,
           description,
@@ -116,13 +134,36 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
           seo,
           gallery
         });
+        createdObjectKey = response.data.objectKey;
       }
+
+      if (createdObjectKey && variants.some((entry) => entry.file)) {
+        const asset = await resolveMediaAssetByObjectKey(createdObjectKey, applicationId);
+        const usedCombos = new Set<string>();
+        for (const variant of variants) {
+          if (!variant.file) {
+            continue;
+          }
+          const combo = `${variant.purpose}|${variant.sizeKey || ""}|${variant.device || ""}`;
+          if (usedCombos.has(combo)) {
+            throw new Error("Duplicate variant combination.");
+          }
+          usedCombos.add(combo);
+          await addMediaVariant(asset.id, applicationId, variant.file, {
+            purpose: variant.purpose,
+            sizeKey: variant.sizeKey,
+            device: variant.device
+          });
+        }
+      }
+
       setFile(null);
       setFileList([]);
       setSelectedVideoAsset(null);
+      setVariants([]);
       onSuccess?.();
     } catch (err) {
-      setError("Upload failed. Check the fields and try again.");
+      setError("Upload failed. Check fields/variant duplicates and try again.");
     } finally {
       setUploading(false);
     }
@@ -135,6 +176,18 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
     if (selected) {
       setSelectedVideoAsset(null);
     }
+  };
+
+  const addVariantRow = () => {
+    setVariants((prev) => [...prev, { file: null, purpose: "thumbnail" }]);
+  };
+
+  const updateVariant = (index: number, patch: Partial<VariantDraft>) => {
+    setVariants((prev) => prev.map((entry, idx) => (idx === index ? { ...entry, ...patch } : entry)));
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   return (
@@ -370,6 +423,66 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
                 </Space>
               </Card>
             ))}
+          </Space>
+        </Card>
+        <Card size="small" title="Variants (mobile/tablet/desktop)" style={{ marginBottom: 16 }}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            {variants.map((variant, index) => (
+              <Card key={index} size="small" style={{ background: "#fafafa" }}>
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Space wrap>
+                    <Button onClick={() => (document.getElementById(`video-variant-${index}`) as HTMLInputElement | null)?.click()}>
+                      {variant.file ? "Change Variant File" : "Select Variant File"}
+                    </Button>
+                    <Typography.Text type="secondary">{variant.file?.name || "No file selected"}</Typography.Text>
+                    <input
+                      id={`video-variant-${index}`}
+                      type="file"
+                      accept="video/*"
+                      hidden
+                      onChange={(event) => updateVariant(index, { file: event.target.files?.[0] || null })}
+                    />
+                  </Space>
+                  <Space wrap>
+                    <Select
+                      value={variant.purpose}
+                      style={{ width: 150 }}
+                      onChange={(value) => updateVariant(index, { purpose: value as MediaVariantPurpose })}
+                      options={[
+                        { value: "thumbnail", label: "thumbnail" },
+                        { value: "hero", label: "hero" },
+                        { value: "cover", label: "cover" },
+                        { value: "gallery", label: "gallery" },
+                        { value: "og_image", label: "og_image" },
+                        { value: "preview", label: "preview" }
+                      ]}
+                    />
+                    <Select
+                      allowClear
+                      placeholder="size"
+                      value={variant.sizeKey}
+                      style={{ width: 120 }}
+                      onChange={(value) => updateVariant(index, { sizeKey: value as MediaVariantSizeKey })}
+                      options={["xs", "sm", "md", "lg", "xl"].map((entry) => ({ value: entry, label: entry }))}
+                    />
+                    <Select
+                      allowClear
+                      placeholder="device"
+                      value={variant.device}
+                      style={{ width: 140 }}
+                      onChange={(value) => updateVariant(index, { device: value as MediaVariantDevice })}
+                      options={["mobile", "tablet", "desktop"].map((entry) => ({ value: entry, label: entry }))}
+                    />
+                    <Button danger onClick={() => removeVariant(index)}>
+                      Remove
+                    </Button>
+                  </Space>
+                </Space>
+              </Card>
+            ))}
+            <Button type="dashed" onClick={addVariantRow}>
+              Add Variant
+            </Button>
           </Space>
         </Card>
       </Form>

@@ -17,6 +17,7 @@ import { AdminAnalyticsController } from './controllers/admin-analytics.controll
 import { DeliveryContentController } from './controllers/delivery-content.controller';
 import { MediaGatewayController } from './controllers/media-gateway.controller';
 import { MediaController } from './controllers/media.controller';
+import { PublicMediaController } from './controllers/public-media.controller';
 import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
@@ -56,6 +57,7 @@ import { MediaLibraryService } from './services/media-library.service';
 import { MediaReferenceService } from './services/media-reference.service';
 import { MediaLifecycleService } from './services/media-lifecycle.service';
 import { MinioStorageProvider } from './services/minio-storage.provider';
+import { MediaVariantService } from './services/media-variant.service';
 
 @Module({
   imports: [
@@ -128,6 +130,7 @@ import { MinioStorageProvider } from './services/minio-storage.provider';
     AdminUserController,
     AdminAnalyticsController,
     DeliveryContentController,
+    PublicMediaController,
     MediaGatewayController,
     MediaController,
   ],
@@ -153,6 +156,7 @@ import { MinioStorageProvider } from './services/minio-storage.provider';
     MinioService,
     MinioStorageProvider,
     MediaLibraryService,
+    MediaVariantService,
     MediaReferenceService,
     MediaLifecycleService,
     { provide: 'STORAGE_PROVIDER', useExisting: MinioStorageProvider },

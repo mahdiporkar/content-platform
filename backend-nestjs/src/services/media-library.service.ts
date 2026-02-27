@@ -8,6 +8,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
 import { ImageEntity } from '../entities/image.entity';
 import { VideoEntity } from '../entities/video.entity';
+import { MediaVariantService } from './media-variant.service';
 
 type ListAssetsParams = {
   applicationId: string;
@@ -41,6 +42,7 @@ export class MediaLibraryService {
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
     private readonly baseUrl: BaseUrlService,
+    private readonly mediaVariantService: MediaVariantService,
   ) {}
 
   async registerAsset(params: RegisterAssetParams): Promise<MediaAssetEntity> {
@@ -55,7 +57,9 @@ export class MediaLibraryService {
       existing.ownerUserId = params.ownerUserId ?? existing.ownerUserId ?? null;
       existing.state = existing.state || MediaAssetState.ACTIVE;
       existing.bucket = params.bucket || existing.bucket || 'media';
-      return await this.mediaAssetRepo.save(existing);
+      const saved = await this.mediaAssetRepo.save(existing);
+      await this.mediaVariantService.ensureDefaultVariantForAsset(saved);
+      return saved;
     }
 
     const entity = this.mediaAssetRepo.create({
@@ -71,7 +75,9 @@ export class MediaLibraryService {
       pinned: false,
       metadata: null,
     });
-    return await this.mediaAssetRepo.save(entity);
+    const saved = await this.mediaAssetRepo.save(entity);
+    await this.mediaVariantService.ensureDefaultVariantForAsset(saved);
+    return saved;
   }
 
   async listAssets(params: ListAssetsParams): Promise<PageResponseDto<MediaAssetResponseDto>> {
@@ -158,6 +164,30 @@ export class MediaLibraryService {
       throw new NotFoundException('Media asset not found.');
     }
     return asset;
+  }
+
+  async getAssetByObjectKeyForApplication(objectKey: string, applicationId: string): Promise<MediaAssetEntity> {
+    const normalized = objectKey.trim();
+    if (!normalized) {
+      throw new NotFoundException('Media asset not found.');
+    }
+    await this.syncFromContent(applicationId);
+    const asset = await this.mediaAssetRepo.findOne({
+      where: { applicationId, objectKey: normalized },
+    });
+    if (!asset) {
+      throw new NotFoundException('Media asset not found.');
+    }
+    return asset;
+  }
+
+  async getAssetResponseByObjectKeyForApplication(objectKey: string, applicationId: string): Promise<MediaAssetResponseDto> {
+    const asset = await this.getAssetByObjectKeyForApplication(objectKey, applicationId);
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    return this.mapAsset(asset, application);
   }
 
   private mapAsset(asset: MediaAssetEntity, application: ApplicationEntity): MediaAssetResponseDto {

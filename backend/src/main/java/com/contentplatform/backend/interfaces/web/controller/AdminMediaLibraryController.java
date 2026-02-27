@@ -51,6 +51,15 @@ public class AdminMediaLibraryController {
         return ResponseEntity.ok(new PageResponse<>(items, result.getTotalElements(), result.getTotalPages(), result.getPage(), result.getSize()));
     }
 
+    @GetMapping("/resolve")
+    public ResponseEntity<MediaAssetResponse> resolveByObjectKey(@RequestParam String applicationId,
+                                                                 @RequestParam String objectKey) {
+        SecurityUtils.requireServicePermission(ServicePermission.MEDIA_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        List<String> allowed = SecurityUtils.resolveAllowedApplicationIdsFor(applicationId);
+        return ResponseEntity.ok(toResponse(mediaLibraryUseCase.getByObjectKey(applicationId, objectKey, allowed)));
+    }
+
     private MediaAssetResponse toResponse(MediaAssetDto dto) {
         return new MediaAssetResponse(
             dto.id(),

@@ -1,5 +1,5 @@
 import client from "./client";
-import type { MediaAsset, MediaReference, MediaUploadResponse, PageResponse } from "../types";
+import type { MediaAsset, MediaReference, MediaUploadResponse, MediaVariant, PageResponse } from "../types";
 
 export type MediaKind = "image" | "video" | "other";
 export type MediaState = "ACTIVE" | "TRASH";
@@ -88,4 +88,95 @@ export const listMediaReferences = async (id: string, applicationId: string): Pr
     params: { applicationId }
   });
   return response.data;
+};
+
+type VariantPayload = {
+  purpose: string;
+  sizeKey?: string;
+  device?: string;
+  minWidth?: number;
+  maxWidth?: number;
+  format?: string;
+  isDefault?: boolean;
+  sortOrder?: number;
+  width?: number;
+  height?: number;
+  duration?: number;
+  bitrate?: number;
+};
+
+export const listMediaVariants = async (mediaId: string, applicationId: string): Promise<MediaVariant[]> => {
+  const response = await client.get<MediaVariant[]>(`/api/v1/admin/media/${mediaId}/variants`, {
+    params: { applicationId }
+  });
+  return response.data;
+};
+
+export const resolveMediaAssetByObjectKey = async (
+  objectKey: string,
+  applicationId: string
+): Promise<MediaAsset> => {
+  const response = await client.get<MediaAsset>("/api/v1/admin/media/library/resolve", {
+    params: { objectKey, applicationId }
+  });
+  return response.data;
+};
+
+export const addMediaVariant = async (
+  mediaId: string,
+  applicationId: string,
+  file: File,
+  payload: VariantPayload
+): Promise<MediaVariant> => {
+  const form = new FormData();
+  form.append("file", file);
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+    form.append(key, String(value));
+  });
+  const response = await client.post<MediaVariant>(`/api/v1/admin/media/${mediaId}/variants`, form, {
+    params: { applicationId },
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return response.data;
+};
+
+export const replaceMediaVariant = async (
+  mediaId: string,
+  variantId: string,
+  applicationId: string,
+  payload: VariantPayload,
+  file?: File
+): Promise<MediaVariant> => {
+  const form = new FormData();
+  if (file) {
+    form.append("file", file);
+  }
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+    form.append(key, String(value));
+  });
+  const response = await client.put<MediaVariant>(
+    `/api/v1/admin/media/${mediaId}/variants/${variantId}`,
+    form,
+    {
+      params: { applicationId },
+      headers: { "Content-Type": "multipart/form-data" }
+    }
+  );
+  return response.data;
+};
+
+export const deleteMediaVariant = async (
+  mediaId: string,
+  variantId: string,
+  applicationId: string
+): Promise<void> => {
+  await client.delete(`/api/v1/admin/media/${mediaId}/variants/${variantId}`, {
+    params: { applicationId }
+  });
 };

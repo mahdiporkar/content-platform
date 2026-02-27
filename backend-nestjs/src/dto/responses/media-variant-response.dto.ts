@@ -1,0 +1,25 @@
+export class MediaVariantResponseDto {
+  constructor(
+    public id: string,
+    public mediaId: string,
+    public applicationId: string,
+    public purpose: string,
+    public sizeKey: string | null,
+    public minWidth: number | null,
+    public maxWidth: number | null,
+    public device: string | null,
+    public format: string | null,
+    public objectKey: string,
+    public fileUrl: string | null,
+    public url: string,
+    public isDefault: boolean,
+    public sortOrder: number,
+    public width: number | null,
+    public height: number | null,
+    public duration: number | null,
+    public bitrate: number | null,
+    public sizeBytes: number,
+    public createdAt: string,
+    public updatedAt: string | null,
+  ) {}
+}

@@ -152,6 +152,42 @@ export type MediaAsset = {
   updatedAt: string;
 };
 
+export type MediaVariantPurpose =
+  | "default"
+  | "thumbnail"
+  | "hero"
+  | "cover"
+  | "gallery"
+  | "og_image"
+  | "preview";
+
+export type MediaVariantSizeKey = "xs" | "sm" | "md" | "lg" | "xl";
+export type MediaVariantDevice = "mobile" | "tablet" | "desktop";
+
+export type MediaVariant = {
+  id: string;
+  mediaId: string;
+  applicationId: string;
+  purpose: MediaVariantPurpose;
+  sizeKey?: MediaVariantSizeKey | null;
+  minWidth?: number | null;
+  maxWidth?: number | null;
+  device?: MediaVariantDevice | null;
+  format?: string | null;
+  objectKey: string;
+  fileUrl?: string | null;
+  url: string;
+  isDefault: boolean;
+  sortOrder: number;
+  width?: number | null;
+  height?: number | null;
+  duration?: number | null;
+  bitrate?: number | null;
+  sizeBytes: number;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
 export type MediaReference = {
   id: string;
   applicationId: string;

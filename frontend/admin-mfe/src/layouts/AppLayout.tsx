@@ -33,7 +33,18 @@ export const AppLayout = () => {
     () => Array.from(new Set((tokenPayload?.applicationIds || []).map((entry) => entry.trim()).filter(Boolean))),
     [tokenPayload]
   );
-  const canSeeMediaManagerMenu = useMemo(() => tokenPayload?.role === "super_admin", [tokenPayload?.role]);
+  const canSeeMediaManagerMenu = useMemo(() => {
+    if (tokenPayload?.role === "super_admin") {
+      return true;
+    }
+    const servicePermissions = tokenPayload?.servicePermissions || [];
+    return (
+      servicePermissions.includes("images.manage") ||
+      servicePermissions.includes("videos.manage") ||
+      servicePermissions.includes("posts.manage") ||
+      servicePermissions.includes("articles.manage")
+    );
+  }, [tokenPayload?.role, tokenPayload?.servicePermissions]);
 
   const handleLogout = () => {
     authStore.clearToken();

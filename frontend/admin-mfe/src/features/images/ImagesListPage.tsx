@@ -21,7 +21,15 @@ import { UploadOutlined } from "@ant-design/icons";
 import { type Dayjs } from "dayjs";
 import axios from "axios";
 import client from "../../api/client";
-import { ContentUsage, ImageContent, MediaAsset } from "../../types";
+import { addMediaVariant, resolveMediaAssetByObjectKey } from "../../api/media";
+import {
+  ContentUsage,
+  ImageContent,
+  MediaAsset,
+  MediaVariantDevice,
+  MediaVariantPurpose,
+  MediaVariantSizeKey
+} from "../../types";
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
@@ -69,6 +77,14 @@ export const ImagesListPage = () => {
   const [usageItems, setUsageItems] = useState<ContentUsage[]>([]);
   const [usageTargetTitle, setUsageTargetTitle] = useState<string>("");
   const [viewMode, setViewMode] = useState<"active" | "trash">("active");
+  const [variants, setVariants] = useState<
+    Array<{
+      file: File | null;
+      purpose: MediaVariantPurpose;
+      sizeKey?: MediaVariantSizeKey;
+      device?: MediaVariantDevice;
+    }>
+  >([]);
 
   const scheduleLabelByLocale: Record<ContentLocale, string> = {
     fa: "زمان انتشار",
@@ -145,6 +161,18 @@ export const ImagesListPage = () => {
     }
   };
 
+  const openVariants = async (image: ImageContent) => {
+    if (!applicationId) {
+      return;
+    }
+    try {
+      const asset = await resolveMediaAssetByObjectKey(image.objectKey, applicationId);
+      navigate(`/media/${asset.id}/variants`);
+    } catch {
+      messageApi.error("Media asset not found for this image.");
+    }
+  };
+
   const handleUpload = async () => {
     if (!applicationId || (!selectedAsset && fileList.length === 0) || !title.trim()) {
       return;
@@ -156,36 +184,79 @@ export const ImagesListPage = () => {
     if (status === "SCHEDULED" && scheduledAt && scheduledAt.valueOf() <= Date.now()) {
       return;
     }
-    if (selectedAsset) {
-      await client.post("/api/v1/admin/images/create-from-asset", {
-        assetId: selectedAsset.id,
-        title: title.trim(),
-        applicationId,
-        status,
-        locale,
-        scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined
-      });
-    } else {
-      const payload = new FormData();
-      payload.append("file", fileList[0]);
-      payload.append("title", title.trim());
-      payload.append("applicationId", applicationId);
-      payload.append("status", status);
-      payload.append("locale", locale);
-      if (status === "SCHEDULED" && scheduledAtIso) {
-        payload.append("scheduledAt", scheduledAtIso);
+    try {
+      let createdObjectKey: string | null = null;
+      if (selectedAsset) {
+        const response = await client.post<{ objectKey: string }>("/api/v1/admin/images/create-from-asset", {
+          assetId: selectedAsset.id,
+          title: title.trim(),
+          applicationId,
+          status,
+          locale,
+          scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined
+        });
+        createdObjectKey = response.data.objectKey;
+      } else {
+        const payload = new FormData();
+        payload.append("file", fileList[0]);
+        payload.append("title", title.trim());
+        payload.append("applicationId", applicationId);
+        payload.append("status", status);
+        payload.append("locale", locale);
+        if (status === "SCHEDULED" && scheduledAtIso) {
+          payload.append("scheduledAt", scheduledAtIso);
+        }
+        const response = await client.post<{ objectKey: string }>("/api/v1/admin/images/upload", payload, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        createdObjectKey = response.data.objectKey;
       }
-      await client.post("/api/v1/admin/images/upload", payload, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+
+      if (createdObjectKey && variants.some((entry) => entry.file)) {
+        const asset = await resolveMediaAssetByObjectKey(createdObjectKey, applicationId);
+        const usedCombos = new Set<string>();
+        for (const variant of variants) {
+          if (!variant.file) {
+            continue;
+          }
+          const combo = `${variant.purpose}|${variant.sizeKey || ""}|${variant.device || ""}`;
+          if (usedCombos.has(combo)) {
+            throw new Error("Duplicate variant combination.");
+          }
+          usedCombos.add(combo);
+          await addMediaVariant(asset.id, applicationId, variant.file, {
+            purpose: variant.purpose,
+            sizeKey: variant.sizeKey,
+            device: variant.device
+          });
+        }
+      }
+      setUploadOpen(false);
+      setFileList([]);
+      setSelectedAsset(null);
+      setVariants([]);
+      setTitle("");
+      setLocale(DEFAULT_CONTENT_LOCALE);
+      setScheduledAt(null);
+      await fetchImages();
+    } catch {
+      messageApi.error("Failed to create image or variants.");
     }
-    setUploadOpen(false);
-    setFileList([]);
-    setSelectedAsset(null);
-    setTitle("");
-    setLocale(DEFAULT_CONTENT_LOCALE);
-    setScheduledAt(null);
-    await fetchImages();
+  };
+
+  const addVariantRow = () => {
+    setVariants((prev) => [...prev, { file: null, purpose: "thumbnail" }]);
+  };
+
+  const updateVariant = (
+    index: number,
+    patch: Partial<{ file: File | null; purpose: MediaVariantPurpose; sizeKey?: MediaVariantSizeKey; device?: MediaVariantDevice }>
+  ) => {
+    setVariants((prev) => prev.map((entry, idx) => (idx === index ? { ...entry, ...patch } : entry)));
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const columns = useMemo<ColumnsType<ImageContent>>(
@@ -240,6 +311,9 @@ export const ImagesListPage = () => {
                 <Button type="text" onClick={() => navigate(`/images/${image.id}`)}>
                   Edit
                 </Button>
+                <Button type="text" onClick={() => void openVariants(image)}>
+                  Variants
+                </Button>
                 <Popconfirm
                   title="Delete this image record?"
                   description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
@@ -261,7 +335,7 @@ export const ImagesListPage = () => {
         )
       }
     ],
-    [handleDelete, handleRestore, navigate, openUsage, viewMode]
+    [applicationId, handleDelete, handleRestore, messageApi, navigate, openUsage, viewMode]
   );
 
   const usageColumns = useMemo<ColumnsType<ContentUsage>>(
@@ -389,6 +463,66 @@ export const ImagesListPage = () => {
             >
               <Button icon={<UploadOutlined />}>Select file</Button>
             </Upload>
+          </Form.Item>
+          <Form.Item label="Variants (mobile/tablet/desktop)">
+            <Space direction="vertical" style={{ width: "100%" }}>
+              {variants.map((variant, index) => (
+                <Card key={index} size="small" style={{ background: "#fafafa" }}>
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Space wrap>
+                      <Button onClick={() => (document.getElementById(`image-variant-${index}`) as HTMLInputElement | null)?.click()}>
+                        {variant.file ? "Change Variant File" : "Select Variant File"}
+                      </Button>
+                      <Typography.Text type="secondary">{variant.file?.name || "No file selected"}</Typography.Text>
+                      <input
+                        id={`image-variant-${index}`}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(event) => updateVariant(index, { file: event.target.files?.[0] || null })}
+                      />
+                    </Space>
+                    <Space wrap>
+                      <Select
+                        value={variant.purpose}
+                        style={{ width: 150 }}
+                        onChange={(value) => updateVariant(index, { purpose: value as MediaVariantPurpose })}
+                        options={[
+                          { value: "thumbnail", label: "thumbnail" },
+                          { value: "hero", label: "hero" },
+                          { value: "cover", label: "cover" },
+                          { value: "gallery", label: "gallery" },
+                          { value: "og_image", label: "og_image" },
+                          { value: "preview", label: "preview" }
+                        ]}
+                      />
+                      <Select
+                        allowClear
+                        placeholder="size"
+                        value={variant.sizeKey}
+                        style={{ width: 120 }}
+                        onChange={(value) => updateVariant(index, { sizeKey: value as MediaVariantSizeKey })}
+                        options={["xs", "sm", "md", "lg", "xl"].map((entry) => ({ value: entry, label: entry }))}
+                      />
+                      <Select
+                        allowClear
+                        placeholder="device"
+                        value={variant.device}
+                        style={{ width: 140 }}
+                        onChange={(value) => updateVariant(index, { device: value as MediaVariantDevice })}
+                        options={["mobile", "tablet", "desktop"].map((entry) => ({ value: entry, label: entry }))}
+                      />
+                      <Button danger onClick={() => removeVariant(index)}>
+                        Remove
+                      </Button>
+                    </Space>
+                  </Space>
+                </Card>
+              ))}
+              <Button type="dashed" onClick={addVariantRow}>
+                Add Variant
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>

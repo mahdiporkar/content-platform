@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Logger, Param, Post, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MinioService } from '../services/minio.service';
@@ -16,6 +16,8 @@ import { MediaLifecycleService } from '../services/media-lifecycle.service';
 import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { MediaReferenceResponseDto } from '../dto/responses/media-reference-response.dto';
+import { MediaVariantService } from '../services/media-variant.service';
+import { MediaVariantResponseDto } from '../dto/responses/media-variant-response.dto';
 
 @Controller('/api/v1/admin/media')
 export class AdminMediaController {
@@ -29,6 +31,7 @@ export class AdminMediaController {
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly access: AdminAuthorizationService,
     private readonly lifecycle: MediaLifecycleService,
+    private readonly mediaVariantService: MediaVariantService,
   ) {}
 
   @Post('upload')
@@ -103,6 +106,131 @@ export class AdminMediaController {
     return await this.lifecycle.getReferences(applicationId, id);
   }
 
+  @Get(':id/variants')
+  async listVariants(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Query('applicationId') applicationId: string,
+  ): Promise<MediaVariantResponseDto[]> {
+    this.access.assertAnyServicePermission(request, [
+      ServicePermission.POSTS_MANAGE,
+      ServicePermission.ARTICLES_MANAGE,
+      ServicePermission.IMAGES_MANAGE,
+      ServicePermission.VIDEOS_MANAGE,
+    ]);
+    this.access.assertApplicationAccess(request, applicationId);
+    return await this.mediaVariantService.listVariants(applicationId, id);
+  }
+
+  @Post(':id/variants')
+  @UseInterceptors(FileInterceptor('file'))
+  async addVariant(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Query('applicationId') applicationId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: Record<string, string | undefined>,
+  ): Promise<MediaVariantResponseDto> {
+    this.access.assertAnyServicePermission(request, [
+      ServicePermission.POSTS_MANAGE,
+      ServicePermission.ARTICLES_MANAGE,
+      ServicePermission.IMAGES_MANAGE,
+      ServicePermission.VIDEOS_MANAGE,
+    ]);
+    this.access.assertApplicationAccess(request, applicationId);
+    if (!file) {
+      throw new BadRequestException('file is required.');
+    }
+    const kindHint = body.kind?.trim().toLowerCase() || undefined;
+    const upload = await this.minioService.upload(applicationId, kindHint, file);
+    return await this.mediaVariantService.addVariant(applicationId, id, {
+      purpose: body.purpose,
+      sizeKey: body.sizeKey,
+      device: body.device,
+      minWidth: this.toOptionalNumber(body.minWidth),
+      maxWidth: this.toOptionalNumber(body.maxWidth),
+      format: body.format,
+      objectKey: upload.objectKey,
+      bucket: this.minioService.getDefaultBucket(),
+      fileUrl: null,
+      isDefault: this.toOptionalBoolean(body.isDefault),
+      sortOrder: this.toOptionalNumber(body.sortOrder),
+      width: this.toOptionalNumber(body.width),
+      height: this.toOptionalNumber(body.height),
+      duration: this.toOptionalNumber(body.duration),
+      bitrate: this.toOptionalNumber(body.bitrate),
+      sizeBytes: upload.sizeBytes,
+      contentType: upload.contentType,
+    });
+  }
+
+  @Put(':id/variants/:variantId')
+  @UseInterceptors(FileInterceptor('file'))
+  async replaceVariant(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @Query('applicationId') applicationId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() body: Record<string, string | undefined>,
+  ): Promise<MediaVariantResponseDto> {
+    this.access.assertAnyServicePermission(request, [
+      ServicePermission.POSTS_MANAGE,
+      ServicePermission.ARTICLES_MANAGE,
+      ServicePermission.IMAGES_MANAGE,
+      ServicePermission.VIDEOS_MANAGE,
+    ]);
+    this.access.assertApplicationAccess(request, applicationId);
+
+    let objectKey: string | undefined;
+    let contentType: string | undefined;
+    let sizeBytes: number | undefined;
+    if (file) {
+      const upload = await this.minioService.upload(applicationId, body.kind?.trim().toLowerCase() || undefined, file);
+      objectKey = upload.objectKey;
+      contentType = upload.contentType;
+      sizeBytes = upload.sizeBytes;
+    }
+
+    return await this.mediaVariantService.replaceVariant(applicationId, id, variantId, {
+      purpose: body.purpose,
+      sizeKey: body.sizeKey,
+      device: body.device,
+      minWidth: this.toOptionalNumber(body.minWidth),
+      maxWidth: this.toOptionalNumber(body.maxWidth),
+      format: body.format,
+      objectKey,
+      bucket: this.minioService.getDefaultBucket(),
+      fileUrl: body.fileUrl ?? undefined,
+      isDefault: this.toOptionalBoolean(body.isDefault),
+      sortOrder: this.toOptionalNumber(body.sortOrder),
+      width: this.toOptionalNumber(body.width),
+      height: this.toOptionalNumber(body.height),
+      duration: this.toOptionalNumber(body.duration),
+      bitrate: this.toOptionalNumber(body.bitrate),
+      sizeBytes,
+      contentType,
+    });
+  }
+
+  @Delete(':id/variants/:variantId')
+  async deleteVariant(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @Query('applicationId') applicationId: string,
+  ): Promise<{ ok: boolean }> {
+    this.access.assertAnyServicePermission(request, [
+      ServicePermission.POSTS_MANAGE,
+      ServicePermission.ARTICLES_MANAGE,
+      ServicePermission.IMAGES_MANAGE,
+      ServicePermission.VIDEOS_MANAGE,
+    ]);
+    this.access.assertApplicationAccess(request, applicationId);
+    await this.mediaVariantService.deleteVariant(applicationId, id, variantId);
+    return { ok: true };
+  }
+
   @Delete(':id/purge')
   async purge(
     @Req() request: Request,
@@ -113,5 +241,33 @@ export class AdminMediaController {
     this.access.assertApplicationAccess(request, applicationId);
     const user = this.access.getUser(request);
     return await this.lifecycle.purgeAsSuperAdmin(applicationId, id, user.sub, user.email);
+  }
+
+  private toOptionalNumber(value?: string): number | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === null || value.trim() === '') {
+      return null;
+    }
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      throw new BadRequestException(`Invalid number: ${value}`);
+    }
+    return numeric;
+  }
+
+  private toOptionalBoolean(value?: string): boolean | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') {
+      return true;
+    }
+    if (normalized === 'false' || normalized === '0') {
+      return false;
+    }
+    throw new BadRequestException(`Invalid boolean: ${value}`);
   }
 }

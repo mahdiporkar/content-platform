@@ -45,4 +45,20 @@ export class AdminMediaLibraryController {
       size: Number(size),
     });
   }
+
+  @Get('resolve')
+  async resolveByObjectKey(
+    @Req() request: Request,
+    @Query('applicationId') applicationId: string,
+    @Query('objectKey') objectKey: string,
+  ): Promise<MediaAssetResponseDto> {
+    this.access.assertAnyServicePermission(request, [
+      ServicePermission.POSTS_MANAGE,
+      ServicePermission.ARTICLES_MANAGE,
+      ServicePermission.IMAGES_MANAGE,
+      ServicePermission.VIDEOS_MANAGE,
+    ]);
+    this.access.assertApplicationAccess(request, applicationId);
+    return await this.mediaLibraryService.getAssetResponseByObjectKeyForApplication(objectKey, applicationId);
+  }
 }

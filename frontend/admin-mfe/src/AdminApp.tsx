@@ -27,6 +27,7 @@ import { ImageEditorPage } from "./features/images/ImageEditorPage";
 import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardPage";
 import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 import { MediaSafetyPage } from "./features/media/MediaSafetyPage";
+import { MediaVariantsPage } from "./features/media/MediaVariantsPage";
 import { I18nProvider, type SupportedLocale, useI18n } from "./i18n";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
@@ -99,6 +100,7 @@ const LocalizedAdminApp = () => {
             <Route path="images" element={<ImagesListPage />} />
             <Route path="images/:id" element={<ImageEditorPage />} />
             <Route path="media" element={<MediaLibraryPage />} />
+            <Route path="media/:id/variants" element={<MediaVariantsPage />} />
             <Route path="media/safety" element={<MediaSafetyPage />} />
             <Route path="analytics" element={<AnalyticsDashboardPage />} />
             </Route>

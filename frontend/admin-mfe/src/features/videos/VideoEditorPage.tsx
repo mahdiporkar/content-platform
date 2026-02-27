@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, DatePicker, Form, Input, Select, Space, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import client from "../../api/client";
-import { uploadMedia } from "../../api/media";
+import { resolveMediaAssetByObjectKey, uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta, Video } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 
@@ -127,6 +127,17 @@ export const VideoEditorPage = () => {
   };
 
   const previewUrl = video?.mediaUrl ?? video?.presignedUrl ?? null;
+  const openVariants = async () => {
+    if (!video?.objectKey || !video.applicationId) {
+      return;
+    }
+    try {
+      const asset = await resolveMediaAssetByObjectKey(video.objectKey, video.applicationId);
+      navigate(`/media/${asset.id}/variants`);
+    } catch {
+      setError("Media asset not found for this video.");
+    }
+  };
 
   return (
     <Card className="page-card">
@@ -357,6 +368,9 @@ export const VideoEditorPage = () => {
       )}
 
       <Space>
+        <Button onClick={() => void openVariants()} disabled={!video}>
+          Manage Variants
+        </Button>
         <Button type="primary" onClick={handleSave} loading={saving} size="large" disabled={loading}>
           Save Changes
         </Button>

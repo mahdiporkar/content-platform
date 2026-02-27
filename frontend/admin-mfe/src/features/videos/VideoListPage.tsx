@@ -5,6 +5,7 @@ import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
 import client from "../../api/client";
+import { resolveMediaAssetByObjectKey } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, ContentUsage, PageResponse, Video } from "../../types";
 
@@ -138,6 +139,18 @@ export const VideoListPage = () => {
     }
   };
 
+  const openVariants = async (video: Video) => {
+    if (!applicationId) {
+      return;
+    }
+    try {
+      const asset = await resolveMediaAssetByObjectKey(video.objectKey, applicationId);
+      navigate(`/media/${asset.id}/variants`);
+    } catch {
+      messageApi.error("Media asset not found for this video.");
+    }
+  };
+
   const columns = useMemo<ColumnsType<Video>>(
     () => [
       {
@@ -205,6 +218,9 @@ export const VideoListPage = () => {
                 >
                   Edit
                 </Button>
+                <Button type="text" onClick={() => void openVariants(video)}>
+                  Variants
+                </Button>
                 <Popconfirm
                   title="Delete this video record?"
                   description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
@@ -226,7 +242,7 @@ export const VideoListPage = () => {
         )
       }
     ],
-    [handleDelete, handleRestore, navigate, openUsage, viewMode]
+    [applicationId, handleDelete, handleRestore, messageApi, navigate, openUsage, viewMode]
   );
 
   const usageColumns = useMemo<ColumnsType<ContentUsage>>(
