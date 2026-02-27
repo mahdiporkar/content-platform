@@ -8,18 +8,22 @@ import { ArticleResponseDto } from '../dto/responses/article-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
+import { SitemapService } from '../services/sitemap.service';
 
 @Controller('/api/v1/admin/articles')
 export class AdminArticleController {
   constructor(
     private readonly articleService: AdminArticleService,
     private readonly access: AdminAuthorizationService,
+    private readonly sitemapService: SitemapService,
   ) {}
 
   @Post()
   async create(@Req() request: Request, @Body() body: ArticleUpsertRequestDto): Promise<ArticleResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, body.applicationId);
-    return await this.articleService.create(body);
+    const created = await this.articleService.create(body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
+    return created;
   }
 
   @Put(':id')
@@ -30,7 +34,9 @@ export class AdminArticleController {
   ): Promise<ArticleResponseDto> {
     const applicationId = await this.articleService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, applicationId);
-    return await this.articleService.update(id, body);
+    const updated = await this.articleService.update(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Patch(':id/status')
@@ -41,7 +47,9 @@ export class AdminArticleController {
   ): Promise<ArticleResponseDto> {
     const applicationId = await this.articleService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, applicationId);
-    return await this.articleService.changeStatus(id, body);
+    const updated = await this.articleService.changeStatus(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Get()

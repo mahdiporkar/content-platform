@@ -4,7 +4,7 @@ import { JwtTokenService } from './jwt-token.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  private readonly publicPrefixes = ['/api/v1/auth', '/api/v1/content', '/media'];
+  private readonly publicPrefixes = ['/api/v1/auth', '/api/v1/content', '/media', '/public'];
 
   constructor(private readonly jwtTokenService: JwtTokenService) {}
 

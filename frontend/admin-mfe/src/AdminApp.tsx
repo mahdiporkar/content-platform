@@ -28,6 +28,7 @@ import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardP
 import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 import { MediaSafetyPage } from "./features/media/MediaSafetyPage";
 import { MediaVariantsPage } from "./features/media/MediaVariantsPage";
+import { SitemapPage } from "./features/sitemap/SitemapPage";
 import { I18nProvider, type SupportedLocale, useI18n } from "./i18n";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
@@ -94,15 +95,16 @@ const LocalizedAdminApp = () => {
               <Route path="articles" element={<ArticlesListPage />} />
               <Route path="articles/new" element={<ArticleEditorPage mode="create" />} />
               <Route path="articles/:id" element={<ArticleEditorPage mode="edit" />} />
-            <Route path="videos" element={<VideoListPage />} />
-            <Route path="videos/:id" element={<VideoEditorPage />} />
-            <Route path="videos/upload" element={<VideoUploadPage />} />
-            <Route path="images" element={<ImagesListPage />} />
-            <Route path="images/:id" element={<ImageEditorPage />} />
-            <Route path="media" element={<MediaLibraryPage />} />
-            <Route path="media/:id/variants" element={<MediaVariantsPage />} />
-            <Route path="media/safety" element={<MediaSafetyPage />} />
-            <Route path="analytics" element={<AnalyticsDashboardPage />} />
+              <Route path="videos" element={<VideoListPage />} />
+              <Route path="videos/:id" element={<VideoEditorPage />} />
+              <Route path="videos/upload" element={<VideoUploadPage />} />
+              <Route path="images" element={<ImagesListPage />} />
+              <Route path="images/:id" element={<ImageEditorPage />} />
+              <Route path="media" element={<MediaLibraryPage />} />
+              <Route path="media/:id/variants" element={<MediaVariantsPage />} />
+              <Route path="media/safety" element={<MediaSafetyPage />} />
+              <Route path="sitemap" element={<SitemapPage />} />
+              <Route path="analytics" element={<AnalyticsDashboardPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

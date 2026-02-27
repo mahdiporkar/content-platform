@@ -279,3 +279,70 @@ export type AdminUser = {
     | "analytics.view"
   )[];
 };
+
+export type SitemapRegenStrategy = "on_publish" | "scheduled" | "manual";
+export type SitemapLastmodPolicy = "updatedAt" | "publishedAt";
+export type SitemapValidateStatus = "OK" | "ERROR" | "WARNING";
+export type SitemapLastmodMode = "now" | "fixed_date" | "none";
+export type SitemapChangefreq =
+  | "always"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "yearly"
+  | "never";
+
+export type SitemapSettings = {
+  tenantId: string;
+  enabled: boolean;
+  baseUrl?: string | null;
+  sitemapPath: string;
+  cacheTtlSeconds: number;
+  regenStrategy: SitemapRegenStrategy;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SitemapTemplate = {
+  id: string;
+  tenantId: string;
+  contentType: string;
+  enabled: boolean;
+  template?: string | null;
+  lastmodPolicy: SitemapLastmodPolicy;
+  defaultChangefreq?: SitemapChangefreq | null;
+  defaultPriority?: number | null;
+  validateStatus: SitemapValidateStatus;
+  validateErrors?: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SitemapPreviewEntry = {
+  contentId?: string | null;
+  contentType: string;
+  title?: string | null;
+  finalUrl?: string | null;
+  lastmod?: string | null;
+  priority?: number | null;
+  changefreq?: SitemapChangefreq | null;
+  source: "template" | "override" | "manual";
+  status: "OK" | "ERROR" | "WARNING";
+  errors: string[];
+  duplicate: boolean;
+};
+
+export type SitemapCustomUrl = {
+  id: string;
+  tenantId: string;
+  pathOrUrl: string;
+  enabled: boolean;
+  lastmodMode: SitemapLastmodMode;
+  lastmodValue?: string | null;
+  changefreq?: SitemapChangefreq | null;
+  priority?: number | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};

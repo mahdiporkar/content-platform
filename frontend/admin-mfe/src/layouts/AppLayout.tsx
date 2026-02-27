@@ -10,6 +10,7 @@ import {
   ReadOutlined,
   TeamOutlined,
   FolderOpenOutlined,
+  GlobalOutlined,
   UnorderedListOutlined,
   VideoCameraOutlined
 } from "@ant-design/icons";
@@ -92,6 +93,7 @@ export const AppLayout = () => {
     { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
     { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
     ...(canSeeMediaManagerMenu ? [{ key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") }] : []),
+    { key: "sitemap", icon: <GlobalOutlined />, label: t("menu.sitemap") },
     { key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }
   ];
 

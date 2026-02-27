@@ -11,6 +11,7 @@ import java.util.List;
 public interface VideoJpaRepository extends JpaRepository<VideoEntity, String> {
     Page<VideoEntity> findByApplicationIdAndDeletedAtIsNull(String applicationId, Pageable pageable);
     Page<VideoEntity> findByApplicationIdAndStatusAndDeletedAtIsNull(String applicationId, ContentStatus status, Pageable pageable);
+    List<VideoEntity> findByApplicationIdAndStatusAndDeletedAtIsNull(String applicationId, ContentStatus status);
     Page<VideoEntity> findByApplicationIdAndDeletedAtIsNotNull(String applicationId, Pageable pageable);
     Page<VideoEntity> findByApplicationIdAndStatusAndDeletedAtIsNotNull(String applicationId, ContentStatus status, Pageable pageable);
     List<VideoEntity> findAllByApplicationId(String applicationId);

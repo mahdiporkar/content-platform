@@ -21,6 +21,7 @@ import { AnalyticsDashboardPage } from "./features/analytics/AnalyticsDashboardP
 import { MediaLibraryPage } from "./features/media/MediaLibraryPage";
 import { MediaSafetyPage } from "./features/media/MediaSafetyPage";
 import { MediaVariantsPage } from "./features/media/MediaVariantsPage";
+import { SitemapPage } from "./features/sitemap/SitemapPage";
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const token = authStore.getToken();
@@ -62,7 +63,8 @@ export const routes: RouteObject[] = [
       { path: "media", element: <MediaLibraryPage /> },
       { path: "media/:id/variants", element: <MediaVariantsPage /> },
       { path: "media/safety", element: <MediaSafetyPage /> },
-      { path: "analytics", element: <AnalyticsDashboardPage /> }
+      { path: "analytics", element: <AnalyticsDashboardPage /> },
+      { path: "sitemap", element: <SitemapPage /> }
     ]
   }
 ];

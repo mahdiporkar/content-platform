@@ -18,6 +18,7 @@ import { DeliveryContentController } from './controllers/delivery-content.contro
 import { MediaGatewayController } from './controllers/media-gateway.controller';
 import { MediaController } from './controllers/media.controller';
 import { PublicMediaController } from './controllers/public-media.controller';
+import { PublicSitemapController } from './controllers/public-sitemap.controller';
 import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
@@ -39,6 +40,11 @@ import { ViewEventEntity } from './entities/view-event.entity';
 import { MediaAssetEntity } from './entities/media-asset.entity';
 import { MediaVariantEntity } from './entities/media-variant.entity';
 import { MediaReferenceEntity } from './entities/media-reference.entity';
+import { SitemapSettingsEntity } from './entities/sitemap-settings.entity';
+import { SitemapTemplateEntity } from './entities/sitemap-template.entity';
+import { SitemapOverrideEntity } from './entities/sitemap-override.entity';
+import { SitemapCustomUrlEntity } from './entities/sitemap-custom-url.entity';
+import { SitemapUrlCheckEntity } from './entities/sitemap-url-check.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
@@ -58,6 +64,8 @@ import { MediaReferenceService } from './services/media-reference.service';
 import { MediaLifecycleService } from './services/media-lifecycle.service';
 import { MinioStorageProvider } from './services/minio-storage.provider';
 import { MediaVariantService } from './services/media-variant.service';
+import { SitemapService } from './services/sitemap.service';
+import { AdminSitemapController } from './controllers/admin-sitemap.controller';
 
 @Module({
   imports: [
@@ -94,6 +102,11 @@ import { MediaVariantService } from './services/media-variant.service';
             MediaAssetEntity,
             MediaVariantEntity,
             MediaReferenceEntity,
+            SitemapSettingsEntity,
+            SitemapTemplateEntity,
+            SitemapOverrideEntity,
+            SitemapCustomUrlEntity,
+            SitemapUrlCheckEntity,
           ],
           synchronize: true,
         };
@@ -114,6 +127,11 @@ import { MediaVariantService } from './services/media-variant.service';
       MediaAssetEntity,
       MediaVariantEntity,
       MediaReferenceEntity,
+      SitemapSettingsEntity,
+      SitemapTemplateEntity,
+      SitemapOverrideEntity,
+      SitemapCustomUrlEntity,
+      SitemapUrlCheckEntity,
     ]),
   ],
   controllers: [
@@ -131,6 +149,8 @@ import { MediaVariantService } from './services/media-variant.service';
     AdminAnalyticsController,
     DeliveryContentController,
     PublicMediaController,
+    PublicSitemapController,
+    AdminSitemapController,
     MediaGatewayController,
     MediaController,
   ],
@@ -157,6 +177,7 @@ import { MediaVariantService } from './services/media-variant.service';
     MinioStorageProvider,
     MediaLibraryService,
     MediaVariantService,
+    SitemapService,
     MediaReferenceService,
     MediaLifecycleService,
     { provide: 'STORAGE_PROVIDER', useExisting: MinioStorageProvider },

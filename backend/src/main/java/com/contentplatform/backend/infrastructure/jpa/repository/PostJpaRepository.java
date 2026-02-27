@@ -6,10 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PostJpaRepository extends JpaRepository<PostEntity, String> {
     Optional<PostEntity> findByApplicationIdAndSlug(String applicationId, String slug);
+    List<PostEntity> findByApplicationIdAndStatus(String applicationId, ContentStatus status);
     Page<PostEntity> findByApplicationId(String applicationId, Pageable pageable);
     Page<PostEntity> findByApplicationIdAndStatus(String applicationId, ContentStatus status, Pageable pageable);
 }

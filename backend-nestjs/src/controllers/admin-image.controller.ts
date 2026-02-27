@@ -10,12 +10,14 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
 import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
+import { SitemapService } from '../services/sitemap.service';
 
 @Controller('/api/v1/admin/images')
 export class AdminImageController {
   constructor(
     private readonly imageService: AdminImageService,
     private readonly access: AdminAuthorizationService,
+    private readonly sitemapService: SitemapService,
   ) {}
 
   @Post('upload')
@@ -35,7 +37,7 @@ export class AdminImageController {
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<ImageResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
-    return await this.imageService.upload(
+    const created = await this.imageService.upload(
       file,
       title,
       description,
@@ -48,6 +50,8 @@ export class AdminImageController {
       altText,
       scheduledAt,
     );
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
+    return created;
   }
 
   @Post('create-from-asset')
@@ -66,7 +70,7 @@ export class AdminImageController {
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<ImageResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
-    return await this.imageService.createFromAsset(
+    const created = await this.imageService.createFromAsset(
       assetId,
       title,
       description,
@@ -79,6 +83,8 @@ export class AdminImageController {
       altText,
       scheduledAt,
     );
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
+    return created;
   }
 
   @Get(':id/usages')
@@ -107,7 +113,9 @@ export class AdminImageController {
   async restore(@Req() request: Request, @Param('id') id: string): Promise<ImageResponseDto> {
     const applicationId = await this.imageService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
-    return await this.imageService.restore(id);
+    const restored = await this.imageService.restore(id);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(restored.applicationId);
+    return restored;
   }
 
   @Put(':id')
@@ -118,7 +126,9 @@ export class AdminImageController {
   ): Promise<ImageResponseDto> {
     const applicationId = await this.imageService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
-    return await this.imageService.update(id, body);
+    const updated = await this.imageService.update(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Put(':id/status')
@@ -128,7 +138,9 @@ export class AdminImageController {
     @Body() body: ChangeStatusRequestDto,
   ): Promise<ImageResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, body.applicationId);
-    return await this.imageService.changeStatus(id, body);
+    const updated = await this.imageService.changeStatus(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Get()

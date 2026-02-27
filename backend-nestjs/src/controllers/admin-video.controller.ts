@@ -23,12 +23,14 @@ import { VideoUpdateRequestDto } from '../dto/requests/video-update-request.dto'
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
 import { ContentUsageResponseDto } from '../dto/responses/content-usage-response.dto';
+import { SitemapService } from '../services/sitemap.service';
 
 @Controller('/api/v1/admin/videos')
 export class AdminVideoController {
   constructor(
     private readonly videoService: AdminVideoService,
     private readonly access: AdminAuthorizationService,
+    private readonly sitemapService: SitemapService,
   ) {}
 
   private parseJson<T>(value: string | undefined): T | undefined {
@@ -61,7 +63,7 @@ export class AdminVideoController {
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
     const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
-    return await this.videoService.upload(
+    const created = await this.videoService.upload(
       file,
       title,
       description,
@@ -73,6 +75,8 @@ export class AdminVideoController {
       locale,
       scheduledAt,
     );
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
+    return created;
   }
 
   @Post('create-from-asset')
@@ -93,7 +97,7 @@ export class AdminVideoController {
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
     const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
-    return await this.videoService.createFromAsset(
+    const created = await this.videoService.createFromAsset(
       assetId,
       title,
       description,
@@ -105,6 +109,8 @@ export class AdminVideoController {
       locale,
       scheduledAt,
     );
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
+    return created;
   }
 
   @Patch(':id/status')
@@ -114,7 +120,9 @@ export class AdminVideoController {
     @Body() body: ChangeStatusRequestDto,
   ): Promise<VideoResponseDto> {
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, body.applicationId);
-    return await this.videoService.changeStatus(id, body);
+    const updated = await this.videoService.changeStatus(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Get(':id/usages')
@@ -143,7 +151,9 @@ export class AdminVideoController {
   async restore(@Req() request: Request, @Param('id') id: string): Promise<VideoResponseDto> {
     const applicationId = await this.videoService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
-    return await this.videoService.restore(id);
+    const restored = await this.videoService.restore(id);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(restored.applicationId);
+    return restored;
   }
 
   @Put(':id')
@@ -154,7 +164,9 @@ export class AdminVideoController {
   ): Promise<VideoResponseDto> {
     const applicationId = await this.videoService.getApplicationIdById(id);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
-    return await this.videoService.update(id, body);
+    const updated = await this.videoService.update(id, body);
+    await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
+    return updated;
   }
 
   @Get()
