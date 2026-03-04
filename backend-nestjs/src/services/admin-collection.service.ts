@@ -20,6 +20,7 @@ import { VideoEntity } from '../entities/video.entity';
 import { ImageEntity } from '../entities/image.entity';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
+import { PublicMediaUrlService } from './public-media-url.service';
 
 type ContentSummary = {
   title: string | null;
@@ -49,6 +50,7 @@ export class AdminCollectionService {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly baseUrl: BaseUrlService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
     private readonly dataSource: DataSource,
     private readonly auditLog: AuditLogService,
   ) {}
@@ -127,7 +129,7 @@ export class AdminCollectionService {
         slug: post?.slug ?? null,
         thumbnailUrl: post?.bannerKey
           ? this.baseUrl.buildMediaUrl(application, post.bannerKey)
-          : (post?.bannerUrl ?? null),
+          : this.publicMediaUrlService.toPublicMediaUrl(application, post?.bannerUrl ?? null),
         publishedAt: post?.publishedAt ? post.publishedAt.toISOString() : null,
       };
     }
@@ -141,7 +143,7 @@ export class AdminCollectionService {
         slug: article?.slug ?? null,
         thumbnailUrl: article?.bannerKey
           ? this.baseUrl.buildMediaUrl(application, article.bannerKey)
-          : (article?.bannerUrl ?? null),
+          : this.publicMediaUrlService.toPublicMediaUrl(application, article?.bannerUrl ?? null),
         publishedAt: article?.publishedAt ? article.publishedAt.toISOString() : null,
       };
     }

@@ -30,6 +30,9 @@ export class AdminUserEntity {
   @Column({ type: 'enum', enum: AdminUserStatus, default: AdminUserStatus.ACTIVE })
   status!: AdminUserStatus;
 
+  @Column({ name: 'token_version', type: 'integer', default: 1 })
+  tokenVersion!: number;
+
   @Column({ name: 'system_permissions', type: 'simple-json', nullable: true })
   systemPermissions!: string[] | null;
 

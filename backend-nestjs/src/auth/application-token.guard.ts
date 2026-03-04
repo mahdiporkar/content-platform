@@ -6,6 +6,8 @@ import { ApplicationEntity, ApplicationStatus } from '../entities/application.en
 import { JwtPayload, JwtTokenService } from './jwt-token.service';
 import { MediaPolicy } from '../entities/application.entity';
 import { AdminUserRole } from '../entities/admin-user.entity';
+import { ApplicationTokenService } from '../services/application-token.service';
+import { ApplicationHeaderService } from '../services/application-header.service';
 
 @Injectable()
 export class ApplicationTokenGuard implements CanActivate {
@@ -13,13 +15,15 @@ export class ApplicationTokenGuard implements CanActivate {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly jwtTokenService: JwtTokenService,
+    private readonly applicationTokenService: ApplicationTokenService,
+    private readonly headerService: ApplicationHeaderService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const headerAppId =
-      this.getHeader(request, 'x-app-id') || this.getHeader(request, 'x-application-id');
-    const tokenHeader = this.getHeader(request, 'x-application-token');
+    const headers = this.headerService.parse(request);
+    const headerAppId = headers.applicationId;
+    const tokenHeader = headers.applicationToken;
     const bearerToken = this.getBearerToken(request);
     const paramAppId = request.params?.applicationId || request.params?.appId;
 
@@ -49,7 +53,15 @@ export class ApplicationTokenGuard implements CanActivate {
     appTokenHeader: string | undefined,
     bearerToken: string | undefined,
   ): Promise<void> {
+    if (!appTokenHeader) {
+      throw new UnauthorizedException('Missing application token.');
+    }
+    if (!(await this.matchesApplicationToken(application, appTokenHeader))) {
+      throw new UnauthorizedException('Invalid application credentials.');
+    }
+
     if (application.mediaPolicy === MediaPolicy.JWT_REQUIRED) {
+      // Reserved for future consumer/user JWT on the delivery plane.
       if (!bearerToken) {
         throw new UnauthorizedException('Missing JWT bearer token.');
       }
@@ -60,14 +72,6 @@ export class ApplicationTokenGuard implements CanActivate {
       (request as Request & { user?: JwtPayload }).user = payload;
       (request as Request & { application?: ApplicationEntity }).application = application;
       return;
-    }
-
-    if (!appTokenHeader) {
-      (request as Request & { application?: ApplicationEntity }).application = application;
-      return;
-    }
-    if (!application.apiToken || application.apiToken !== appTokenHeader) {
-      throw new UnauthorizedException('Invalid application credentials.');
     }
     (request as Request & { application?: ApplicationEntity }).application = application;
   }
@@ -91,6 +95,23 @@ export class ApplicationTokenGuard implements CanActivate {
   private async markUsed(application: ApplicationEntity): Promise<void> {
     application.lastUsedAt = new Date();
     await this.applicationRepo.save(application);
+  }
+
+  private async matchesApplicationToken(application: ApplicationEntity, rawToken: string): Promise<boolean> {
+    if (this.applicationTokenService.matches(rawToken, application.apiTokenHash, application.apiTokenSalt)) {
+      return true;
+    }
+    if (!application.apiToken || application.apiToken !== rawToken) {
+      return false;
+    }
+
+    const migrated = this.applicationTokenService.hashToken(rawToken);
+    application.apiTokenHash = migrated.tokenHash;
+    application.apiTokenSalt = migrated.tokenSalt;
+    application.apiToken = null;
+    application.lastRotatedAt = new Date();
+    await this.applicationRepo.save(application);
+    return true;
   }
 
   private getHeader(request: Request, name: string): string | undefined {

@@ -14,6 +14,7 @@ import { AdminCollectionController } from './controllers/admin-collection.contro
 import { AdminAppCollectionController } from './controllers/admin-app-collection.controller';
 import { AdminImageController } from './controllers/admin-image.controller';
 import { AdminAnalyticsController } from './controllers/admin-analytics.controller';
+import { AdminAuthController } from './controllers/admin-auth.controller';
 import { DeliveryContentController } from './controllers/delivery-content.controller';
 import { MediaGatewayController } from './controllers/media-gateway.controller';
 import { MediaController } from './controllers/media.controller';
@@ -45,6 +46,8 @@ import { SitemapTemplateEntity } from './entities/sitemap-template.entity';
 import { SitemapOverrideEntity } from './entities/sitemap-override.entity';
 import { SitemapCustomUrlEntity } from './entities/sitemap-custom-url.entity';
 import { SitemapUrlCheckEntity } from './entities/sitemap-url-check.entity';
+import { ConsumerUserEntity } from './entities/consumer-user.entity';
+import { ConsumerEntitlementEntity } from './entities/consumer-entitlement.entity';
 import { JwtTokenService } from './auth/jwt-token.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ApplicationTokenGuard } from './auth/application-token.guard';
@@ -66,6 +69,13 @@ import { MinioStorageProvider } from './services/minio-storage.provider';
 import { MediaVariantService } from './services/media-variant.service';
 import { SitemapService } from './services/sitemap.service';
 import { AdminSitemapController } from './controllers/admin-sitemap.controller';
+import { InMemoryRateLimiterService } from './services/in-memory-rate-limiter.service';
+import { LoginProtectionService } from './services/login-protection.service';
+import { ViewRateLimitService } from './services/view-rate-limit.service';
+import { ApplicationTokenService } from './services/application-token.service';
+import { ApplicationHeaderService } from './services/application-header.service';
+import { AccessControlService } from './services/access-control.service';
+import { PublicMediaUrlService } from './services/public-media-url.service';
 
 @Module({
   imports: [
@@ -107,6 +117,8 @@ import { AdminSitemapController } from './controllers/admin-sitemap.controller';
             SitemapOverrideEntity,
             SitemapCustomUrlEntity,
             SitemapUrlCheckEntity,
+            ConsumerUserEntity,
+            ConsumerEntitlementEntity,
           ],
           synchronize: true,
         };
@@ -132,10 +144,13 @@ import { AdminSitemapController } from './controllers/admin-sitemap.controller';
       SitemapOverrideEntity,
       SitemapCustomUrlEntity,
       SitemapUrlCheckEntity,
+      ConsumerUserEntity,
+      ConsumerEntitlementEntity,
     ]),
   ],
   controllers: [
     AuthController,
+    AdminAuthController,
     AdminApplicationController,
     AdminCollectionController,
     AdminAppCollectionController,
@@ -157,7 +172,10 @@ import { AdminSitemapController } from './controllers/admin-sitemap.controller';
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     JwtTokenService,
+    ApplicationTokenService,
+    PublicMediaUrlService,
     ApplicationTokenGuard,
+    ApplicationHeaderService,
     AdminAuthorizationService,
     AuthService,
     AdminApplicationService,
@@ -173,6 +191,10 @@ import { AdminSitemapController } from './controllers/admin-sitemap.controller';
     DomainPolicyService,
     AuditLogService,
     SeedDataService,
+    InMemoryRateLimiterService,
+    LoginProtectionService,
+    ViewRateLimitService,
+    AccessControlService,
     MinioService,
     MinioStorageProvider,
     MediaLibraryService,

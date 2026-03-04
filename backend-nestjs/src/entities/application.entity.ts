@@ -34,12 +34,20 @@ export class ApplicationEntity {
   @Column({ name: 'allowed_domains', type: 'text', array: true, nullable: true })
   allowedDomains!: string[] | null;
 
-  @Index({ unique: true })
   @Column({ name: 'api_token', type: 'varchar', nullable: true })
   apiToken!: string | null;
 
+  @Column({ name: 'api_token_hash', type: 'varchar', nullable: true })
+  apiTokenHash!: string | null;
+
+  @Column({ name: 'api_token_salt', type: 'varchar', nullable: true })
+  apiTokenSalt!: string | null;
+
   @Column({ name: 'token_created_at', type: 'timestamptz', nullable: true })
   tokenCreatedAt!: Date | null;
+
+  @Column({ name: 'last_rotated_at', type: 'timestamptz', nullable: true })
+  lastRotatedAt!: Date | null;
 
   @Column({ name: 'last_used_at', type: 'timestamptz', nullable: true })
   lastUsedAt!: Date | null;

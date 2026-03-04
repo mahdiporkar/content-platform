@@ -22,6 +22,7 @@ import { MediaVariantResponseDto } from '../dto/responses/media-variant-response
 import { MediaResolveResponseDto } from '../dto/responses/media-resolve-response.dto';
 import { MediaAssetResponseDto } from '../dto/responses/media-asset-response.dto';
 import { MediaWithVariantsResponseDto } from '../dto/responses/media-with-variants-response.dto';
+import { PublicMediaUrlService } from './public-media-url.service';
 
 export type MediaVariantUpsertPayload = {
   purpose?: string;
@@ -61,6 +62,7 @@ export class MediaVariantService {
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly baseUrl: BaseUrlService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
   ) {}
 
   async listVariants(applicationId: string, mediaId: string): Promise<MediaVariantResponseDto[]> {
@@ -556,7 +558,7 @@ export class MediaVariantService {
       variant.device ?? null,
       variant.format ?? null,
       variant.objectKey,
-      variant.fileUrl ?? null,
+      this.publicMediaUrlService.toPublicMediaUrl(application, variant.fileUrl ?? null),
       url,
       variant.isDefault ?? false,
       variant.sortOrder ?? 0,

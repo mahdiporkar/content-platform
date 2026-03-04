@@ -21,7 +21,9 @@ export class PublicMediaController {
     @Param('mediaId') mediaId: string,
   ): Promise<MediaWithVariantsResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    if (this.domainPolicy.hasOriginSignal(request)) {
+      this.domainPolicy.ensureAllowed(application, request);
+    }
     return await this.mediaVariantService.getMediaWithVariants(application.id, mediaId);
   }
 
@@ -36,7 +38,9 @@ export class PublicMediaController {
     @Query('format') format?: string,
   ): Promise<MediaResolveResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    if (this.domainPolicy.hasOriginSignal(request)) {
+      this.domainPolicy.ensureAllowed(application, request);
+    }
     return await this.mediaVariantService.resolveVariant(application.id, mediaId, {
       purpose,
       size,

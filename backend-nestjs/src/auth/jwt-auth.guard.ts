@@ -1,17 +1,24 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import type { Request } from 'express';
+import { Repository } from 'typeorm';
 import { JwtTokenService } from './jwt-token.service';
+import { AdminUserEntity, AdminUserStatus } from '../entities/admin-user.entity';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  private readonly publicPrefixes = ['/api/v1/auth', '/api/v1/content', '/media', '/public'];
+  private readonly publicPrefixes = ['/api/v1/content', '/api/public/media', '/media', '/public'];
 
-  constructor(private readonly jwtTokenService: JwtTokenService) {}
+  constructor(
+    private readonly jwtTokenService: JwtTokenService,
+    @InjectRepository(AdminUserEntity)
+    private readonly adminUserRepo: Repository<AdminUserEntity>,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path || request.url;
-    if (request.method === 'OPTIONS' || this.isPublicPath(path)) {
+    if (request.method === 'OPTIONS' || path === '/api/v1/auth/login' || this.isPublicPath(path)) {
       return true;
     }
 
@@ -27,6 +34,10 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtTokenService.verify(token);
+      const admin = await this.adminUserRepo.findOne({ where: { id: payload.sub } });
+      if (!admin || admin.status === AdminUserStatus.SUSPENDED || admin.tokenVersion !== payload.tokenVersion) {
+        throw new UnauthorizedException('Invalid or expired token.');
+      }
       (request as Request & { user?: unknown }).user = payload;
       return true;
     } catch {

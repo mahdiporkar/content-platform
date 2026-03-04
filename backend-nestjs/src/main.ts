@@ -4,6 +4,7 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ValidationError } from 'class-validator';
+import { validateJwtSecret } from './common/jwt-secret';
 
 function buildFieldErrors(errors: ValidationError[]) {
   return errors.flatMap((error) => {
@@ -18,6 +19,7 @@ function buildFieldErrors(errors: ValidationError[]) {
 }
 
 async function bootstrap() {
+  validateJwtSecret(process.env);
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
@@ -41,13 +43,12 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Content Platform API')
     .setDescription(
-      'Admin endpoints use Bearer JWT. Content/Media access is controlled by application mediaPolicy: public, domain-locked, or JWT-required.'
+      'Admin plane uses Bearer JWT on /api/v1/admin/** and /api/v1/media/**. Delivery plane uses X-Application-Id + X-Application-Token, with domain-locked acting as an extra browser-domain check.'
     )
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')
-    .addApiKey({ type: 'apiKey', name: 'x-app-id', in: 'header' }, 'app-id')
-    .addApiKey({ type: 'apiKey', name: 'x-application-id', in: 'header' }, 'application-id')
-    .addApiKey({ type: 'apiKey', name: 'x-application-token', in: 'header' }, 'application-token')
+    .addApiKey({ type: 'apiKey', name: 'X-Application-Id', in: 'header' }, 'application-id')
+    .addApiKey({ type: 'apiKey', name: 'X-Application-Token', in: 'header' }, 'application-token')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, swaggerDocument);

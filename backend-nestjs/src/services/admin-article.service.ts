@@ -13,6 +13,9 @@ import { resolvePublicationFields } from '../common/publishing';
 import { calculateReadingTimeMinutes } from '../common/reading-time';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
+import { sanitizeHtml } from '../common/html-sanitizer';
+import { PublicMediaUrlService } from './public-media-url.service';
+import { ApplicationEntity } from '../entities/application.entity';
 
 @Injectable()
 export class AdminArticleService {
@@ -20,6 +23,7 @@ export class AdminArticleService {
     @InjectRepository(ArticleEntity)
     private readonly articleRepo: Repository<ArticleEntity>,
     private readonly mediaReferenceService: MediaReferenceService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
   ) {}
 
   private mapArticle(article: ArticleEntity): ArticleResponseDto {
@@ -30,7 +34,10 @@ export class AdminArticleService {
       article.description ?? null,
       article.slug,
       article.content,
-      article.bannerUrl ?? null,
+      this.publicMediaUrlService.toPublicMediaUrl(
+        { id: article.applicationId, publicBaseUrlOverride: null } as ApplicationEntity,
+        article.bannerUrl ?? null,
+      ),
       article.bannerKey ?? null,
       article.locale ?? null,
       article.tags ?? null,
@@ -63,6 +70,7 @@ export class AdminArticleService {
       description: request.description?.trim() || null,
       slug: request.slug.trim(),
       content: request.content,
+      sanitizedHtml: sanitizeHtml(request.content),
       bannerUrl: request.bannerUrl?.trim() || null,
       bannerKey: request.bannerKey?.trim() || null,
       locale: normalizeContentLocale(request.locale),
@@ -97,6 +105,7 @@ export class AdminArticleService {
     article.description = request.description?.trim() || null;
     article.slug = request.slug.trim();
     article.content = request.content;
+    article.sanitizedHtml = sanitizeHtml(request.content);
     article.bannerUrl = request.bannerUrl?.trim() || null;
     article.bannerKey = request.bannerKey?.trim() || null;
     article.locale = normalizeContentLocale(request.locale);

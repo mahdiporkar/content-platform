@@ -7,6 +7,7 @@ export type JwtPayload = {
   email: string;
   role?: string;
   applicationIds: string[];
+  tokenVersion: number;
   systemPermissions?: string[];
   servicePermissions?: string[];
 };
@@ -24,7 +25,20 @@ export class JwtTokenService {
   }
 
   private get secret(): jwt.Secret {
-    return (this.config.get<string>('JWT_SECRET') || 'dev-secret') as jwt.Secret;
+    const secret = this.config.get<string>('JWT_SECRET');
+    if (secret) {
+      return secret as jwt.Secret;
+    }
+
+    const appEnv = (
+      this.config.get<string>('APP_ENV') ||
+      this.config.get<string>('NODE_ENV') ||
+      'development'
+    ).toLowerCase();
+    if (appEnv === 'production') {
+      throw new Error('JWT_SECRET is not configured.');
+    }
+    return 'dev-secret-local-only' as jwt.Secret;
   }
 
   private get expiresIn(): jwt.SignOptions['expiresIn'] {

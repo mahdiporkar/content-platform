@@ -13,6 +13,9 @@ import { resolvePublicationFields } from '../common/publishing';
 import { calculateReadingTimeMinutes } from '../common/reading-time';
 import { MediaReferenceService } from './media-reference.service';
 import { MediaReferenceType } from '../entities/media-reference.entity';
+import { sanitizeHtml } from '../common/html-sanitizer';
+import { PublicMediaUrlService } from './public-media-url.service';
+import { ApplicationEntity } from '../entities/application.entity';
 
 @Injectable()
 export class AdminPostService {
@@ -20,6 +23,7 @@ export class AdminPostService {
     @InjectRepository(PostEntity)
     private readonly postRepo: Repository<PostEntity>,
     private readonly mediaReferenceService: MediaReferenceService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
   ) {}
 
   private mapPost(post: PostEntity): PostResponseDto {
@@ -30,7 +34,10 @@ export class AdminPostService {
       post.description ?? null,
       post.slug,
       post.content,
-      post.bannerUrl ?? null,
+      this.publicMediaUrlService.toPublicMediaUrl(
+        { id: post.applicationId, publicBaseUrlOverride: null } as ApplicationEntity,
+        post.bannerUrl ?? null,
+      ),
       post.bannerKey ?? null,
       post.locale ?? null,
       post.tags ?? null,
@@ -63,6 +70,7 @@ export class AdminPostService {
       description: request.description?.trim() || null,
       slug: request.slug.trim(),
       content: request.content,
+      sanitizedHtml: sanitizeHtml(request.content),
       bannerUrl: request.bannerUrl?.trim() || null,
       bannerKey: request.bannerKey?.trim() || null,
       locale: normalizeContentLocale(request.locale),
@@ -97,6 +105,7 @@ export class AdminPostService {
     post.description = request.description?.trim() || null;
     post.slug = request.slug.trim();
     post.content = request.content;
+    post.sanitizedHtml = sanitizeHtml(request.content);
     post.bannerUrl = request.bannerUrl?.trim() || null;
     post.bannerKey = request.bannerKey?.trim() || null;
     post.locale = normalizeContentLocale(request.locale);

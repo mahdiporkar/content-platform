@@ -64,6 +64,7 @@ export class AdminUserService {
       passwordHash,
       role: request.role ?? AdminUserRole.EDITOR,
       status: request.status ?? AdminUserStatus.ACTIVE,
+      tokenVersion: 1,
       systemPermissions: normalizeSystemPermissions(
         request.role ?? AdminUserRole.EDITOR,
         request.systemPermissions,
@@ -102,11 +103,17 @@ export class AdminUserService {
       user.email = email;
     }
 
+    let rotateSessions = false;
     if (request.password?.trim()) {
       user.passwordHash = await bcrypt.hash(request.password.trim(), 10);
+      rotateSessions = true;
     }
     user.role = request.role ?? user.role ?? AdminUserRole.EDITOR;
+    const previousStatus = user.status ?? AdminUserStatus.ACTIVE;
     user.status = request.status ?? user.status ?? AdminUserStatus.ACTIVE;
+    if (previousStatus !== user.status && user.status === AdminUserStatus.SUSPENDED) {
+      rotateSessions = true;
+    }
     user.systemPermissions = normalizeSystemPermissions(
       user.role,
       request.systemPermissions ?? user.systemPermissions,
@@ -115,6 +122,9 @@ export class AdminUserService {
       user.role,
       request.servicePermissions ?? user.servicePermissions,
     );
+    if (rotateSessions) {
+      user.tokenVersion = (user.tokenVersion ?? 1) + 1;
+    }
 
     await this.adminUserRepo.save(user);
 
@@ -135,6 +145,16 @@ export class AdminUserService {
       throw new NotFoundException('Admin user not found.');
     }
     await this.adminUserRepo.remove(user);
+  }
+
+  async rotateSessions(id: string): Promise<AdminUserResponseDto> {
+    const user = await this.adminUserRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('Admin user not found.');
+    }
+    user.tokenVersion = (user.tokenVersion ?? 1) + 1;
+    const saved = await this.adminUserRepo.save(user);
+    return this.mapUser(saved);
   }
 
   private async replaceApplications(adminUserId: string, applicationIds: string[]): Promise<void> {

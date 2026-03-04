@@ -10,6 +10,11 @@ import { DeliveryCollectionResponseDto } from '../dto/responses/delivery-collect
 import { PageResponseDto } from '../dto/page-response.dto';
 import { ApplicationEntity } from '../entities/application.entity';
 import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
+import { ViewRateLimitService } from '../services/view-rate-limit.service';
+import { getClientIp } from '../common/client-ip';
+import { MediaAccessRequestDto } from '../dto/requests/media-access-request.dto';
+import { MediaAccessResponseDto } from '../dto/responses/media-access-response.dto';
+import { MediaVariantService } from '../services/media-variant.service';
 
 @Controller('/api/v1/content')
 @UseGuards(ApplicationTokenGuard)
@@ -17,6 +22,8 @@ export class DeliveryContentController {
   constructor(
     private readonly deliveryService: DeliveryContentService,
     private readonly domainPolicy: DomainPolicyService,
+    private readonly viewRateLimit: ViewRateLimitService,
+    private readonly mediaVariantService: MediaVariantService,
   ) {}
 
   @Get(':applicationId/posts')
@@ -55,7 +62,7 @@ export class DeliveryContentController {
     @Query() query: Record<string, string | string[]>,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     const type = (query.type as ContentType | undefined) ?? undefined;
     const collectionSlug = query.collection as string | undefined;
     const locale = query.locale as string | undefined;
@@ -80,7 +87,7 @@ export class DeliveryContentController {
     @Param('slug') slug: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.getPostBySlug(application, slug);
   }
 
@@ -90,7 +97,7 @@ export class DeliveryContentController {
     @Param('slug') slug: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.getArticleBySlug(application, slug);
   }
 
@@ -100,7 +107,7 @@ export class DeliveryContentController {
     @Param('id') id: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.getVideoById(application, id);
   }
 
@@ -111,7 +118,7 @@ export class DeliveryContentController {
     @Query('size') size = '10',
   ): Promise<PageResponseDto<GalleryImageResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.listGallery(application, Number(page), Number(size));
   }
 
@@ -121,7 +128,7 @@ export class DeliveryContentController {
     @Param('index') index: string,
   ): Promise<GalleryImageResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.getGalleryItem(application, Number(index));
   }
 
@@ -132,7 +139,7 @@ export class DeliveryContentController {
     @Query('locale') locale?: string,
   ): Promise<DeliveryCollectionResponseDto> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.getCollection(application, slug, locale);
   }
 
@@ -142,8 +149,24 @@ export class DeliveryContentController {
     @Body() request: ViewEventRequestDto,
   ): Promise<{ ok: boolean }> {
     const application = httpRequest.application as ApplicationEntity;
+    this.enforceDeliveryDomainPolicy(application, httpRequest);
+    this.viewRateLimit.assertAllowed(application.id, getClientIp(httpRequest), request.contentId);
     await this.deliveryService.incrementView(request.contentType, request.contentId, application.id);
     return { ok: true };
+  }
+
+  @Post(':applicationId/media/:mediaId/access')
+  async requestMediaAccess(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('mediaId') mediaId: string,
+    @Body() body: MediaAccessRequestDto,
+  ): Promise<MediaAccessResponseDto> {
+    const application = request.application as ApplicationEntity;
+    this.enforceDeliveryDomainPolicy(application, request);
+    // TODO: layer user-level purchase/entitlement checks here before issuing signed media URLs.
+    void body;
+    const media = await this.mediaVariantService.getMediaWithVariants(application.id, mediaId);
+    return new MediaAccessResponseDto(mediaId, media.media.mediaUrl, false, null);
   }
 
   private async listByType(
@@ -154,7 +177,7 @@ export class DeliveryContentController {
     locale?: string,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
     const application = request.application as ApplicationEntity;
-    this.domainPolicy.ensureAllowed(application, request, { allowMissing: true });
+    this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.listContent({
       application,
       type,
@@ -162,5 +185,12 @@ export class DeliveryContentController {
       page: Number(page),
       size: Number(size),
     });
+  }
+
+  private enforceDeliveryDomainPolicy(application: ApplicationEntity, request: Request): void {
+    if (!this.domainPolicy.hasOriginSignal(request)) {
+      return;
+    }
+    this.domainPolicy.ensureAllowed(application, request);
   }
 }

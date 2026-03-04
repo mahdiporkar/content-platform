@@ -44,6 +44,12 @@ export class AdminUserController {
     return await this.adminUserService.update(id, body);
   }
 
+  @Post(':id/sessions/rotate')
+  async rotateSessions(@Req() request: Request, @Param('id') id: string): Promise<AdminUserResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.USERS_MANAGE);
+    return await this.adminUserService.rotateSessions(id);
+  }
+
   @Delete(':id')
   async remove(@Req() request: Request, @Param('id') id: string): Promise<{ id: string }> {
     this.access.assertSystemPermission(request, SystemPermission.USERS_MANAGE);

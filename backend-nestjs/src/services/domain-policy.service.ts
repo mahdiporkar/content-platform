@@ -4,6 +4,10 @@ import { ApplicationEntity, MediaPolicy } from '../entities/application.entity';
 
 @Injectable()
 export class DomainPolicyService {
+  hasOriginSignal(request: Request): boolean {
+    return Boolean(this.getHeader(request, 'origin') || this.getHeader(request, 'referer'));
+  }
+
   ensureAllowed(application: ApplicationEntity, request: Request, options?: { allowMissing?: boolean }) {
     if (application.mediaPolicy !== MediaPolicy.DOMAIN_LOCKED) {
       return;

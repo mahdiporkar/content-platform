@@ -22,6 +22,9 @@ export class ArticleEntity {
   @Column({ type: 'text' })
   content!: string;
 
+  @Column({ name: 'sanitized_html', type: 'text', nullable: true })
+  sanitizedHtml!: string | null;
+
   @Column({ name: 'banner_url', type: 'text', nullable: true })
   bannerUrl!: string | null;
 

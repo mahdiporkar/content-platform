@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationEntity } from '../entities/application.entity';
-import { MediaPolicy } from '../entities/application.entity';
+import { PublicMediaUrlService } from './public-media-url.service';
 
 @Injectable()
 export class BaseUrlService {
@@ -9,9 +9,14 @@ export class BaseUrlService {
   private readonly mediaBasePath: string;
   private readonly deliveryBasePath: string;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
+  ) {
     this.publicBaseUrl = this.normalizeBaseUrl(
-      this.config.get<string>('PUBLIC_BASE_URL') || 'http://localhost:3000',
+      this.config.get<string>('CONTENT_PLATFORM_BASE_URL') ||
+      this.config.get<string>('PUBLIC_BASE_URL') ||
+      'http://localhost:3000',
     );
     this.mediaBasePath = this.normalizePath(this.config.get<string>('MEDIA_BASE_PATH') || '/media');
     this.deliveryBasePath = this.normalizePath(
@@ -22,9 +27,11 @@ export class BaseUrlService {
   }
 
   buildMediaUrl(application: ApplicationEntity, objectKey: string): string {
-    const baseUrl = this.resolveMediaBaseUrl(application);
     const objectPath = this.stripApplicationPrefix(application.id, objectKey);
-    return `${baseUrl}${this.mediaBasePath}/${application.id}/${objectPath}`;
+    return this.publicMediaUrlService.toPublicMediaUrl(
+      application,
+      `${this.mediaBasePath}/${application.id}/${objectPath}`,
+    ) as string;
   }
 
   buildDeliveryUrl(application: ApplicationEntity, path: string): string {
@@ -54,12 +61,4 @@ export class BaseUrlService {
     return path.replace(/\/$/, '');
   }
 
-  private resolveMediaBaseUrl(application: ApplicationEntity): string {
-    if (application.mediaPolicy === MediaPolicy.JWT_REQUIRED) {
-      return this.normalizeBaseUrl(application.publicBaseUrlOverride || this.publicBaseUrl);
-    }
-    return this.normalizeBaseUrl(
-      application.mediaBaseUrlOverride || application.publicBaseUrlOverride || this.publicBaseUrl,
-    );
-  }
 }

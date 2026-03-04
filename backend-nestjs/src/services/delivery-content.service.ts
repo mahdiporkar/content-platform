@@ -17,6 +17,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { PublicMediaUrlService } from './public-media-url.service';
 
 @Injectable()
 export class DeliveryContentService {
@@ -36,6 +37,7 @@ export class DeliveryContentService {
     @InjectRepository(ViewEventEntity)
     private readonly viewEventRepo: Repository<ViewEventEntity>,
     private readonly baseUrl: BaseUrlService,
+    private readonly publicMediaUrlService: PublicMediaUrlService,
   ) {}
 
   private toOptionalString(value: unknown): string | null {
@@ -258,7 +260,7 @@ export class DeliveryContentService {
       .map(
         (item) =>
           new GalleryImageResponseDto(
-            item.url as string,
+            this.publicMediaUrlService.toPublicMediaUrl(application, item.url as string) || '',
             this.toOptionalString(item.alt),
             this.toOptionalString(item.caption),
           ),
@@ -279,7 +281,7 @@ export class DeliveryContentService {
     }
     const item = gallery[index];
     return new GalleryImageResponseDto(
-      item.url as string,
+      this.publicMediaUrlService.toPublicMediaUrl(application, item.url as string) || '',
       this.toOptionalString(item.alt),
       this.toOptionalString(item.caption),
     );
@@ -410,7 +412,7 @@ export class DeliveryContentService {
   private mapArticle(application: ApplicationEntity, article: ArticleEntity): DeliveryContentResponseDto {
     const mediaUrl = article.bannerKey
       ? this.baseUrl.buildMediaUrl(application, article.bannerKey)
-      : article.bannerUrl ?? null;
+      : this.publicMediaUrlService.toPublicMediaUrl(application, article.bannerUrl);
     return new DeliveryContentResponseDto(
       article.id,
       article.applicationId,
@@ -434,14 +436,14 @@ export class DeliveryContentService {
       null,
       null,
       article.seo ?? null,
-      article.content ?? null,
+      this.publicMediaUrlService.rewriteHtmlMediaUrls(application, article.sanitizedHtml ?? article.content ?? null),
     );
   }
 
   private mapPost(application: ApplicationEntity, post: PostEntity): DeliveryContentResponseDto {
     const mediaUrl = post.bannerKey
       ? this.baseUrl.buildMediaUrl(application, post.bannerKey)
-      : post.bannerUrl ?? null;
+      : this.publicMediaUrlService.toPublicMediaUrl(application, post.bannerUrl);
     return new DeliveryContentResponseDto(
       post.id,
       post.applicationId,
@@ -465,7 +467,7 @@ export class DeliveryContentService {
       null,
       null,
       post.seo ?? null,
-      post.content ?? null,
+      this.publicMediaUrlService.rewriteHtmlMediaUrls(application, post.sanitizedHtml ?? post.content ?? null),
     );
   }
 

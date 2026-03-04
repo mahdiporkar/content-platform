@@ -42,6 +42,7 @@ export class AuthService {
       email: admin.email,
       role: admin.role,
       applicationIds,
+      tokenVersion: admin.tokenVersion ?? 1,
       systemPermissions,
       servicePermissions,
     });

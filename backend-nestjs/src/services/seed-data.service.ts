@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { ApplicationEntity } from '../entities/application.entity';
 import { AdminUserEntity } from '../entities/admin-user.entity';
 import { AdminUserApplicationEntity } from '../entities/admin-user-application.entity';
+import { ApplicationTokenService } from './application-token.service';
 
 @Injectable()
 export class SeedDataService implements OnModuleInit {
@@ -20,6 +21,7 @@ export class SeedDataService implements OnModuleInit {
     @InjectRepository(AdminUserApplicationEntity)
     private readonly adminUserApplicationRepo: Repository<AdminUserApplicationEntity>,
     private readonly config: ConfigService,
+    private readonly applicationTokenService: ApplicationTokenService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -33,21 +35,39 @@ export class SeedDataService implements OnModuleInit {
     const existing = await this.applicationRepo.find({ take: 1, order: { id: 'ASC' } });
     if (existing.length > 0) {
       const application = existing[0];
-      if (!application.apiToken) {
-        application.apiToken = uuidv4().replace(/-/g, '');
+      if (!application.apiTokenHash && application.apiToken) {
+        const migrated = this.applicationTokenService.hashToken(application.apiToken);
+        application.apiTokenHash = migrated.tokenHash;
+        application.apiTokenSalt = migrated.tokenSalt;
+        application.apiToken = null;
+        application.lastRotatedAt = new Date();
         await this.applicationRepo.save(application);
+      } else if (!application.apiTokenHash) {
+        const issued = this.applicationTokenService.generate();
+        application.apiTokenHash = issued.tokenHash;
+        application.apiTokenSalt = issued.tokenSalt;
+        application.tokenCreatedAt = new Date();
+        application.lastRotatedAt = new Date();
+        await this.applicationRepo.save(application);
+        this.logger.log(`Seeded application token for existing app ${application.id}: ${issued.rawToken}`);
       }
       this.logger.log(`Existing applicationId: ${application.id}`);
       return application.id;
     }
 
+    const issued = this.applicationTokenService.generate();
     const application = this.applicationRepo.create({
       id: uuidv4(),
       name: 'Demo Application',
-      apiToken: uuidv4().replace(/-/g, ''),
+      apiToken: null,
+      apiTokenHash: issued.tokenHash,
+      apiTokenSalt: issued.tokenSalt,
+      tokenCreatedAt: new Date(),
+      lastRotatedAt: new Date(),
     });
     await this.applicationRepo.save(application);
     this.logger.log(`Seeded applicationId: ${application.id}`);
+    this.logger.log(`Seeded application token: ${issued.rawToken}`);
     return application.id;
   }
 
@@ -66,6 +86,7 @@ export class SeedDataService implements OnModuleInit {
       id: uuidv4(),
       email: adminEmail,
       passwordHash,
+      tokenVersion: 1,
       applications: [],
     });
 

@@ -1,14 +1,12 @@
-import { Controller, Get, NotFoundException, Param, Req, Res, ForbiddenException, UseGuards } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { Controller, Get, NotFoundException, Param, Req, Res, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Request, Response } from 'express';
 import { Repository } from 'typeorm';
 import { ApplicationEntity, ApplicationStatus } from '../entities/application.entity';
 import { MinioService } from '../services/minio.service';
 import { DomainPolicyService } from '../services/domain-policy.service';
-import { ApplicationTokenGuard } from '../auth/application-token.guard';
 
 @Controller('/media')
-@UseGuards(ApplicationTokenGuard)
 export class MediaGatewayController {
   constructor(
     @InjectRepository(ApplicationEntity)
@@ -35,7 +33,9 @@ export class MediaGatewayController {
     if (application.status === ApplicationStatus.SUSPENDED) {
       throw new ForbiddenException('Application is suspended.');
     }
-    this.domainPolicy.ensureAllowed(application, request);
+    if (this.domainPolicy.hasOriginSignal(request)) {
+      this.domainPolicy.ensureAllowed(application, request);
+    }
 
     const objectKey = normalizedObjectPath.startsWith(`${appId}/`)
       ? normalizedObjectPath
