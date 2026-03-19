@@ -6,6 +6,7 @@ import com.contentplatform.backend.application.dto.MediaVariantDto;
 import com.contentplatform.backend.application.dto.MediaWithVariantsDto;
 import com.contentplatform.backend.application.dto.ResolveMediaVariantQuery;
 import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
+import com.contentplatform.backend.application.service.PublicMediaUrlService;
 import com.contentplatform.backend.interfaces.web.response.MediaAssetResponse;
 import com.contentplatform.backend.interfaces.web.response.MediaResolveResponse;
 import com.contentplatform.backend.interfaces.web.response.MediaVariantResponse;
@@ -21,9 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/public/{applicationId}/media")
 public class PublicMediaController {
     private final MediaLibraryUseCase mediaLibraryUseCase;
+    private final PublicMediaUrlService publicMediaUrlService;
 
-    public PublicMediaController(MediaLibraryUseCase mediaLibraryUseCase) {
+    public PublicMediaController(MediaLibraryUseCase mediaLibraryUseCase, PublicMediaUrlService publicMediaUrlService) {
         this.mediaLibraryUseCase = mediaLibraryUseCase;
+        this.publicMediaUrlService = publicMediaUrlService;
     }
 
     @GetMapping("/{mediaId}")
@@ -55,7 +58,7 @@ public class PublicMediaController {
             dto.resolvedPurpose(),
             dto.resolvedSize(),
             dto.resolvedDevice(),
-            dto.url(),
+            publicMediaUrlService.toPublicMediaUrl(applicationId, dto.url()),
             dto.width(),
             dto.height(),
             dto.duration(),
@@ -75,7 +78,7 @@ public class PublicMediaController {
             dto.originalName(),
             dto.contentType(),
             dto.sizeBytes(),
-            dto.url(),
+            publicMediaUrlService.toPublicMediaUrl(dto.applicationId(), dto.url()),
             dto.trashedAt(),
             dto.purgedAt(),
             dto.deletedByUserId(),
@@ -104,7 +107,7 @@ public class PublicMediaController {
             dto.bitrate(),
             dto.bucket(),
             dto.objectKey(),
-            dto.fileUrl(),
+            publicMediaUrlService.toPublicMediaUrl(dto.applicationId(), dto.fileUrl()),
             dto.sizeBytes(),
             dto.isDefault(),
             dto.sortOrder(),

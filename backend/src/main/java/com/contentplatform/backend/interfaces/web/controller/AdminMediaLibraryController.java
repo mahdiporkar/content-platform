@@ -4,6 +4,7 @@ import com.contentplatform.backend.application.dto.MediaAssetDto;
 import com.contentplatform.backend.application.dto.PageRequest;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
+import com.contentplatform.backend.application.service.PublicMediaUrlService;
 import com.contentplatform.backend.domain.value.MediaAssetKind;
 import com.contentplatform.backend.domain.value.MediaAssetState;
 import com.contentplatform.backend.domain.value.ServicePermission;
@@ -22,9 +23,11 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/media/library")
 public class AdminMediaLibraryController {
     private final MediaLibraryUseCase mediaLibraryUseCase;
+    private final PublicMediaUrlService publicMediaUrlService;
 
-    public AdminMediaLibraryController(MediaLibraryUseCase mediaLibraryUseCase) {
+    public AdminMediaLibraryController(MediaLibraryUseCase mediaLibraryUseCase, PublicMediaUrlService publicMediaUrlService) {
         this.mediaLibraryUseCase = mediaLibraryUseCase;
+        this.publicMediaUrlService = publicMediaUrlService;
     }
 
     @GetMapping
@@ -72,7 +75,7 @@ public class AdminMediaLibraryController {
             dto.originalName(),
             dto.contentType(),
             dto.sizeBytes(),
-            dto.url(),
+            publicMediaUrlService.toPublicMediaUrl(dto.applicationId(), dto.url()),
             dto.trashedAt(),
             dto.purgedAt(),
             dto.deletedByUserId(),

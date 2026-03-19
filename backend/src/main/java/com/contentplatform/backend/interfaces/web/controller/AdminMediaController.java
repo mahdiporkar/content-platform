@@ -6,6 +6,7 @@ import com.contentplatform.backend.application.dto.UploadMediaCommand;
 import com.contentplatform.backend.application.dto.UpsertMediaVariantCommand;
 import com.contentplatform.backend.application.port.in.MediaLibraryUseCase;
 import com.contentplatform.backend.application.port.in.MediaUseCase;
+import com.contentplatform.backend.application.service.PublicMediaUrlService;
 import com.contentplatform.backend.domain.value.ServicePermission;
 import com.contentplatform.backend.interfaces.web.SecurityUtils;
 import com.contentplatform.backend.interfaces.web.response.MediaUploadResponse;
@@ -30,10 +31,14 @@ import java.util.List;
 public class AdminMediaController {
     private final MediaUseCase mediaUseCase;
     private final MediaLibraryUseCase mediaLibraryUseCase;
+    private final PublicMediaUrlService publicMediaUrlService;
 
-    public AdminMediaController(MediaUseCase mediaUseCase, MediaLibraryUseCase mediaLibraryUseCase) {
+    public AdminMediaController(MediaUseCase mediaUseCase,
+                                MediaLibraryUseCase mediaLibraryUseCase,
+                                PublicMediaUrlService publicMediaUrlService) {
         this.mediaUseCase = mediaUseCase;
         this.mediaLibraryUseCase = mediaLibraryUseCase;
+        this.publicMediaUrlService = publicMediaUrlService;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -52,7 +57,12 @@ public class AdminMediaController {
             file.getInputStream()
         );
         MediaUploadDto dto = mediaUseCase.upload(command, allowed);
-        return ResponseEntity.ok(new MediaUploadResponse(dto.objectKey(), dto.contentType(), dto.sizeBytes(), dto.url()));
+        return ResponseEntity.ok(new MediaUploadResponse(
+            dto.objectKey(),
+            dto.contentType(),
+            dto.sizeBytes(),
+            publicMediaUrlService.toPublicMediaUrl(applicationId, dto.url())
+        ));
     }
 
     @GetMapping("/{mediaId}/variants")
@@ -183,7 +193,7 @@ public class AdminMediaController {
             dto.bitrate(),
             dto.bucket(),
             dto.objectKey(),
-            dto.fileUrl(),
+            publicMediaUrlService.toPublicMediaUrl(dto.applicationId(), dto.fileUrl()),
             dto.sizeBytes(),
             dto.isDefault(),
             dto.sortOrder(),

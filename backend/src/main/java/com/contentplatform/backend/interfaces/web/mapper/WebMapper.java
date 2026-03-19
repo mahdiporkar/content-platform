@@ -5,6 +5,7 @@ import com.contentplatform.backend.application.dto.ApplicationDto;
 import com.contentplatform.backend.application.dto.PageResult;
 import com.contentplatform.backend.application.dto.PostDto;
 import com.contentplatform.backend.application.dto.VideoDto;
+import com.contentplatform.backend.application.service.PublicMediaUrlService;
 import com.contentplatform.backend.interfaces.web.response.ApplicationResponse;
 import com.contentplatform.backend.interfaces.web.response.ArticleResponse;
 import com.contentplatform.backend.interfaces.web.response.PageResponse;
@@ -16,13 +17,19 @@ import java.util.List;
 
 @Component
 public class WebMapper {
+    private final PublicMediaUrlService publicMediaUrlService;
+
+    public WebMapper(PublicMediaUrlService publicMediaUrlService) {
+        this.publicMediaUrlService = publicMediaUrlService;
+    }
+
     public PostResponse toPostResponse(PostDto dto) {
         return new PostResponse(
             dto.getId(),
             dto.getApplicationId(),
             dto.getTitle(),
             dto.getSlug(),
-            dto.getContent(),
+            publicMediaUrlService.rewriteHtmlMediaUrls(dto.getApplicationId(), dto.getContent()),
             dto.getLocale(),
             dto.getStatus(),
             dto.getPublishedAt(),
@@ -39,11 +46,14 @@ public class WebMapper {
             dto.getApiToken(),
             dto.getWebsiteUrl(),
             dto.getGallery().stream()
-                .map(image -> new com.contentplatform.backend.interfaces.web.response.GalleryImageResponse(
-                    image.getUrl(),
-                    image.getAlt(),
-                    image.getCaption()
-                ))
+                .map(image -> {
+                    String rewrittenUrl = publicMediaUrlService.toPublicMediaUrl(dto.getId(), image.getUrl());
+                    return new com.contentplatform.backend.interfaces.web.response.GalleryImageResponse(
+                        rewrittenUrl == null ? image.getUrl() : rewrittenUrl,
+                        image.getAlt(),
+                        image.getCaption()
+                    );
+                })
                 .toList()
         );
     }
@@ -54,7 +64,7 @@ public class WebMapper {
             dto.getApplicationId(),
             dto.getTitle(),
             dto.getSlug(),
-            dto.getContent(),
+            publicMediaUrlService.rewriteHtmlMediaUrls(dto.getApplicationId(), dto.getContent()),
             dto.getLocale(),
             dto.getStatus(),
             dto.getPublishedAt(),
@@ -79,7 +89,7 @@ public class WebMapper {
             dto.getCreatedAt(),
             dto.getUpdatedAt(),
             dto.getDeletedAt(),
-            presignedUrl
+            publicMediaUrlService.toPublicMediaUrl(dto.getApplicationId(), presignedUrl)
         );
     }
 

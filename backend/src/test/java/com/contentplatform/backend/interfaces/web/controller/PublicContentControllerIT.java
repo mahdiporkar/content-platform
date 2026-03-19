@@ -81,4 +81,28 @@ class PublicContentControllerIT {
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.items[0].slug").value("published-title"));
     }
+
+    @Test
+    void postContentRewritesMediaUrlsToApplicationBaseUrl() throws Exception {
+        String applicationId = "app-2";
+        applicationRepository.save(new ApplicationEntity(applicationId, "Demo App", "http://consumer.local/", null, List.of()));
+
+        postRepository.save(new PostEntity(
+            "post-3",
+            applicationId,
+            "Media title",
+            "media-title",
+            "<p><img src=\"http://localhost:9000/media/app-2/image/2026/03/test.png\"></p>",
+            "en",
+            ContentStatus.PUBLISHED,
+            Instant.parse("2024-01-03T00:00:00Z"),
+            1,
+            Instant.parse("2024-01-03T00:00:00Z"),
+            Instant.parse("2024-01-03T00:00:00Z")
+        ));
+
+        mockMvc.perform(get("/api/v1/public/{applicationId}/posts/{slug}", applicationId, "media-title"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").value("<p><img src=\"http://consumer.local/media/app-2/image/2026/03/test.png\"></p>"));
+    }
 }

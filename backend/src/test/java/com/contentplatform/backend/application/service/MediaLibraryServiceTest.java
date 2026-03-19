@@ -155,6 +155,7 @@ class MediaLibraryServiceTest {
 
         var resolved = service.resolveVariant("m1", "t1", new ResolveMediaVariantQuery("hero", "xs", null, "mobile", "webp"));
         assertEquals("v-hero", resolved.variantId());
+        assertEquals("/media/t1/hero.webp", resolved.url());
         assertEquals(false, resolved.fallbackUsed());
     }
 
@@ -186,6 +187,7 @@ class MediaLibraryServiceTest {
 
         var resolved = service.resolveVariant("m1", "t1", new ResolveMediaVariantQuery("thumbnail", null, 390, "mobile", "webp"));
         assertEquals("v-default", resolved.variantId());
+        assertEquals("/media/t1/img.jpg", resolved.url());
         assertTrue(resolved.fallbackUsed());
     }
 }

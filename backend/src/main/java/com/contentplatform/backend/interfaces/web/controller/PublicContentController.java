@@ -9,6 +9,7 @@ import com.contentplatform.backend.application.exception.NotFoundException;
 import com.contentplatform.backend.application.port.in.ArticleUseCase;
 import com.contentplatform.backend.application.port.in.PostUseCase;
 import com.contentplatform.backend.application.port.in.VideoUseCase;
+import com.contentplatform.backend.application.service.PublicMediaUrlService;
 import com.contentplatform.backend.domain.value.ContentStatus;
 import com.contentplatform.backend.interfaces.web.mapper.WebMapper;
 import com.contentplatform.backend.interfaces.web.response.ArticleResponse;
@@ -29,12 +30,18 @@ public class PublicContentController {
     private final ArticleUseCase articleUseCase;
     private final VideoUseCase videoUseCase;
     private final WebMapper mapper;
+    private final PublicMediaUrlService publicMediaUrlService;
 
-    public PublicContentController(PostUseCase postUseCase, ArticleUseCase articleUseCase, VideoUseCase videoUseCase, WebMapper mapper) {
+    public PublicContentController(PostUseCase postUseCase,
+                                   ArticleUseCase articleUseCase,
+                                   VideoUseCase videoUseCase,
+                                   WebMapper mapper,
+                                   PublicMediaUrlService publicMediaUrlService) {
         this.postUseCase = postUseCase;
         this.articleUseCase = articleUseCase;
         this.videoUseCase = videoUseCase;
         this.mapper = mapper;
+        this.publicMediaUrlService = publicMediaUrlService;
     }
 
     @GetMapping("/{applicationId}/posts")
@@ -79,6 +86,6 @@ public class PublicContentController {
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "10") int size) {
         PageResult<VideoDto> result = videoUseCase.list(applicationId, status, new PageRequest(page, size), false);
-        return ResponseEntity.ok(mapper.toVideoPage(result, video -> videoUseCase.getPresignedUrl(video.getObjectKey())));
+        return ResponseEntity.ok(mapper.toVideoPage(result, video -> publicMediaUrlService.toPublicMediaUrl(applicationId, "/media/" + video.getObjectKey())));
     }
 }

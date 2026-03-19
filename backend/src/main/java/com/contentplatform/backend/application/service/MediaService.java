@@ -28,8 +28,6 @@ public class MediaService implements MediaUseCase {
     private final TimeProvider timeProvider;
     private final MediaLibraryUseCase mediaLibraryUseCase;
     private final String bucket;
-    private final String publicUrl;
-
     public MediaService(MediaStoragePort mediaStoragePort,
                         TimeProvider timeProvider,
                         MediaLibraryUseCase mediaLibraryUseCase,
@@ -39,7 +37,6 @@ public class MediaService implements MediaUseCase {
         this.timeProvider = timeProvider;
         this.mediaLibraryUseCase = mediaLibraryUseCase;
         this.bucket = bucket;
-        this.publicUrl = publicUrl;
     }
 
     @Override
@@ -99,10 +96,6 @@ public class MediaService implements MediaUseCase {
     }
 
     private String buildPublicUrl(String objectKey) {
-        String base = publicUrl == null ? "" : publicUrl.trim();
-        if (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 1);
-        }
-        return String.format("%s/%s/%s", base, bucket, objectKey);
+        return "/media/" + objectKey;
     }
 }

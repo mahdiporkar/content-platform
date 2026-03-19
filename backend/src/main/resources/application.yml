@@ -20,6 +20,9 @@ app:
   storage:
     presign-expiry-seconds: ${PRESIGN_EXPIRY_SECONDS:900}
     public-url: ${MINIO_PUBLIC_URL:${MINIO_URL:http://localhost:9000}}
+  delivery:
+    content-platform-base-url: ${CONTENT_PLATFORM_BASE_URL:http://localhost:3000}
+    minio-public-base-url: ${MINIO_PUBLIC_BASE_URL:${MINIO_PUBLIC_URL:${MINIO_URL:http://localhost:9000}}}
 
 minio:
   url: ${MINIO_URL:http://localhost:9000}

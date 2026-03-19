@@ -63,8 +63,6 @@ public class MediaLibraryService implements MediaLibraryUseCase {
     private final MediaStoragePort mediaStoragePort;
     private final TimeProvider timeProvider;
     private final String bucket;
-    private final String publicUrl;
-
     public MediaLibraryService(MediaAssetRepository mediaAssetRepository,
                                VideoJpaRepository videoJpaRepository,
                                MediaReferenceJpaRepository mediaReferenceJpaRepository,
@@ -82,7 +80,6 @@ public class MediaLibraryService implements MediaLibraryUseCase {
         this.mediaStoragePort = mediaStoragePort;
         this.timeProvider = timeProvider;
         this.bucket = bucket;
-        this.publicUrl = publicUrl;
     }
 
     @Override
@@ -749,7 +746,7 @@ public class MediaLibraryService implements MediaLibraryUseCase {
             variant.getBitrate(),
             variant.getBucket(),
             variant.getObjectKey(),
-            variant.getFileUrl() == null ? buildPublicUrl(variant.getBucket(), variant.getObjectKey()) : variant.getFileUrl(),
+            buildPublicUrl(variant.getBucket(), variant.getObjectKey()),
             variant.getSizeBytes(),
             variant.isDefault(),
             variant.getSortOrder(),
@@ -845,12 +842,7 @@ public class MediaLibraryService implements MediaLibraryUseCase {
     }
 
     private String buildPublicUrl(String mediaBucket, String objectKey) {
-        String base = publicUrl == null ? "" : publicUrl.trim();
-        if (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 1);
-        }
-        String targetBucket = mediaBucket == null || mediaBucket.isBlank() ? bucket : mediaBucket;
-        return String.format("%s/%s/%s", base, targetBucket, objectKey);
+        return "/media/" + objectKey;
     }
 
     private void syncVideoAssets(String applicationId, List<String> allowedApplicationIds) {
