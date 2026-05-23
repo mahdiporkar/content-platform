@@ -1,5 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Link from "next/link";
+import SiteNav from "./site-nav";
 
 export const metadata: Metadata = {
   title: "Content Platform Demo",
@@ -11,14 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <div className="page">
-          <header className="hero">
-            <div>
-              <p className="eyebrow">Public Demo</p>
-              <h1>Content Platform</h1>
-              <p className="subtitle">
-                A multi-tenant publishing surface for posts, articles, and video.
-              </p>
-            </div>
+          <header className="topbar">
+            <Link className="brand" href="/">
+              Content Platform
+            </Link>
+            <SiteNav />
           </header>
           <main className="main">{children}</main>
         </div>

@@ -1,24 +1,20 @@
-import AccessForm from "./components/access-form";
+import SiteNav from "./site-nav";
 
 export default function HomePage() {
   return (
-    <section className="grid">
-      <div className="card">
-        <span className="pill">Access</span>
-        <h2 className="title">Application Credentials</h2>
-        <p className="muted">
-          Enter your <strong>applicationId</strong> and <strong>token</strong> to view
-          posts, articles, gallery, and photos.
+    <section className="home">
+      <div className="home-copy">
+        <p className="eyebrow">Publication</p>
+        <h1>Stories, media, and collections from this site.</h1>
+        <p>
+          This public consumer app renders content on the server and sends only browser-safe media URLs to visitors.
         </p>
-        <AccessForm />
+        <SiteNav />
       </div>
-      <div className="card">
-        <span className="pill">Required Headers</span>
-        <h2 className="title">Auth via token</h2>
-        <p className="muted">
-          The demo sends <code>x-app-id</code> and <code>x-application-token</code>
-          with each request.
-        </p>
+      <div className="home-panel" aria-hidden="true">
+        <div className="panel-row" />
+        <div className="panel-row short" />
+        <div className="panel-media" />
       </div>
     </section>
   );

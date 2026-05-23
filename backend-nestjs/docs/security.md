@@ -7,7 +7,7 @@
   - `/api/v1/media/**`
   - Requires admin Bearer JWT only.
 - Delivery plane:
-  - `/api/v1/content/:applicationId/**`
+  - `/api/v1/content/**`
   - `/api/public/media/**`
   - `/media/:appId/*`
   - Requires `X-Application-Id` and `X-Application-Token`.
@@ -56,6 +56,13 @@ The `domain-locked` policy is an extra browser-domain check, not the primary aut
 - Domain policy is enforced with the same option-2 rules as delivery content.
 - In-memory rate limiting reduces abuse and analytics pollution.
 
+## Visitor Media Proxy
+
+- Consumer applications keep the application id and application token on the server side.
+- Delivery responses expose browser-safe media proxy URLs such as `/media/:appId/*`.
+- The browser should not receive direct MinIO URLs or the MinIO port.
+- `MediaGatewayController` streams the object from MinIO and applies application status and domain policy checks.
+
 ## Future Paid Content
 
 The codebase now includes:
@@ -63,7 +70,7 @@ The codebase now includes:
 - `consumer_users`
 - `consumer_entitlements`
 - `AccessControlService`
-- `POST /api/v1/content/:applicationId/media/:mediaId/access`
+- `POST /api/v1/content/media/:mediaId/access`
 
 The media access endpoint currently returns a direct media URL. It is the integration point for future user-level entitlement checks and signed URLs with expiry.
 

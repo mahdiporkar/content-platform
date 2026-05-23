@@ -1,10 +1,25 @@
 export const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+  process.env.CONTENT_PLATFORM_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:3000";
 
 export type ApiAuth = {
   applicationId: string;
   token: string;
 };
+
+export function getServerApiAuth(): ApiAuth {
+  const applicationId = process.env.CONTENT_PLATFORM_APPLICATION_ID?.trim();
+  const token = process.env.CONTENT_PLATFORM_API_TOKEN?.trim();
+
+  if (!applicationId || !token) {
+    throw new Error(
+      "Missing CONTENT_PLATFORM_APPLICATION_ID or CONTENT_PLATFORM_API_TOKEN server environment variable."
+    );
+  }
+
+  return { applicationId, token };
+}
 
 function maskToken(token: string): string {
   if (token.length <= 10) {
@@ -16,17 +31,16 @@ function maskToken(token: string): string {
 export async function apiFetch<T>(path: string, auth: ApiAuth): Promise<T> {
   const url = `${apiBaseUrl}${path}`;
   const headers = {
-    "x-app-id": auth.applicationId,
-    "x-application-token": auth.token,
-    Authorization: `Bearer ${auth.token}`
+    "X-Application-Id": auth.applicationId,
+    "X-Application-Token": auth.token
   };
 
   console.log("[contentplatform:req]", {
     method: "GET",
     url,
     headers: {
-      "x-app-id": headers["x-app-id"],
-      "x-application-token": maskToken(headers["x-application-token"])
+      "X-Application-Id": headers["X-Application-Id"],
+      "X-Application-Token": maskToken(headers["X-Application-Token"])
     }
   });
 
@@ -61,13 +75,4 @@ export async function apiFetch<T>(path: string, auth: ApiAuth): Promise<T> {
   }
 
   return parsedBody as T;
-}
-
-export function getSingleParam(value: string | string[] | undefined): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-  const normalized = Array.isArray(value) ? value[0] : value;
-  const trimmed = normalized.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
 }

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiSecurity } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { DeliveryContentService } from '../services/delivery-content.service';
 import { ApplicationTokenGuard } from '../auth/application-token.guard';
@@ -18,6 +19,7 @@ import { MediaVariantService } from '../services/media-variant.service';
 
 @Controller('/api/v1/content')
 @UseGuards(ApplicationTokenGuard)
+@ApiSecurity({ 'application-id': [], 'application-token': [] })
 export class DeliveryContentController {
   constructor(
     private readonly deliveryService: DeliveryContentService,
@@ -26,8 +28,16 @@ export class DeliveryContentController {
     private readonly mediaVariantService: MediaVariantService,
   ) {}
 
-  @Get(':applicationId/posts')
-  async listPosts(
+  @Get()
+  async listContentFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Query() query: Record<string, string | string[]>,
+  ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
+    return await this.listContentForApplication(request, query);
+  }
+
+  @Get('posts')
+  async listPostsFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
     @Query('page') page = '0',
     @Query('size') size = '10',
@@ -36,8 +46,8 @@ export class DeliveryContentController {
     return this.listByType(request, ContentType.POST, page, size, locale);
   }
 
-  @Get(':applicationId/articles')
-  async listArticles(
+  @Get('articles')
+  async listArticlesFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
     @Query('page') page = '0',
     @Query('size') size = '10',
@@ -46,8 +56,8 @@ export class DeliveryContentController {
     return this.listByType(request, ContentType.ARTICLE, page, size, locale);
   }
 
-  @Get(':applicationId/videos')
-  async listVideos(
+  @Get('videos')
+  async listVideosFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
     @Query('page') page = '0',
     @Query('size') size = '10',
@@ -56,12 +66,90 @@ export class DeliveryContentController {
     return this.listByType(request, ContentType.VIDEO, page, size, locale);
   }
 
-  @Get(':applicationId')
-  async listContent(
+  @Get('posts/:slug')
+  async getPostBySlugFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
-    @Query() query: Record<string, string | string[]>,
+    @Param('slug') slug: string,
+  ): Promise<DeliveryContentResponseDto> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getPostBySlug(application, slug);
+  }
+
+  @Get('articles/:slug')
+  async getArticleBySlugFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('slug') slug: string,
+  ): Promise<DeliveryContentResponseDto> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getArticleBySlug(application, slug);
+  }
+
+  @Get('videos/:id')
+  async getVideoByIdFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('id') id: string,
+  ): Promise<DeliveryContentResponseDto> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getVideoById(application, id);
+  }
+
+  @Get('gallery')
+  async listGalleryFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Query('page') page = '0',
+    @Query('size') size = '10',
+  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.listGallery(application, Number(page), Number(size));
+  }
+
+  @Get('gallery/:index')
+  async getGalleryItemFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('index') index: string,
+  ): Promise<GalleryImageResponseDto> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getGalleryItem(application, Number(index));
+  }
+
+  @Get('collections/:slug')
+  async getCollectionFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('slug') slug: string,
+    @Query('locale') locale?: string,
+  ): Promise<DeliveryCollectionResponseDto> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getCollection(application, slug, locale);
+  }
+
+  @Post('events/view')
+  async trackViewFromHeaders(
+    @Req() httpRequest: Request & { application?: ApplicationEntity },
+    @Body() request: ViewEventRequestDto,
+  ): Promise<{ ok: boolean }> {
+    return await this.trackViewForApplication(httpRequest, request);
+  }
+
+  @Post('media/:mediaId/access')
+  async requestMediaAccessFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('mediaId') mediaId: string,
+    @Body() body: MediaAccessRequestDto,
+  ): Promise<MediaAccessResponseDto> {
+    return await this.requestMediaAccessForApplication(request, mediaId, body);
+  }
+
+  private async listContentForApplication(
+    request: Request & { application?: ApplicationEntity },
+    query: Record<string, string | string[]>,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
-    const application = request.application as ApplicationEntity;
+    const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
     const type = (query.type as ContentType | undefined) ?? undefined;
     const collectionSlug = query.collection as string | undefined;
@@ -81,87 +169,23 @@ export class DeliveryContentController {
     });
   }
 
-  @Get(':applicationId/posts/:slug')
-  async getPostBySlug(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('slug') slug: string,
-  ): Promise<DeliveryContentResponseDto> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getPostBySlug(application, slug);
-  }
-
-  @Get(':applicationId/articles/:slug')
-  async getArticleBySlug(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('slug') slug: string,
-  ): Promise<DeliveryContentResponseDto> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getArticleBySlug(application, slug);
-  }
-
-  @Get(':applicationId/videos/:id')
-  async getVideoById(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('id') id: string,
-  ): Promise<DeliveryContentResponseDto> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getVideoById(application, id);
-  }
-
-  @Get(':applicationId/gallery')
-  async listGallery(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Query('page') page = '0',
-    @Query('size') size = '10',
-  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.listGallery(application, Number(page), Number(size));
-  }
-
-  @Get(':applicationId/gallery/:index')
-  async getGalleryItem(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('index') index: string,
-  ): Promise<GalleryImageResponseDto> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getGalleryItem(application, Number(index));
-  }
-
-  @Get(':applicationId/collections/:slug')
-  async getCollection(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('slug') slug: string,
-    @Query('locale') locale?: string,
-  ): Promise<DeliveryCollectionResponseDto> {
-    const application = request.application as ApplicationEntity;
-    this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getCollection(application, slug, locale);
-  }
-
-  @Post(':applicationId/events/view')
-  async trackView(
-    @Req() httpRequest: Request & { application?: ApplicationEntity },
-    @Body() request: ViewEventRequestDto,
+  private async trackViewForApplication(
+    httpRequest: Request & { application?: ApplicationEntity },
+    request: ViewEventRequestDto,
   ): Promise<{ ok: boolean }> {
-    const application = httpRequest.application as ApplicationEntity;
+    const application = this.getApplication(httpRequest);
     this.enforceDeliveryDomainPolicy(application, httpRequest);
     this.viewRateLimit.assertAllowed(application.id, getClientIp(httpRequest), request.contentId);
     await this.deliveryService.incrementView(request.contentType, request.contentId, application.id);
     return { ok: true };
   }
 
-  @Post(':applicationId/media/:mediaId/access')
-  async requestMediaAccess(
-    @Req() request: Request & { application?: ApplicationEntity },
-    @Param('mediaId') mediaId: string,
-    @Body() body: MediaAccessRequestDto,
+  private async requestMediaAccessForApplication(
+    request: Request & { application?: ApplicationEntity },
+    mediaId: string,
+    body: MediaAccessRequestDto,
   ): Promise<MediaAccessResponseDto> {
-    const application = request.application as ApplicationEntity;
+    const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
     // TODO: layer user-level purchase/entitlement checks here before issuing signed media URLs.
     void body;
@@ -176,7 +200,7 @@ export class DeliveryContentController {
     size: string,
     locale?: string,
   ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
-    const application = request.application as ApplicationEntity;
+    const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
     return await this.deliveryService.listContent({
       application,
@@ -185,6 +209,10 @@ export class DeliveryContentController {
       page: Number(page),
       size: Number(size),
     });
+  }
+
+  private getApplication(request: Request & { application?: ApplicationEntity }): ApplicationEntity {
+    return request.application as ApplicationEntity;
   }
 
   private enforceDeliveryDomainPolicy(application: ApplicationEntity, request: Request): void {

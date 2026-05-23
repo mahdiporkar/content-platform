@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiSecurity } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ApplicationTokenGuard } from '../auth/application-token.guard';
 import { ApplicationEntity } from '../entities/application.entity';
@@ -9,6 +10,7 @@ import { MediaWithVariantsResponseDto } from '../dto/responses/media-with-varian
 
 @Controller('/api/public/media')
 @UseGuards(ApplicationTokenGuard)
+@ApiSecurity({ 'application-id': [], 'application-token': [] })
 export class PublicMediaController {
   constructor(
     private readonly mediaVariantService: MediaVariantService,

@@ -86,6 +86,9 @@ services:
     container_name: content-platform-demo-next
     environment:
       WATCHPACK_POLLING: "true"
+      CONTENT_PLATFORM_API_BASE_URL: http://backend:3001
+      CONTENT_PLATFORM_APPLICATION_ID: ${CONTENT_PLATFORM_APPLICATION_ID:-}
+      CONTENT_PLATFORM_API_TOKEN: ${CONTENT_PLATFORM_API_TOKEN:-}
     ports:
       - "3003:3003"
     volumes:

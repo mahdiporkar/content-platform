@@ -34,7 +34,15 @@ export class PublicMediaUrlService {
       return `${publicBaseUrl}${mediaPath}`;
     }
 
+    const objectKeyPath = this.extractApplicationObjectKeyPath(application, value);
+    if (objectKeyPath) {
+      return `${publicBaseUrl}${objectKeyPath}`;
+    }
+
     if (this.isAbsoluteUrl(value)) {
+      if (this.startsWithBaseUrl(value, this.minioPublicBaseUrl)) {
+        return null;
+      }
       return value.replace(/\/$/, '');
     }
 
@@ -52,10 +60,11 @@ export class PublicMediaUrlService {
 
     return html.replace(/\b(src|href)\s*=\s*(["'])([^"']+)\2/gi, (_match, attribute: string, quote: string, url: string) => {
       const mediaPath = this.extractMediaPath(url);
-      if (!mediaPath) {
+      const objectKeyPath = this.extractApplicationObjectKeyPath(application, url);
+      if (!mediaPath && !objectKeyPath) {
         return `${attribute}=${quote}${url}${quote}`;
       }
-      return `${attribute}=${quote}${this.getPublicBaseUrl(application)}${mediaPath}${quote}`;
+      return `${attribute}=${quote}${this.getPublicBaseUrl(application)}${mediaPath || objectKeyPath}${quote}`;
     });
   }
 
@@ -90,6 +99,35 @@ export class PublicMediaUrlService {
         if (parsed.pathname.startsWith('/media/')) {
           return `${parsed.pathname}${parsed.search}${parsed.hash}`;
         }
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  private extractApplicationObjectKeyPath(application: ApplicationEntity, value: string): string | null {
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const objectKey = this.extractObjectKey(application.id, normalized);
+    return objectKey ? `/media/${objectKey}` : null;
+  }
+
+  private extractObjectKey(applicationId: string, value: string): string | null {
+    if (value.startsWith(`${applicationId}/`)) {
+      return value;
+    }
+
+    if (this.startsWithBaseUrl(value, this.minioPublicBaseUrl)) {
+      try {
+        const parsed = new URL(value);
+        const path = parsed.pathname.replace(/^\/+/, '');
+        const withoutBucket = path.startsWith('media/') ? path.slice('media/'.length) : path;
+        return withoutBucket.startsWith(`${applicationId}/`) ? withoutBucket : null;
       } catch {
         return null;
       }
