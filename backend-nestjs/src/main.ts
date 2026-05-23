@@ -47,6 +47,7 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')
+    .addSecurityRequirements('bearer')
     .addApiKey({ type: 'apiKey', name: 'X-Application-Id', in: 'header' }, 'application-id')
     .addApiKey({ type: 'apiKey', name: 'X-Application-Token', in: 'header' }, 'application-token')
     .build();
