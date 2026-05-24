@@ -7,7 +7,6 @@ import { ApplicationUpsertRequestDto } from '../dto/requests/application-upsert-
 import { ApplicationResponseDto } from '../dto/responses/application-response.dto';
 import { AuditLogService } from './audit-log.service';
 import { ApplicationTokenService } from './application-token.service';
-import { PublicMediaUrlService } from './public-media-url.service';
 
 @Injectable()
 export class AdminApplicationService {
@@ -18,7 +17,6 @@ export class AdminApplicationService {
     private readonly applicationRepo: Repository<ApplicationEntity>,
     private readonly auditLog: AuditLogService,
     private readonly applicationTokenService: ApplicationTokenService,
-    private readonly publicMediaUrlService: PublicMediaUrlService,
   ) {}
 
   private mapApplication(application: ApplicationEntity, rawToken?: string | null): ApplicationResponseDto {
@@ -40,7 +38,6 @@ export class AdminApplicationService {
       application.mediaBaseUrlOverride ?? null,
       application.tags ?? null,
       application.seo ?? null,
-      this.normalizeGalleryUrls(application) ?? null,
       application.createdAt.toISOString(),
       application.updatedAt.toISOString(),
     );
@@ -87,7 +84,6 @@ export class AdminApplicationService {
       mediaBaseUrlOverride: request.mediaBaseUrlOverride?.trim() || null,
       tags: this.normalizeTags(request.tags),
       seo: request.seo ? (request.seo as Record<string, unknown>) : null,
-      gallery: request.gallery ? (request.gallery as unknown as Record<string, unknown>[]) : null,
     });
     const saved = await this.applicationRepo.save(application);
     await this.auditLog.record({
@@ -114,9 +110,6 @@ export class AdminApplicationService {
     application.mediaBaseUrlOverride = request.mediaBaseUrlOverride?.trim() || null;
     application.tags = this.normalizeTags(request.tags);
     application.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
-    application.gallery = request.gallery
-      ? (request.gallery as unknown as Record<string, unknown>[])
-      : null;
 
     let rawToken: string | null = null;
     if (request.apiToken?.trim()) {
@@ -230,16 +223,4 @@ export class AdminApplicationService {
     return `${token.slice(0, 6)}...${token.slice(-4)}`;
   }
 
-  private normalizeGalleryUrls(application: ApplicationEntity): Record<string, unknown>[] | null {
-    if (!application.gallery) {
-      return null;
-    }
-    return application.gallery.map((item) => {
-      const record = { ...(item as Record<string, unknown>) };
-      if (typeof record.url === 'string') {
-        record.url = this.publicMediaUrlService.toPublicMediaUrl(application, record.url);
-      }
-      return record;
-    });
-  }
 }

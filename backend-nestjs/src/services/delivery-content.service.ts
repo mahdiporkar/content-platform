@@ -6,13 +6,13 @@ import { ContentType } from '../common/content-type.enum';
 import { ArticleEntity } from '../entities/article.entity';
 import { PostEntity } from '../entities/post.entity';
 import { VideoEntity } from '../entities/video.entity';
+import { GalleryEntity } from '../entities/gallery.entity';
 import { ImageEntity } from '../entities/image.entity';
 import { CollectionEntity } from '../entities/collection.entity';
 import { CollectionItemEntity } from '../entities/collection-item.entity';
 import { ViewEventEntity } from '../entities/view-event.entity';
 import { DeliveryContentResponseDto } from '../dto/responses/delivery-content-response.dto';
 import { DeliveryCollectionResponseDto } from '../dto/responses/delivery-collection-response.dto';
-import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
@@ -28,6 +28,8 @@ export class DeliveryContentService {
     private readonly postRepo: Repository<PostEntity>,
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
+    @InjectRepository(GalleryEntity)
+    private readonly galleryRepo: Repository<GalleryEntity>,
     @InjectRepository(ImageEntity)
     private readonly imageRepo: Repository<ImageEntity>,
     @InjectRepository(CollectionEntity)
@@ -78,6 +80,9 @@ export class DeliveryContentService {
         [ContentType.VIDEO]: items
           .filter((item) => item.contentType === ContentType.VIDEO)
           .map((item) => item.contentId),
+        [ContentType.GALLERY]: items
+          .filter((item) => item.contentType === ContentType.GALLERY)
+          .map((item) => item.contentId),
         [ContentType.IMAGE]: items
           .filter((item) => item.contentType === ContentType.IMAGE)
           .map((item) => item.contentId),
@@ -114,6 +119,16 @@ export class DeliveryContentService {
         pageSize,
       );
     }
+    if (type === ContentType.GALLERY) {
+      const [items, total] = await this.queryGalleries(params.application.id, tags, locale, filteredIds?.gallery, pageNumber, pageSize);
+      return new PageResponseDto(
+        items.map((gallery) => this.mapGallery(params.application, gallery)),
+        total,
+        Math.ceil(total / pageSize),
+        pageNumber,
+        pageSize,
+      );
+    }
     if (type === ContentType.IMAGE) {
       const [items, total] = await this.queryImages(params.application.id, tags, locale, filteredIds?.image, pageNumber, pageSize);
       return new PageResponseDto(
@@ -125,10 +140,11 @@ export class DeliveryContentService {
       );
     }
 
-    const [posts, articles, videos, images] = await Promise.all([
+    const [posts, articles, videos, galleries, images] = await Promise.all([
       this.queryPosts(params.application.id, tags, locale, filteredIds?.post, pageNumber, pageSize),
       this.queryArticles(params.application.id, tags, locale, filteredIds?.article, pageNumber, pageSize),
       this.queryVideos(params.application.id, tags, locale, filteredIds?.video, pageNumber, pageSize),
+      this.queryGalleries(params.application.id, tags, locale, filteredIds?.gallery, pageNumber, pageSize),
       this.queryImages(params.application.id, tags, locale, filteredIds?.image, pageNumber, pageSize),
     ]);
 
@@ -136,9 +152,10 @@ export class DeliveryContentService {
       ...posts[0].map((post) => this.mapPost(params.application, post)),
       ...articles[0].map((article) => this.mapArticle(params.application, article)),
       ...videos[0].map((video) => this.mapVideo(params.application, video)),
+      ...galleries[0].map((gallery) => this.mapGallery(params.application, gallery)),
       ...images[0].map((image) => this.mapImage(params.application, image)),
     ];
-    const total = posts[1] + articles[1] + videos[1] + images[1];
+    const total = posts[1] + articles[1] + videos[1] + galleries[1] + images[1];
 
     return new PageResponseDto(allItems, total, Math.ceil(total / pageSize), pageNumber, pageSize);
   }
@@ -159,6 +176,7 @@ export class DeliveryContentService {
       post: items.filter((item) => item.contentType === ContentType.POST).map((item) => item.contentId),
       article: items.filter((item) => item.contentType === ContentType.ARTICLE).map((item) => item.contentId),
       video: items.filter((item) => item.contentType === ContentType.VIDEO).map((item) => item.contentId),
+      gallery: items.filter((item) => item.contentType === ContentType.GALLERY).map((item) => item.contentId),
       image: items.filter((item) => item.contentType === ContentType.IMAGE).map((item) => item.contentId),
     };
 
@@ -192,6 +210,17 @@ export class DeliveryContentService {
       sorted.forEach((video) => {
         if (!localeValue || video.locale === localeValue) {
           mapped.push(this.mapVideo(application, video));
+        }
+      });
+    }
+    if (grouped.gallery.length > 0) {
+      const galleries = await this.galleryRepo.find({ where: { id: In(grouped.gallery), status: ContentStatus.PUBLISHED } });
+      const sorted = grouped.gallery
+        .map((id) => galleries.find((entry) => entry.id === id))
+        .filter(Boolean) as GalleryEntity[];
+      sorted.forEach((gallery) => {
+        if (!localeValue || gallery.locale === localeValue) {
+          mapped.push(this.mapGallery(application, gallery));
         }
       });
     }
@@ -250,40 +279,38 @@ export class DeliveryContentService {
     return this.mapVideo(application, video);
   }
 
-  async listGallery(
-    application: ApplicationEntity,
-    page: number,
-    size: number,
-  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
-    const gallery = (application.gallery || [])
-      .filter((item) => typeof item.url === 'string' && item.url.trim().length > 0)
-      .map(
-        (item) =>
-          new GalleryImageResponseDto(
-            this.publicMediaUrlService.toPublicMediaUrl(application, item.url as string) || '',
-            this.toOptionalString(item.alt),
-            this.toOptionalString(item.caption),
-          ),
-      );
-    const pageNumber = Math.max(0, page);
-    const pageSize = Math.max(1, size);
-    const start = pageNumber * pageSize;
-    const paged = gallery.slice(start, start + pageSize);
-    return new PageResponseDto(paged, gallery.length, Math.ceil(gallery.length / pageSize), pageNumber, pageSize);
+  async getGalleryBySlug(application: ApplicationEntity, slug: string): Promise<DeliveryContentResponseDto> {
+    const gallery = await this.galleryRepo.findOne({
+      where: { applicationId: application.id, slug, status: ContentStatus.PUBLISHED },
+    });
+    if (!gallery) {
+      throw new NotFoundException('Gallery not found.');
+    }
+    return this.mapGallery(application, gallery);
   }
 
-  async getGalleryItem(application: ApplicationEntity, index: number): Promise<GalleryImageResponseDto> {
-    const gallery = (application.gallery || []).filter(
-      (item) => typeof item.url === 'string' && item.url.trim().length > 0,
+  async listGallery(
+    application: ApplicationEntity,
+    locale: string | undefined,
+    page: number,
+    size: number,
+  ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
+    const pageNumber = Math.max(0, page);
+    const pageSize = Math.max(1, size);
+    const [items, total] = await this.queryGalleries(
+      application.id,
+      [],
+      locale?.trim() || null,
+      null,
+      pageNumber,
+      pageSize,
     );
-    if (index < 0 || index >= gallery.length) {
-      throw new NotFoundException('Gallery item not found.');
-    }
-    const item = gallery[index];
-    return new GalleryImageResponseDto(
-      this.publicMediaUrlService.toPublicMediaUrl(application, item.url as string) || '',
-      this.toOptionalString(item.alt),
-      this.toOptionalString(item.caption),
+    return new PageResponseDto(
+      items.map((gallery) => this.mapGallery(application, gallery)),
+      total,
+      Math.ceil(total / pageSize),
+      pageNumber,
+      pageSize,
     );
   }
 
@@ -294,6 +321,8 @@ export class DeliveryContentService {
       await this.articleRepo.increment({ id: contentId }, 'viewCount', 1);
     } else if (contentType === ContentType.VIDEO) {
       await this.videoRepo.increment({ id: contentId }, 'viewCount', 1);
+    } else if (contentType === ContentType.GALLERY) {
+      await this.galleryRepo.increment({ id: contentId }, 'viewCount', 1);
     } else if (contentType === ContentType.IMAGE) {
       await this.imageRepo.increment({ id: contentId }, 'viewCount', 1);
     }
@@ -380,6 +409,31 @@ export class DeliveryContentService {
       qb.andWhere('video.id IN (:...ids)', { ids });
     }
     qb.orderBy('video.publishedAt', 'DESC').addOrderBy('video.createdAt', 'DESC');
+    qb.skip(pageNumber * pageSize).take(pageSize);
+    return await qb.getManyAndCount();
+  }
+
+  private async queryGalleries(
+    applicationId: string,
+    tags: string[],
+    locale: string | null,
+    ids: string[] | null | undefined,
+    pageNumber: number,
+    pageSize: number,
+  ): Promise<[GalleryEntity[], number]> {
+    const qb = this.galleryRepo.createQueryBuilder('gallery');
+    qb.where('gallery.applicationId = :applicationId', { applicationId })
+      .andWhere('gallery.status = :status', { status: ContentStatus.PUBLISHED });
+    if (locale) {
+      qb.andWhere('gallery.locale = :locale', { locale });
+    }
+    if (tags.length > 0) {
+      qb.andWhere('gallery.tags && ARRAY[:...tags]', { tags });
+    }
+    if (ids && ids.length > 0) {
+      qb.andWhere('gallery.id IN (:...ids)', { ids });
+    }
+    qb.orderBy('gallery.publishedAt', 'DESC').addOrderBy('gallery.createdAt', 'DESC');
     qb.skip(pageNumber * pageSize).take(pageSize);
     return await qb.getManyAndCount();
   }
@@ -496,6 +550,46 @@ export class DeliveryContentService {
       video.altText ?? null,
       video.seo ?? null,
       null,
+    );
+  }
+
+  private mapGallery(application: ApplicationEntity, gallery: GalleryEntity): DeliveryContentResponseDto {
+    const firstImage = (gallery.gallery || []).find((item) => typeof item.url === 'string' && item.url.trim().length > 0);
+    const mediaUrl = firstImage
+      ? this.publicMediaUrlService.toPublicMediaUrl(application, firstImage.url as string)
+      : null;
+    return new DeliveryContentResponseDto(
+      gallery.id,
+      gallery.applicationId,
+      ContentType.GALLERY,
+      gallery.title,
+      gallery.description ?? null,
+      gallery.locale ?? null,
+      gallery.tags ?? null,
+      gallery.status,
+      gallery.slug,
+      gallery.publishedAt ? gallery.publishedAt.toISOString() : null,
+      gallery.scheduledAt ? gallery.scheduledAt.toISOString() : null,
+      gallery.viewCount ?? 0,
+      null,
+      mediaUrl,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      this.toOptionalString(firstImage?.alt) ?? null,
+      gallery.seo ?? null,
+      JSON.stringify(
+        (gallery.gallery || []).map((item) => ({
+          ...item,
+          url:
+            typeof item.url === 'string'
+              ? this.publicMediaUrlService.toPublicMediaUrl(application, item.url)
+              : item.url,
+        })),
+      ),
     );
   }
 

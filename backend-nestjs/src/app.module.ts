@@ -6,6 +6,7 @@ import { AuthController } from './controllers/auth.controller';
 import { AdminApplicationController } from './controllers/admin-application.controller';
 import { AdminPostController } from './controllers/admin-post.controller';
 import { AdminArticleController } from './controllers/admin-article.controller';
+import { AdminGalleryController } from './controllers/admin-gallery.controller';
 import { AdminVideoController } from './controllers/admin-video.controller';
 import { AdminMediaController } from './controllers/admin-media.controller';
 import { AdminMediaLibraryController } from './controllers/admin-media-library.controller';
@@ -24,6 +25,7 @@ import { AuthService } from './services/auth.service';
 import { AdminApplicationService } from './services/admin-application.service';
 import { AdminPostService } from './services/admin-post.service';
 import { AdminArticleService } from './services/admin-article.service';
+import { AdminGalleryService } from './services/admin-gallery.service';
 import { AdminVideoService } from './services/admin-video.service';
 import { AdminImageService } from './services/admin-image.service';
 import { AdminUserService } from './services/admin-user.service';
@@ -32,6 +34,7 @@ import { AdminUserEntity } from './entities/admin-user.entity';
 import { AdminUserApplicationEntity } from './entities/admin-user-application.entity';
 import { PostEntity } from './entities/post.entity';
 import { ArticleEntity } from './entities/article.entity';
+import { GalleryEntity } from './entities/gallery.entity';
 import { VideoEntity } from './entities/video.entity';
 import { ImageEntity } from './entities/image.entity';
 import { CollectionEntity } from './entities/collection.entity';
@@ -103,6 +106,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
             AdminUserApplicationEntity,
             PostEntity,
             ArticleEntity,
+            GalleryEntity,
             VideoEntity,
             ImageEntity,
             CollectionEntity,
@@ -130,6 +134,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
       AdminUserApplicationEntity,
       PostEntity,
       ArticleEntity,
+      GalleryEntity,
       VideoEntity,
       ImageEntity,
       CollectionEntity,
@@ -156,6 +161,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
     AdminAppCollectionController,
     AdminPostController,
     AdminArticleController,
+    AdminGalleryController,
     AdminVideoController,
     AdminImageController,
     AdminMediaController,
@@ -182,6 +188,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
     AdminCollectionService,
     AdminPostService,
     AdminArticleService,
+    AdminGalleryService,
     AdminVideoService,
     AdminImageService,
     AdminUserService,

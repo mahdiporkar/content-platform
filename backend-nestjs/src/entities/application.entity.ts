@@ -67,9 +67,6 @@ export class ApplicationEntity {
   @Column({ type: 'jsonb', nullable: true })
   seo!: Record<string, unknown> | null;
 
-  @Column({ type: 'jsonb', nullable: true })
-  gallery!: Record<string, unknown>[] | null;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

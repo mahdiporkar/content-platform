@@ -35,7 +35,6 @@ export type Application = {
   mediaBaseUrlOverride?: string | null;
   tags?: string[] | null;
   seo?: SeoMeta | null;
-  gallery?: GalleryImage[] | null;
   apiToken?: string | null;
   tokenCreatedAt?: string | null;
   lastUsedAt?: string | null;
@@ -90,6 +89,24 @@ export type Article = {
   publishedAt?: string | null;
   scheduledAt?: string | null;
   readingTimeMinutes?: number;
+  viewCount?: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GalleryContent = {
+  id: string;
+  applicationId: string;
+  title: string;
+  description?: string | null;
+  slug: string;
+  locale?: string | null;
+  tags?: string[] | null;
+  seo?: SeoMeta | null;
+  gallery?: GalleryImage[] | null;
+  status: ContentStatus;
+  publishedAt?: string | null;
+  scheduledAt?: string | null;
   viewCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -273,6 +290,7 @@ export type AdminUser = {
   servicePermissions: (
     | "posts.manage"
     | "articles.manage"
+    | "galleries.manage"
     | "images.manage"
     | "videos.manage"
     | "collections.manage"

@@ -14,6 +14,8 @@ import { PostsListPage } from "./features/posts/PostsListPage";
 import { PostEditorPage } from "./features/posts/PostEditorPage";
 import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
+import { GalleriesListPage } from "./features/galleries/GalleriesListPage";
+import { GalleryEditorPage } from "./features/galleries/GalleryEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
 import { VideoEditorPage } from "./features/videos/VideoEditorPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
@@ -95,6 +97,9 @@ const LocalizedAdminApp = () => {
               <Route path="articles" element={<ArticlesListPage />} />
               <Route path="articles/new" element={<ArticleEditorPage mode="create" />} />
               <Route path="articles/:id" element={<ArticleEditorPage mode="edit" />} />
+              <Route path="galleries" element={<GalleriesListPage />} />
+              <Route path="galleries/new" element={<GalleryEditorPage mode="create" />} />
+              <Route path="galleries/:id" element={<GalleryEditorPage mode="edit" />} />
               <Route path="videos" element={<VideoListPage />} />
               <Route path="videos/:id" element={<VideoEditorPage />} />
               <Route path="videos/upload" element={<VideoUploadPage />} />

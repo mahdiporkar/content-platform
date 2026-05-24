@@ -17,7 +17,6 @@ export class ApplicationResponseDto {
     public mediaBaseUrlOverride: string | null,
     public tags: string[] | null,
     public seo: Record<string, unknown> | null,
-    public gallery: Record<string, unknown>[] | null,
     public createdAt: string,
     public updatedAt: string,
   ) {}

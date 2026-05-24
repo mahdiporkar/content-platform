@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Form, Input, Select, Space, Typography, message } from "antd";
 import client from "../../api/client";
-import { Application, GalleryImage, SeoMeta } from "../../types";
+import { Application, SeoMeta } from "../../types";
 
 type Mode = "create" | "edit";
 
@@ -40,7 +40,6 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
   const [apiToken, setApiToken] = useState(state?.application?.apiToken ?? "");
   const [tags, setTags] = useState<string[]>(state?.application?.tags ?? []);
   const [seo, setSeo] = useState<SeoMeta>(state?.application?.seo ?? {});
-  const [gallery, setGallery] = useState<GalleryImage[]>(state?.application?.gallery ?? []);
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -66,18 +65,6 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     setSeo((prev) => ({ ...prev, [key]: value }));
   };
 
-  const updateGallery = (index: number, patch: Partial<GalleryImage>) => {
-    setGallery((prev) => prev.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
-  };
-
-  const addGalleryItem = () => {
-    setGallery((prev) => [...prev, { url: "", alt: "", caption: "" }]);
-  };
-
-  const removeGalleryItem = (index: number) => {
-    setGallery((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
   const loadApplication = async (id: string) => {
     setLoading(true);
     try {
@@ -95,7 +82,6 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       setApiToken(response.data.apiToken ?? "");
       setTags(response.data.tags ?? []);
       setSeo(response.data.seo ?? {});
-      setGallery(response.data.gallery ?? []);
     } catch (error) {
       showRequestError(error, "Failed to load application.");
       navigate("/applications");
@@ -139,8 +125,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
           mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
           apiToken: apiToken.trim() || undefined,
           tags,
-          seo,
-          gallery
+          seo
         });
       } else if (params.id) {
         await client.put<Application>(`/api/v1/admin/applications/${params.id}`, {
@@ -155,8 +140,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
           mediaBaseUrlOverride: mediaBaseUrlOverride.trim() || undefined,
           apiToken: apiToken.trim() || undefined,
           tags,
-          seo,
-          gallery
+          seo
         });
       }
       navigate("/applications");
@@ -425,37 +409,6 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
               rows={4}
             />
           </Form.Item>
-        </Card>
-        <Card size="small" title="Image Gallery" style={{ marginBottom: 16 }}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            {gallery.map((item, index) => (
-              <Card key={`${item.url}-${index}`} size="small" style={{ background: "#fafafa" }}>
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Input
-                    placeholder="Image URL"
-                    value={item.url}
-                    onChange={(event) => updateGallery(index, { url: event.target.value })}
-                  />
-                  <Input
-                    placeholder="Alt text"
-                    value={item.alt ?? ""}
-                    onChange={(event) => updateGallery(index, { alt: event.target.value })}
-                  />
-                  <Input
-                    placeholder="Caption"
-                    value={item.caption ?? ""}
-                    onChange={(event) => updateGallery(index, { caption: event.target.value })}
-                  />
-                  <Button danger onClick={() => removeGalleryItem(index)}>
-                    Remove
-                  </Button>
-                </Space>
-              </Card>
-            ))}
-            <Button type="dashed" onClick={addGalleryItem}>
-              Add Image
-            </Button>
-          </Space>
         </Card>
         <Space>
           <Button type="primary" htmlType="submit" loading={loading} disabled={!name.trim()}>

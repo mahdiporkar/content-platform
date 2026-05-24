@@ -10,7 +10,6 @@ import { DeliveryContentResponseDto } from '../dto/responses/delivery-content-re
 import { DeliveryCollectionResponseDto } from '../dto/responses/delivery-collection-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
 import { ApplicationEntity } from '../entities/application.entity';
-import { GalleryImageResponseDto } from '../dto/responses/gallery-image-response.dto';
 import { ViewRateLimitService } from '../services/view-rate-limit.service';
 import { getClientIp } from '../common/client-ip';
 import { MediaAccessRequestDto } from '../dto/requests/media-access-request.dto';
@@ -101,20 +100,21 @@ export class DeliveryContentController {
     @Req() request: Request & { application?: ApplicationEntity },
     @Query('page') page = '0',
     @Query('size') size = '10',
-  ): Promise<PageResponseDto<GalleryImageResponseDto>> {
+    @Query('locale') locale?: string,
+  ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
     const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.listGallery(application, Number(page), Number(size));
+    return await this.deliveryService.listGallery(application, locale, Number(page), Number(size));
   }
 
-  @Get('gallery/:index')
+  @Get('gallery/:slug')
   async getGalleryItemFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
-    @Param('index') index: string,
-  ): Promise<GalleryImageResponseDto> {
+    @Param('slug') slug: string,
+  ): Promise<DeliveryContentResponseDto> {
     const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getGalleryItem(application, Number(index));
+    return await this.deliveryService.getGalleryBySlug(application, slug);
   }
 
   @Get('collections/:slug')

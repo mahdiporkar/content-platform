@@ -43,6 +43,7 @@ export const AppLayout = () => {
       servicePermissions.includes("images.manage") ||
       servicePermissions.includes("videos.manage") ||
       servicePermissions.includes("posts.manage") ||
+      servicePermissions.includes("galleries.manage") ||
       servicePermissions.includes("articles.manage")
     );
   }, [tokenPayload?.role, tokenPayload?.servicePermissions]);
@@ -90,6 +91,7 @@ export const AppLayout = () => {
     { key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") },
     { key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") },
     { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
+    { key: "galleries", icon: <PictureOutlined />, label: t("menu.galleries") },
     { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
     { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
     ...(canSeeMediaManagerMenu ? [{ key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") }] : []),

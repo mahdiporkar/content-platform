@@ -6,6 +6,6 @@ export class ViewEventRequestDto {
   contentId!: string;
 
   @IsNotEmpty()
-  @IsIn([ContentType.ARTICLE, ContentType.VIDEO, ContentType.IMAGE])
+  @IsIn([ContentType.ARTICLE, ContentType.VIDEO, ContentType.GALLERY, ContentType.IMAGE])
   contentType!: ContentType;
 }

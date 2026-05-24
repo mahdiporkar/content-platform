@@ -12,7 +12,8 @@ const systemPermissionOptions = [
 const servicePermissionOptions = [
   { value: "posts.manage", label: "Manage Posts" },
   { value: "articles.manage", label: "Manage Articles" },
-  { value: "images.manage", label: "Manage Gallery (Images)" },
+  { value: "galleries.manage", label: "Manage Galleries" },
+  { value: "images.manage", label: "Manage Images" },
   { value: "videos.manage", label: "Manage Videos" },
   { value: "collections.manage", label: "Manage Collections" },
   { value: "analytics.view", label: "View Analytics" }

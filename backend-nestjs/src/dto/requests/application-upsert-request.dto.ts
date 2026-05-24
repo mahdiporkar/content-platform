@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { GalleryImageDto } from './gallery-image.dto';
 import { SeoMetaDto } from './seo-meta.dto';
 import { ApplicationStatus, MediaPolicy } from '../../entities/application.entity';
 
@@ -59,9 +58,4 @@ export class ApplicationUpsertRequestDto {
   @Type(() => SeoMetaDto)
   seo?: SeoMetaDto;
 
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => GalleryImageDto)
-  gallery?: GalleryImageDto[];
 }

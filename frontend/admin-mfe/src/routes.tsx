@@ -7,6 +7,8 @@ import { PostsListPage } from "./features/posts/PostsListPage";
 import { PostEditorPage } from "./features/posts/PostEditorPage";
 import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
+import { GalleriesListPage } from "./features/galleries/GalleriesListPage";
+import { GalleryEditorPage } from "./features/galleries/GalleryEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
 import { VideoEditorPage } from "./features/videos/VideoEditorPage";
 import { VideoUploadPage } from "./features/videos/VideoUploadPage";
@@ -55,6 +57,9 @@ export const routes: RouteObject[] = [
       { path: "articles", element: <ArticlesListPage /> },
       { path: "articles/new", element: <ArticleEditorPage mode="create" /> },
       { path: "articles/:id", element: <ArticleEditorPage mode="edit" /> },
+      { path: "galleries", element: <GalleriesListPage /> },
+      { path: "galleries/new", element: <GalleryEditorPage mode="create" /> },
+      { path: "galleries/:id", element: <GalleryEditorPage mode="edit" /> },
       { path: "videos", element: <VideoListPage /> },
       { path: "videos/:id", element: <VideoEditorPage /> },
       { path: "videos/upload", element: <VideoUploadPage /> },
