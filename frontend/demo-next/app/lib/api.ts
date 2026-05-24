@@ -1,7 +1,12 @@
+import { cookies } from "next/headers";
+
 export const apiBaseUrl =
   process.env.CONTENT_PLATFORM_API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:3000";
+
+export const APPLICATION_ID_COOKIE = "content_platform_application_id";
+export const API_TOKEN_COOKIE = "content_platform_api_token";
 
 export type ApiAuth = {
   applicationId: string;
@@ -9,12 +14,17 @@ export type ApiAuth = {
 };
 
 export function getServerApiAuth(): ApiAuth {
-  const applicationId = process.env.CONTENT_PLATFORM_APPLICATION_ID?.trim();
-  const token = process.env.CONTENT_PLATFORM_API_TOKEN?.trim();
+  const cookieStore = cookies();
+  const applicationId =
+    cookieStore.get(APPLICATION_ID_COOKIE)?.value.trim() ||
+    process.env.CONTENT_PLATFORM_APPLICATION_ID?.trim();
+  const token =
+    cookieStore.get(API_TOKEN_COOKIE)?.value.trim() ||
+    process.env.CONTENT_PLATFORM_API_TOKEN?.trim();
 
   if (!applicationId || !token) {
     throw new Error(
-      "Missing CONTENT_PLATFORM_APPLICATION_ID or CONTENT_PLATFORM_API_TOKEN server environment variable."
+      "Missing content platform credentials. Configure them in /settings or set CONTENT_PLATFORM_APPLICATION_ID and CONTENT_PLATFORM_API_TOKEN on the server."
     );
   }
 

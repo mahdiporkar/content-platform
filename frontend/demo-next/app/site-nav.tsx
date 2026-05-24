@@ -8,6 +8,7 @@ export default function SiteNav() {
       <Link href="/gallery">Gallery</Link>
       <Link href="/photos">Photos</Link>
       <Link href="/videos">Videos</Link>
+      <Link href="/settings">Settings</Link>
     </nav>
   );
 }
