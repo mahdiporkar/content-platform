@@ -69,9 +69,20 @@ export const CollectionsListPage = () => {
       },
       { title: "Slug", dataIndex: "slug", width: "16%" },
       {
+        title: "Status",
+        dataIndex: "status",
+        width: "9%",
+        render: (value: string | undefined) => {
+          const color = value === "published" ? "green" : value === "archived" ? "red" : "default";
+          return <Tag color={color}>{value || "draft"}</Tag>;
+        }
+      },
+      { title: "Presentation", dataIndex: ["presentation", "type"], width: "10%", render: (value) => value || "list" },
+      { title: "Priority", dataIndex: "priority", width: "8%", render: (value) => value ?? 0 },
+      {
         title: "Allowed Types",
         dataIndex: "allowedTypes",
-        width: "20%",
+        width: "16%",
         render: (value: string[] | null | undefined) =>
           value && value.length > 0 ? (
             <Space wrap>
@@ -83,11 +94,11 @@ export const CollectionsListPage = () => {
             <Typography.Text type="secondary">All</Typography.Text>
           )
       },
-      { title: "Items", dataIndex: "itemsCount", width: "8%" },
+      { title: "Items", dataIndex: "itemsCount", width: "7%" },
       {
         title: "Visibility",
         dataIndex: "isPublic",
-        width: "10%",
+        width: "9%",
         render: (value: boolean | undefined) => (value === false ? <Tag color="orange">Private</Tag> : <Tag color="green">Public</Tag>)
       },
       { title: "Updated", dataIndex: "updatedAt", width: "14%", render: (value: string) => new Date(value).toLocaleString() },

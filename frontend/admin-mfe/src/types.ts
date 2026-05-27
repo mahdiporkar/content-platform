@@ -258,6 +258,32 @@ export type Collection = {
   allowedTypes?: string[] | null;
   maxItems?: number | null;
   isPublic?: boolean;
+  status?: "draft" | "published" | "archived";
+  priority?: number;
+  presentation?: {
+    type: "list" | "grid" | "slider" | "carousel" | "hero" | "banner";
+    config?: Record<string, unknown>;
+  } | null;
+  placement?: {
+    page?: string;
+    section?: string;
+    device?: "desktop" | "mobile" | "all";
+  } | null;
+  fallback?: {
+    enabled: boolean;
+    source?: "latest" | "popular";
+    limit?: number;
+  } | null;
+  audience?: {
+    locale?: string;
+    segment?: "guest" | "logged-in" | "vip" | string;
+  } | null;
+  metadata?: {
+    campaignKey?: string;
+    analyticsKey?: string;
+  } | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
   itemsCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -266,9 +292,35 @@ export type Collection = {
 export type CollectionItem = {
   id: string;
   collectionId: string;
-  contentType: "post" | "article" | "video" | "image";
-  contentId: string;
+  contentType: "post" | "article" | "video" | "gallery" | "image" | null;
+  contentId: string | null;
+  type?: "content" | "custom";
   position: number;
+  isActive?: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  display?: {
+    titleOverride?: string;
+    subtitleOverride?: string;
+    descriptionOverride?: string;
+    imageOverride?: string;
+    mobileImageOverride?: string;
+    videoOverride?: string;
+    badgeText?: string;
+    ctaLabel?: string;
+  } | null;
+  link?: {
+    type: "content" | "internal" | "external" | "none";
+    contentId?: string;
+    url?: string;
+    target?: "_blank" | "_self";
+    rel?: "nofollow" | "sponsored" | "noopener";
+    trackingKey?: string;
+  } | null;
+  metadata?: {
+    analyticsKey?: string;
+    campaignKey?: string;
+  } | null;
   title?: string | null;
   status?: ContentStatus | null;
   locale?: string | null;
@@ -276,6 +328,8 @@ export type CollectionItem = {
   slug?: string | null;
   thumbnailUrl?: string | null;
   publishedAt?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 };

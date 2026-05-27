@@ -35,6 +35,13 @@ export class DeliveryContentController {
     return await this.listContentForApplication(request, query);
   }
 
+  async listContent(
+    request: Request & { application?: ApplicationEntity },
+    query: Record<string, string | string[]> = {},
+  ): Promise<PageResponseDto<DeliveryContentResponseDto>> {
+    return await this.listContentForApplication(request, query);
+  }
+
   @Get('posts')
   async listPostsFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
@@ -132,6 +139,13 @@ export class DeliveryContentController {
   async trackViewFromHeaders(
     @Req() httpRequest: Request & { application?: ApplicationEntity },
     @Body() request: ViewEventRequestDto,
+  ): Promise<{ ok: boolean }> {
+    return await this.trackViewForApplication(httpRequest, request);
+  }
+
+  async trackView(
+    httpRequest: Request & { application?: ApplicationEntity },
+    request: ViewEventRequestDto,
   ): Promise<{ ok: boolean }> {
     return await this.trackViewForApplication(httpRequest, request);
   }

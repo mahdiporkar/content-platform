@@ -18,9 +18,26 @@ import { PostEntity } from '../entities/post.entity';
 import { ArticleEntity } from '../entities/article.entity';
 import { VideoEntity } from '../entities/video.entity';
 import { ImageEntity } from '../entities/image.entity';
+import { GalleryEntity } from '../entities/gallery.entity';
 import { BaseUrlService } from './base-url.service';
 import { ApplicationEntity } from '../entities/application.entity';
 import { PublicMediaUrlService } from './public-media-url.service';
+import {
+  CollectionAudience,
+  CollectionFallback,
+  CollectionFallbackSource,
+  CollectionItemDisplay,
+  CollectionItemLink,
+  CollectionItemLinkType,
+  CollectionItemMetadata,
+  CollectionItemType,
+  CollectionMetadata,
+  CollectionPlacement,
+  CollectionPlacementDevice,
+  CollectionPresentation,
+  CollectionPresentationType,
+  CollectionStatus,
+} from '../common/collection-types';
 
 type ContentSummary = {
   title: string | null;
@@ -45,6 +62,8 @@ export class AdminCollectionService {
     private readonly articleRepo: Repository<ArticleEntity>,
     @InjectRepository(VideoEntity)
     private readonly videoRepo: Repository<VideoEntity>,
+    @InjectRepository(GalleryEntity)
+    private readonly galleryRepo: Repository<GalleryEntity>,
     @InjectRepository(ImageEntity)
     private readonly imageRepo: Repository<ImageEntity>,
     @InjectRepository(ApplicationEntity)
@@ -72,6 +91,145 @@ export class AdminCollectionService {
     return normalized.length > 0 ? normalized : null;
   }
 
+  private normalizePresentation(presentation?: CollectionPresentation | null): CollectionPresentation {
+    if (!presentation) {
+      return { type: CollectionPresentationType.LIST };
+    }
+    const type = Object.values(CollectionPresentationType).includes(presentation.type)
+      ? presentation.type
+      : CollectionPresentationType.LIST;
+    return {
+      type,
+      config: presentation.config && typeof presentation.config === 'object' ? presentation.config : undefined,
+    };
+  }
+
+  private normalizePlacement(placement?: CollectionPlacement | null): CollectionPlacement | null {
+    if (!placement) {
+      return null;
+    }
+    return {
+      page: placement.page?.trim() || undefined,
+      section: placement.section?.trim() || undefined,
+      device: placement.device && Object.values(CollectionPlacementDevice).includes(placement.device)
+        ? placement.device
+        : CollectionPlacementDevice.ALL,
+    };
+  }
+
+  private normalizeFallback(fallback?: CollectionFallback | null): CollectionFallback {
+    if (!fallback) {
+      return { enabled: false };
+    }
+    return {
+      enabled: fallback.enabled === true,
+      source: fallback.source && Object.values(CollectionFallbackSource).includes(fallback.source) ? fallback.source : undefined,
+      limit: typeof fallback.limit === 'number' && fallback.limit > 0 ? Math.floor(fallback.limit) : undefined,
+    };
+  }
+
+  private normalizeAudience(audience?: CollectionAudience | null): CollectionAudience | null {
+    if (!audience) {
+      return null;
+    }
+    return {
+      locale: audience.locale?.trim() || undefined,
+      segment: audience.segment?.trim() || undefined,
+    };
+  }
+
+  private normalizeMetadata(metadata?: CollectionMetadata | null): CollectionMetadata | null {
+    if (!metadata) {
+      return null;
+    }
+    return {
+      campaignKey: metadata.campaignKey?.trim() || undefined,
+      analyticsKey: metadata.analyticsKey?.trim() || undefined,
+    };
+  }
+
+  private normalizeDisplay(display?: CollectionItemDisplay | null): CollectionItemDisplay | null {
+    if (!display) {
+      return null;
+    }
+    return {
+      titleOverride: display.titleOverride?.trim() || undefined,
+      subtitleOverride: display.subtitleOverride?.trim() || undefined,
+      descriptionOverride: display.descriptionOverride?.trim() || undefined,
+      imageOverride: display.imageOverride?.trim() || undefined,
+      mobileImageOverride: display.mobileImageOverride?.trim() || undefined,
+      videoOverride: display.videoOverride?.trim() || undefined,
+      badgeText: display.badgeText?.trim() || undefined,
+      ctaLabel: display.ctaLabel?.trim() || undefined,
+    };
+  }
+
+  private normalizeLink(link?: CollectionItemLink | null): CollectionItemLink {
+    if (!link) {
+      return { type: CollectionItemLinkType.NONE };
+    }
+    const type = Object.values(CollectionItemLinkType).includes(link.type) ? link.type : CollectionItemLinkType.NONE;
+    return {
+      type,
+      contentId: link.contentId?.trim() || undefined,
+      url: link.url?.trim() || undefined,
+      target: link.target === '_blank' || link.target === '_self' ? link.target : undefined,
+      rel: link.rel === 'nofollow' || link.rel === 'sponsored' || link.rel === 'noopener' ? link.rel : undefined,
+      trackingKey: link.trackingKey?.trim() || undefined,
+    };
+  }
+
+  private normalizeItemMetadata(metadata?: CollectionItemMetadata | null): CollectionItemMetadata | null {
+    if (!metadata) {
+      return null;
+    }
+    return {
+      campaignKey: metadata.campaignKey?.trim() || undefined,
+      analyticsKey: metadata.analyticsKey?.trim() || undefined,
+    };
+  }
+
+  private parseOptionalDate(value?: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('Invalid schedule date.');
+    }
+    return parsed;
+  }
+
+  private validateSchedule(startsAt: Date | null, endsAt: Date | null): void {
+    if (startsAt && endsAt && startsAt >= endsAt) {
+      throw new BadRequestException('startsAt must be before endsAt.');
+    }
+  }
+
+  private validateCustomDisplay(display: CollectionItemDisplay | null): void {
+    if (!display?.imageOverride && !display?.mobileImageOverride && !display?.titleOverride && !display?.videoOverride) {
+      throw new BadRequestException('Custom items must include titleOverride, imageOverride, mobileImageOverride, or videoOverride.');
+    }
+  }
+
+  private validateLink(link: CollectionItemLink): void {
+    if (link.type === CollectionItemLinkType.INTERNAL) {
+      if (!link.url?.startsWith('/')) {
+        throw new BadRequestException('Internal links must use a relative URL.');
+      }
+      return;
+    }
+    if (link.type === CollectionItemLinkType.EXTERNAL) {
+      if (!link.url || !/^https?:\/\//.test(link.url)) {
+        throw new BadRequestException('External links must use an absolute http(s) URL.');
+      }
+      return;
+    }
+    if (link.type === CollectionItemLinkType.CONTENT && !link.contentId) {
+      throw new BadRequestException('Content links must include contentId.');
+    }
+  }
+
   private mapCollection(collection: CollectionEntity, itemsCount = 0): CollectionResponseDto {
     return new CollectionResponseDto(
       collection.id,
@@ -82,6 +240,15 @@ export class AdminCollectionService {
       collection.allowedTypes ?? null,
       collection.maxItems ?? null,
       collection.isPublic,
+      collection.status ?? CollectionStatus.DRAFT,
+      collection.priority ?? 0,
+      collection.presentation ?? { type: CollectionPresentationType.LIST },
+      collection.placement ?? null,
+      collection.fallback ?? { enabled: false },
+      collection.audience ?? null,
+      collection.metadata ?? null,
+      collection.createdBy ?? null,
+      collection.updatedBy ?? null,
       itemsCount,
       collection.createdAt.toISOString(),
       collection.updatedAt.toISOString(),
@@ -94,7 +261,14 @@ export class AdminCollectionService {
       item.collectionId,
       item.contentType,
       item.contentId,
+      item.type ?? CollectionItemType.CONTENT,
       item.position,
+      item.isActive ?? true,
+      item.startsAt ? item.startsAt.toISOString() : null,
+      item.endsAt ? item.endsAt.toISOString() : null,
+      item.display ?? null,
+      item.link ?? { type: CollectionItemLinkType.NONE },
+      item.metadata ?? null,
       summary?.title ?? null,
       summary?.status ?? null,
       summary?.locale ?? null,
@@ -102,6 +276,8 @@ export class AdminCollectionService {
       summary?.slug ?? null,
       summary?.thumbnailUrl ?? null,
       summary?.publishedAt ?? null,
+      item.createdBy ?? null,
+      item.updatedBy ?? null,
       item.createdAt.toISOString(),
       item.updatedAt.toISOString(),
     );
@@ -119,6 +295,17 @@ export class AdminCollectionService {
     application: ApplicationEntity,
     item: Pick<CollectionItemEntity, 'contentType' | 'contentId'>,
   ): Promise<ContentSummary> {
+    if (!item.contentType || !item.contentId) {
+      return {
+        title: null,
+        status: null,
+        locale: null,
+        tags: null,
+        slug: null,
+        thumbnailUrl: null,
+        publishedAt: null,
+      };
+    }
     if (item.contentType === ContentType.POST) {
       const post = await this.postRepo.findOne({ where: { id: item.contentId, applicationId: application.id } });
       return {
@@ -161,6 +348,22 @@ export class AdminCollectionService {
         publishedAt: video?.publishedAt ? video.publishedAt.toISOString() : null,
       };
     }
+    if (item.contentType === ContentType.GALLERY) {
+      const gallery = await this.galleryRepo.findOne({ where: { id: item.contentId, applicationId: application.id } });
+      const firstImage = (gallery?.gallery || []).find((entry) => typeof entry.url === 'string' && entry.url.trim());
+      return {
+        title: gallery?.title ?? null,
+        status: gallery?.status ?? null,
+        locale: gallery?.locale ?? null,
+        tags: gallery?.tags ?? null,
+        slug: gallery?.slug ?? null,
+        thumbnailUrl:
+          firstImage && typeof firstImage.url === 'string'
+            ? this.publicMediaUrlService.toPublicMediaUrl(application, firstImage.url)
+            : null,
+        publishedAt: gallery?.publishedAt ? gallery.publishedAt.toISOString() : null,
+      };
+    }
     const image = await this.imageRepo.findOne({ where: { id: item.contentId, applicationId: application.id } });
     return {
       title: image?.title ?? null,
@@ -196,6 +399,13 @@ export class AdminCollectionService {
       const video = await this.videoRepo.findOne({ where: { id: contentId, applicationId } });
       if (!video) {
         throw new BadRequestException('Selected video does not exist for this application.');
+      }
+      return;
+    }
+    if (contentType === ContentType.GALLERY) {
+      const gallery = await this.galleryRepo.findOne({ where: { id: contentId, applicationId } });
+      if (!gallery) {
+        throw new BadRequestException('Selected gallery does not exist for this application.');
       }
       return;
     }
@@ -274,6 +484,15 @@ export class AdminCollectionService {
       allowedTypes: this.normalizeAllowedTypes(request.allowedTypes),
       maxItems: request.maxItems ?? null,
       isPublic: request.isPublic ?? true,
+      status: request.status ?? CollectionStatus.DRAFT,
+      priority: request.priority ?? 0,
+      presentation: this.normalizePresentation(request.presentation),
+      placement: this.normalizePlacement(request.placement),
+      fallback: this.normalizeFallback(request.fallback),
+      audience: this.normalizeAudience(request.audience),
+      metadata: this.normalizeMetadata(request.metadata),
+      createdBy: null,
+      updatedBy: null,
     });
     try {
       const saved = await this.collectionRepo.save(collection);
@@ -311,6 +530,13 @@ export class AdminCollectionService {
     collection.allowedTypes = this.normalizeAllowedTypes(request.allowedTypes);
     collection.maxItems = request.maxItems ?? null;
     collection.isPublic = request.isPublic ?? collection.isPublic;
+    collection.status = request.status ?? collection.status ?? CollectionStatus.DRAFT;
+    collection.priority = request.priority ?? collection.priority ?? 0;
+    collection.presentation = this.normalizePresentation(request.presentation ?? collection.presentation);
+    collection.placement = request.placement === undefined ? collection.placement ?? null : this.normalizePlacement(request.placement);
+    collection.fallback = this.normalizeFallback(request.fallback ?? collection.fallback);
+    collection.audience = request.audience === undefined ? collection.audience ?? null : this.normalizeAudience(request.audience);
+    collection.metadata = request.metadata === undefined ? collection.metadata ?? null : this.normalizeMetadata(request.metadata);
     try {
       const saved = await this.collectionRepo.save(collection);
       const count = await this.itemRepo.count({ where: { collectionId: saved.id } });
@@ -359,10 +585,28 @@ export class AdminCollectionService {
     request: CollectionItemAddRequestDto,
   ): Promise<CollectionItemResponseDto> {
     const collection = await this.getCollectionForApplication(applicationId, collectionId);
-    if (collection.allowedTypes && !collection.allowedTypes.includes(request.contentType)) {
-      throw new BadRequestException('Content type is not allowed for this collection.');
+    const itemType = request.type ?? CollectionItemType.CONTENT;
+    const contentType = request.contentType ?? null;
+    const contentId = request.contentId?.trim() || null;
+    const display = this.normalizeDisplay(request.display);
+    const link = this.normalizeLink(request.link);
+    const metadata = this.normalizeItemMetadata(request.metadata);
+    const startsAt = this.parseOptionalDate(request.startsAt);
+    const endsAt = this.parseOptionalDate(request.endsAt);
+    this.validateSchedule(startsAt, endsAt);
+    this.validateLink(link);
+
+    if (itemType === CollectionItemType.CONTENT) {
+      if (!contentType || !contentId) {
+        throw new BadRequestException('Content items require contentType and contentId.');
+      }
+      if (collection.allowedTypes && !collection.allowedTypes.includes(contentType)) {
+        throw new BadRequestException('Content type is not allowed for this collection.');
+      }
+      await this.validateContentOwnership(applicationId, contentType, contentId);
+    } else {
+      this.validateCustomDisplay(display);
     }
-    await this.validateContentOwnership(applicationId, request.contentType, request.contentId);
     const maxItems = collection.maxItems ?? null;
     const created = await this.dataSource.transaction(async (manager) => {
       const transactionalRepo = manager.getRepository(CollectionItemEntity);
@@ -382,9 +626,18 @@ export class AdminCollectionService {
       const item = transactionalRepo.create({
         id: uuidv4(),
         collectionId,
-        contentType: request.contentType,
-        contentId: request.contentId.trim(),
+        contentType,
+        contentId,
+        type: itemType,
         position: newPosition,
+        isActive: request.isActive ?? true,
+        startsAt,
+        endsAt,
+        display,
+        link,
+        metadata,
+        createdBy: null,
+        updatedBy: null,
       });
       try {
         return await transactionalRepo.save(item);
@@ -403,6 +656,7 @@ export class AdminCollectionService {
         itemId: created.id,
         contentType: created.contentType,
         contentId: created.contentId,
+        type: created.type,
       },
     });
     const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
@@ -413,15 +667,55 @@ export class AdminCollectionService {
     return this.mapItem(created, summary);
   }
 
+  async updateItemForApplication(
+    applicationId: string,
+    collectionId: string,
+    itemId: string,
+    request: CollectionItemAddRequestDto,
+  ): Promise<CollectionItemResponseDto> {
+    await this.getCollectionForApplication(applicationId, collectionId);
+    const item = await this.itemRepo.findOne({ where: { id: itemId, collectionId } });
+    if (!item) {
+      throw new NotFoundException('Collection item not found.');
+    }
+    const display = request.display === undefined ? item.display : this.normalizeDisplay(request.display);
+    const link = request.link === undefined ? item.link ?? { type: CollectionItemLinkType.NONE } : this.normalizeLink(request.link);
+    const startsAt = request.startsAt === undefined ? item.startsAt : this.parseOptionalDate(request.startsAt);
+    const endsAt = request.endsAt === undefined ? item.endsAt : this.parseOptionalDate(request.endsAt);
+    this.validateSchedule(startsAt, endsAt);
+    this.validateLink(link);
+    if ((item.type ?? CollectionItemType.CONTENT) === CollectionItemType.CUSTOM) {
+      this.validateCustomDisplay(display);
+    }
+    item.isActive = request.isActive ?? item.isActive;
+    item.startsAt = startsAt;
+    item.endsAt = endsAt;
+    item.display = display;
+    item.link = link;
+    item.metadata = request.metadata === undefined ? item.metadata : this.normalizeItemMetadata(request.metadata);
+    item.updatedBy = null;
+    const saved = await this.itemRepo.save(item);
+    const application = await this.applicationRepo.findOne({ where: { id: applicationId } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    const summary = await this.resolveSummary(application, saved);
+    return this.mapItem(saved, summary);
+  }
+
   async removeItemByContentForApplication(
     applicationId: string,
     collectionId: string,
     request: CollectionItemRemoveRequestDto,
   ): Promise<void> {
     await this.getCollectionForApplication(applicationId, collectionId);
-    const existing = await this.itemRepo.findOne({
-      where: { collectionId, contentId: request.contentId, contentType: request.contentType },
-    });
+    const existing = request.itemId
+      ? await this.itemRepo.findOne({ where: { id: request.itemId, collectionId } })
+      : request.contentId && request.contentType
+        ? await this.itemRepo.findOne({
+            where: { collectionId, contentId: request.contentId, contentType: request.contentType },
+          })
+        : null;
     if (!existing) {
       throw new NotFoundException('Collection item not found.');
     }
@@ -431,7 +725,7 @@ export class AdminCollectionService {
       action: 'collection.item.remove',
       entityType: 'collection',
       entityId: collectionId,
-      metadata: { contentType: request.contentType, contentId: request.contentId },
+      metadata: { itemId: existing.id, contentType: existing.contentType, contentId: existing.contentId },
     });
   }
 
@@ -456,8 +750,7 @@ export class AdminCollectionService {
         }
         const positions = new Set<number>();
         for (const entry of requestedByItem) {
-          const key = `${entry.contentType}:${entry.contentId}`;
-          const found = keyed.get(key);
+          const found = entry.itemId ? byId.get(entry.itemId) : keyed.get(`${entry.contentType}:${entry.contentId}`);
           if (!found) {
             throw new BadRequestException('Reorder request contains unknown content.');
           }
@@ -555,8 +848,7 @@ export class AdminCollectionService {
       throw new NotFoundException('Collection item not found.');
     }
     await this.removeItemByContentForApplication(collection.applicationId, collectionId, {
-      contentType: existing.contentType,
-      contentId: existing.contentId,
+      itemId: existing.id,
     });
   }
 

@@ -105,6 +105,18 @@ export class AdminAppCollectionController {
     return { ok: true };
   }
 
+  @Patch(':collectionId/items/item/:itemId')
+  async updateItem(
+    @Req() request: Request,
+    @Param('appId') appId: string,
+    @Param('collectionId') collectionId: string,
+    @Param('itemId') itemId: string,
+    @Body() body: CollectionItemAddRequestDto,
+  ): Promise<CollectionItemResponseDto> {
+    this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
+    return await this.collectionService.updateItemForApplication(appId, collectionId, itemId, body);
+  }
+
   @Patch(':collectionId/items/reorder')
   async reorder(
     @Req() request: Request,

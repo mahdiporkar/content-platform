@@ -4,12 +4,16 @@ import { ContentType } from '../../common/content-type.enum';
 
 class CollectionReorderItemDto {
   @IsString()
-  @IsNotEmpty()
-  contentId!: string;
+  @IsOptional()
+  contentId?: string;
 
   @IsString()
-  @IsNotEmpty()
-  contentType!: ContentType;
+  @IsOptional()
+  contentType?: ContentType;
+
+  @IsString()
+  @IsOptional()
+  itemId?: string;
 
   @IsInt()
   @Min(1)

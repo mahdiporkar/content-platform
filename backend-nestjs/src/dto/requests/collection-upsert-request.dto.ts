@@ -1,5 +1,13 @@
-import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Min } from 'class-validator';
 import { ContentType } from '../../common/content-type.enum';
+import {
+  CollectionAudience,
+  CollectionFallback,
+  CollectionMetadata,
+  CollectionPlacement,
+  CollectionPresentation,
+  CollectionStatus,
+} from '../../common/collection-types';
 
 export class CollectionUpsertRequestDto {
   @IsOptional()
@@ -23,10 +31,40 @@ export class CollectionUpsertRequestDto {
   allowedTypes?: ContentType[];
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   maxItems?: number;
 
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
+
+  @IsOptional()
+  @IsEnum(CollectionStatus)
+  status?: CollectionStatus;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  priority?: number;
+
+  @IsOptional()
+  @IsObject()
+  presentation?: CollectionPresentation | null;
+
+  @IsOptional()
+  @IsObject()
+  placement?: CollectionPlacement | null;
+
+  @IsOptional()
+  @IsObject()
+  fallback?: CollectionFallback | null;
+
+  @IsOptional()
+  @IsObject()
+  audience?: CollectionAudience | null;
+
+  @IsOptional()
+  @IsObject()
+  metadata?: CollectionMetadata | null;
 }
