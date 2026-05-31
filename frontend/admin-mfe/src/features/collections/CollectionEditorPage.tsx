@@ -9,6 +9,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Segmented,
   Select,
   Space,
   Switch,
@@ -19,7 +20,8 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
-import { Collection, CollectionItem, ContentStatus, PageResponse } from "../../types";
+import { MediaPickerModal } from "../../components/MediaPickerModal";
+import { Collection, CollectionItem, ContentStatus, MediaAsset, PageResponse } from "../../types";
 import { useTenant } from "../../app/tenant";
 
 type Mode = "create" | "edit";
@@ -35,6 +37,12 @@ type Candidate = {
 };
 
 type LocationState = { collection?: Collection };
+type CustomMediaTarget = "image" | "mobileImage" | "video";
+type CustomDisplayType = "default" | "hero" | "banner" | "card" | "inline" | "background";
+type CustomMediaFit = "cover" | "contain" | "fill";
+type CustomMediaPosition = "center" | "top" | "bottom" | "left" | "right";
+type CustomVideoPlayback = "inline" | "background" | "modal";
+
 const contentTypeOptions: { value: ContentType; label: string }[] = [
   { value: "post", label: "Post" },
   { value: "article", label: "Article" },
@@ -47,6 +55,35 @@ const presentationTypeOptions = ["list", "grid", "slider", "carousel", "hero", "
   value,
   label: value
 }));
+
+const customDisplayTypeOptions: { value: CustomDisplayType; label: string }[] = [
+  { value: "default", label: "Default" },
+  { value: "hero", label: "Hero" },
+  { value: "banner", label: "Banner" },
+  { value: "card", label: "Card" },
+  { value: "inline", label: "Inline" },
+  { value: "background", label: "Background" }
+];
+
+const mediaFitOptions: { value: CustomMediaFit; label: string }[] = [
+  { value: "cover", label: "Cover" },
+  { value: "contain", label: "Contain" },
+  { value: "fill", label: "Fill" }
+];
+
+const mediaPositionOptions: { value: CustomMediaPosition; label: string }[] = [
+  { value: "center", label: "Center" },
+  { value: "top", label: "Top" },
+  { value: "bottom", label: "Bottom" },
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" }
+];
+
+const videoPlaybackOptions: { value: CustomVideoPlayback; label: string }[] = [
+  { value: "inline", label: "Inline player" },
+  { value: "background", label: "Background video" },
+  { value: "modal", label: "Open in modal" }
+];
 
 const parseJsonObject = (value: string): Record<string, unknown> | undefined => {
   const trimmed = value.trim();
@@ -108,6 +145,11 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
   const [customImage, setCustomImage] = useState("");
   const [customMobileImage, setCustomMobileImage] = useState("");
   const [customVideo, setCustomVideo] = useState("");
+  const [customDisplayType, setCustomDisplayType] = useState<CustomDisplayType>("default");
+  const [customMediaFit, setCustomMediaFit] = useState<CustomMediaFit>("cover");
+  const [customMediaPosition, setCustomMediaPosition] = useState<CustomMediaPosition>("center");
+  const [customVideoPlayback, setCustomVideoPlayback] = useState<CustomVideoPlayback>("inline");
+  const [customMediaPickerTarget, setCustomMediaPickerTarget] = useState<CustomMediaTarget | null>(null);
   const [customBadge, setCustomBadge] = useState("");
   const [customCta, setCustomCta] = useState("");
   const [customLinkType, setCustomLinkType] = useState<"none" | "internal" | "external" | "content">("none");
@@ -302,6 +344,49 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
     messageApi.success("Selected content added.");
   };
 
+  const resetCustomItemForm = () => {
+    setCustomTitle("");
+    setCustomSubtitle("");
+    setCustomDescription("");
+    setCustomImage("");
+    setCustomMobileImage("");
+    setCustomVideo("");
+    setCustomDisplayType("default");
+    setCustomMediaFit("cover");
+    setCustomMediaPosition("center");
+    setCustomVideoPlayback("inline");
+    setCustomMediaPickerTarget(null);
+    setCustomBadge("");
+    setCustomCta("");
+    setCustomLinkType("none");
+    setCustomLinkUrl("");
+    setCustomTrackingKey("");
+    setCustomStartsAt("");
+    setCustomEndsAt("");
+  };
+
+  const openCustomMediaPicker = (target: CustomMediaTarget) => {
+    if (!applicationId) {
+      messageApi.error("Select an application first.");
+      return;
+    }
+    setCustomMediaPickerTarget(target);
+  };
+
+  const selectCustomMedia = (asset: MediaAsset) => {
+    const nextValue = asset.mediaUrl || asset.objectKey;
+    if (customMediaPickerTarget === "image") {
+      setCustomImage(nextValue);
+    }
+    if (customMediaPickerTarget === "mobileImage") {
+      setCustomMobileImage(nextValue);
+    }
+    if (customMediaPickerTarget === "video") {
+      setCustomVideo(nextValue);
+    }
+    setCustomMediaPickerTarget(null);
+  };
+
   const addCustomItem = async () => {
     if (!applicationId || !collectionId) {
       return;
@@ -316,6 +401,10 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           imageOverride: customImage.trim() || undefined,
           mobileImageOverride: customMobileImage.trim() || undefined,
           videoOverride: customVideo.trim() || undefined,
+          displayType: customDisplayType,
+          mediaFit: customMediaFit,
+          mediaPosition: customMediaPosition,
+          videoPlayback: customVideo ? customVideoPlayback : undefined,
           badgeText: customBadge.trim() || undefined,
           ctaLabel: customCta.trim() || undefined
         },
@@ -331,19 +420,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
         isActive: true
       });
       setCustomModalOpen(false);
-      setCustomTitle("");
-      setCustomSubtitle("");
-      setCustomDescription("");
-      setCustomImage("");
-      setCustomMobileImage("");
-      setCustomVideo("");
-      setCustomBadge("");
-      setCustomCta("");
-      setCustomLinkType("none");
-      setCustomLinkUrl("");
-      setCustomTrackingKey("");
-      setCustomStartsAt("");
-      setCustomEndsAt("");
+      resetCustomItemForm();
       await loadCollection(collectionId);
       messageApi.success("Custom item added.");
     } catch (error) {
@@ -478,6 +555,43 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
     ...entry,
     disabled: items.some((item) => item.contentType === entry.type && item.contentId === entry.id)
   }));
+
+  const renderMediaSelector = (
+    label: string,
+    target: CustomMediaTarget,
+    value: string,
+    clear: () => void
+  ) => {
+    const isVideo = target === "video";
+    return (
+      <Form.Item label={label}>
+        <Space direction="vertical" size={8} style={{ width: 220 }}>
+          <div className="collection-media-preview">
+            {value ? (
+              isVideo ? (
+                <video src={value} controls muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              )
+            ) : (
+              <Typography.Text type="secondary">{isVideo ? "No video selected" : "No image selected"}</Typography.Text>
+            )}
+          </div>
+          <Space.Compact block>
+            <Button onClick={() => openCustomMediaPicker(target)}>{value ? "Change" : "Choose"}</Button>
+            <Button disabled={!value} onClick={clear}>
+              Clear
+            </Button>
+          </Space.Compact>
+          {value && (
+            <Typography.Text type="secondary" ellipsis style={{ maxWidth: 220, fontSize: 12 }}>
+              {value}
+            </Typography.Text>
+          )}
+        </Space>
+      </Form.Item>
+    );
+  };
 
   return (
     <Card className="page-card">
@@ -740,15 +854,43 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             <Input.TextArea value={customDescription} onChange={(event) => setCustomDescription(event.target.value)} rows={2} />
           </Form.Item>
           <Space wrap style={{ width: "100%" }} align="start">
-            <Form.Item label="Image URL">
-              <Input value={customImage} onChange={(event) => setCustomImage(event.target.value)} style={{ width: 320 }} />
+            <Form.Item label="Display Type">
+              <Segmented<CustomDisplayType>
+                value={customDisplayType}
+                onChange={setCustomDisplayType}
+                options={customDisplayTypeOptions}
+              />
             </Form.Item>
-            <Form.Item label="Mobile Image URL">
-              <Input value={customMobileImage} onChange={(event) => setCustomMobileImage(event.target.value)} style={{ width: 320 }} />
+            <Form.Item label="Media Fit">
+              <Select
+                style={{ width: 140 }}
+                value={customMediaFit}
+                onChange={setCustomMediaFit}
+                options={mediaFitOptions}
+              />
             </Form.Item>
-            <Form.Item label="Video URL">
-              <Input value={customVideo} onChange={(event) => setCustomVideo(event.target.value)} style={{ width: 320 }} />
+            <Form.Item label="Media Position">
+              <Select
+                style={{ width: 140 }}
+                value={customMediaPosition}
+                onChange={setCustomMediaPosition}
+                options={mediaPositionOptions}
+              />
             </Form.Item>
+            <Form.Item label="Video Display">
+              <Select
+                style={{ width: 180 }}
+                value={customVideoPlayback}
+                onChange={setCustomVideoPlayback}
+                options={videoPlaybackOptions}
+                disabled={!customVideo}
+              />
+            </Form.Item>
+          </Space>
+          <Space wrap style={{ width: "100%" }} align="start">
+            {renderMediaSelector("Image", "image", customImage, () => setCustomImage(""))}
+            {renderMediaSelector("Mobile Image", "mobileImage", customMobileImage, () => setCustomMobileImage(""))}
+            {renderMediaSelector("Video", "video", customVideo, () => setCustomVideo(""))}
             <Form.Item label="Badge">
               <Input value={customBadge} onChange={(event) => setCustomBadge(event.target.value)} style={{ width: 160 }} />
             </Form.Item>
@@ -787,6 +929,16 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           </Space>
         </Form>
       </Modal>
+      {applicationId && (
+        <MediaPickerModal
+          open={customMediaPickerTarget !== null}
+          applicationId={applicationId}
+          allowedKinds={customMediaPickerTarget === "video" ? ["video"] : ["image"]}
+          title={customMediaPickerTarget === "video" ? "Choose Video" : "Choose Image"}
+          onCancel={() => setCustomMediaPickerTarget(null)}
+          onSelect={selectCustomMedia}
+        />
+      )}
     </Card>
   );
 };

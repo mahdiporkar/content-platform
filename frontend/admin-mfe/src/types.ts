@@ -148,7 +148,7 @@ export type MediaUploadResponse = {
   mediaUrl?: string;
 };
 
-export type MediaAssetKind = "image" | "video" | "file";
+export type MediaAssetKind = "image" | "video" | "other";
 
 export type MediaAsset = {
   id: string;
@@ -306,6 +306,10 @@ export type CollectionItem = {
     imageOverride?: string;
     mobileImageOverride?: string;
     videoOverride?: string;
+    displayType?: "default" | "hero" | "banner" | "card" | "inline" | "background";
+    mediaFit?: "cover" | "contain" | "fill";
+    mediaPosition?: "center" | "top" | "bottom" | "left" | "right";
+    videoPlayback?: "inline" | "background" | "modal";
     badgeText?: string;
     ctaLabel?: string;
   } | null;

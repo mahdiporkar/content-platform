@@ -753,6 +753,18 @@ a {
   border: 1px solid var(--border);
 }
 
+.collection-media-preview {
+  width: 220px;
+  height: 124px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f7f8fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
 .editor-content .ProseMirror table {
   width: min(100%, var(--table-width, 100%));
   min-width: 220px;

@@ -152,6 +152,10 @@ export class AdminCollectionService {
     if (!display) {
       return null;
     }
+    const displayTypes = ['default', 'hero', 'banner', 'card', 'inline', 'background'];
+    const mediaFits = ['cover', 'contain', 'fill'];
+    const mediaPositions = ['center', 'top', 'bottom', 'left', 'right'];
+    const videoPlaybacks = ['inline', 'background', 'modal'];
     return {
       titleOverride: display.titleOverride?.trim() || undefined,
       subtitleOverride: display.subtitleOverride?.trim() || undefined,
@@ -159,6 +163,10 @@ export class AdminCollectionService {
       imageOverride: display.imageOverride?.trim() || undefined,
       mobileImageOverride: display.mobileImageOverride?.trim() || undefined,
       videoOverride: display.videoOverride?.trim() || undefined,
+      displayType: display.displayType && displayTypes.includes(display.displayType) ? display.displayType : undefined,
+      mediaFit: display.mediaFit && mediaFits.includes(display.mediaFit) ? display.mediaFit : undefined,
+      mediaPosition: display.mediaPosition && mediaPositions.includes(display.mediaPosition) ? display.mediaPosition : undefined,
+      videoPlayback: display.videoPlayback && videoPlaybacks.includes(display.videoPlayback) ? display.videoPlayback : undefined,
       badgeText: display.badgeText?.trim() || undefined,
       ctaLabel: display.ctaLabel?.trim() || undefined,
     };

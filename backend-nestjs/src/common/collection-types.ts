@@ -70,6 +70,10 @@ export type CollectionItemDisplay = {
   imageOverride?: string;
   mobileImageOverride?: string;
   videoOverride?: string;
+  displayType?: 'default' | 'hero' | 'banner' | 'card' | 'inline' | 'background';
+  mediaFit?: 'cover' | 'contain' | 'fill';
+  mediaPosition?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  videoPlayback?: 'inline' | 'background' | 'modal';
   badgeText?: string;
   ctaLabel?: string;
 };

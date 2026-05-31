@@ -25,7 +25,7 @@ const toSizeLabel = (sizeBytes: number): string => {
 export const MediaPickerModal = ({
   open,
   applicationId,
-  allowedKinds = ["image", "video", "file"],
+  allowedKinds = ["image", "video", "other"],
   title = "File Manager",
   onCancel,
   onSelect
