@@ -2,6 +2,8 @@
 
 Multi-tenant content platform built with NestJS, PostgreSQL, and MinIO, with an Admin panel (React) and demo consumer app (Next.js).
 
+[فارسی](README.fa.md)
+
 ![Architecture Diagram](./docs/architecture.png)
 
 ## Architecture Docs
@@ -153,6 +155,66 @@ Existing collections remain valid. Missing fields default to:
 - `fallback: { "enabled": false }`
 - `placement.device: "all"` when placement is provided
 - item `link: { "type": "none" }`
+
+### Pages and Menus
+
+Pages and menus are tenant-scoped content management features. They are available in both backend implementations, so the admin panel can work with either the NestJS backend or the Java backend without changing the frontend contract.
+
+Use pages for standalone website routes such as:
+
+- `/fa/about`
+- `/fa/contact`
+- `/fa/about-me-2`
+- `/en/about`
+
+Use menus to define the navigation structure that consumer websites render. A menu item can point to a static route, a managed page, an article, a post, a gallery, or an external URL.
+
+This lets a consumer website add new screens without changing the menu code. For example, if the frontend team adds a new component for `/fa/about-me-2`, an admin only needs to create or update the menu item in content-platform and set the route. The consumer app receives the new item through the menu delivery API and can show the route in the browser.
+
+Menu items returned by the public menu API include a `dynamic` flag:
+
+- `dynamic: false`: the route is handled by the consumer app as a normal static route.
+- `dynamic: true`: the route is backed by content-platform content. The consumer app should load the page/content body from content-platform and render it inside its own layout and visual style.
+
+Admin APIs:
+
+```http
+POST /api/v1/admin/pages
+PUT /api/v1/admin/pages/{id}
+PATCH /api/v1/admin/pages/{id}/status
+GET /api/v1/admin/pages/{id}
+GET /api/v1/admin/pages?applicationId={applicationId}
+
+POST /api/v1/admin/menus
+PUT /api/v1/admin/menus/{id}
+PATCH /api/v1/admin/menus/{id}/status
+DELETE /api/v1/admin/menus/{id}
+GET /api/v1/admin/menus/{id}
+GET /api/v1/admin/menus?applicationId={applicationId}
+POST /api/v1/admin/menus/{id}/items
+PUT /api/v1/admin/menus/{id}/items/layout
+PUT /api/v1/admin/menus/{id}/items/{itemId}
+DELETE /api/v1/admin/menus/{id}/items/{itemId}
+GET /api/v1/admin/menus/{id}/published-content
+POST /api/v1/admin/menus/{id}/sync-published
+```
+
+Public delivery APIs:
+
+```http
+GET /api/v1/content/pages
+GET /api/v1/content/pages/slugs
+GET /api/v1/content/pages/{languageCode}/{slug}
+GET /api/v1/content/menus/location/{languageCode}/{location}
+GET /api/v1/content/menus/{languageCode}/{code}
+```
+
+The public delivery APIs use the same consumer headers as the rest of the delivery plane:
+
+```http
+X-Application-Id: <application-id>
+X-Application-Token: <application-token>
+```
 
 ### Visitor Browser Plane
 
