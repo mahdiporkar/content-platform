@@ -511,7 +511,7 @@ public class SitemapService {
     private ContentItem toContentItem(GalleryImage image) {
         return new ContentItem(
             UUID.randomUUID().toString(),
-            image.caption(),
+            image.getCaption(),
             null,
             null,
             null,

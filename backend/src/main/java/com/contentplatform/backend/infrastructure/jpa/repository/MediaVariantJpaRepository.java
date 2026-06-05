@@ -22,6 +22,18 @@ public interface MediaVariantJpaRepository extends JpaRepository<MediaVariantEnt
           and mv.purpose = :purpose
           and ((:sizeKey is null and mv.sizeKey is null) or mv.sizeKey = :sizeKey)
           and ((:device is null and mv.device is null) or mv.device = :device)
+        """)
+    boolean existsByMediaAssetIdAndPurposeAndSizeKeyAndDevice(@Param("mediaAssetId") String mediaAssetId,
+                                                              @Param("purpose") String purpose,
+                                                              @Param("sizeKey") String sizeKey,
+                                                              @Param("device") String device);
+
+    @Query("""
+        select count(mv) > 0 from MediaVariantEntity mv
+        where mv.mediaAssetId = :mediaAssetId
+          and mv.purpose = :purpose
+          and ((:sizeKey is null and mv.sizeKey is null) or mv.sizeKey = :sizeKey)
+          and ((:device is null and mv.device is null) or mv.device = :device)
           and mv.id <> :variantId
         """)
     boolean existsDuplicateExcept(@Param("mediaAssetId") String mediaAssetId,

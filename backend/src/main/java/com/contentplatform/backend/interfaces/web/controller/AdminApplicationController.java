@@ -80,6 +80,20 @@ public class AdminApplicationController {
         return ResponseEntity.ok(mapper.toApplicationResponse(dto));
     }
 
+    @PostMapping("/{id}/token/rotate")
+    public ResponseEntity<ApplicationResponse> rotateToken(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
+        ApplicationDto dto = applicationUseCase.rotateToken(id);
+        return ResponseEntity.ok(mapper.toApplicationResponse(dto));
+    }
+
+    @PostMapping("/{id}/token/revoke")
+    public ResponseEntity<ApplicationResponse> revokeToken(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
+        ApplicationDto dto = applicationUseCase.revokeToken(id);
+        return ResponseEntity.ok(mapper.toApplicationResponse(dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);

@@ -83,6 +83,34 @@ public class ApplicationService implements ApplicationUseCase {
     }
 
     @Override
+    public ApplicationDto rotateToken(String id) {
+        Application existing = applicationRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Application not found"));
+        Application updated = new Application(
+            existing.getId(),
+            existing.getName(),
+            existing.getWebsiteUrl(),
+            generateToken(),
+            existing.getGallery()
+        );
+        return toDto(applicationRepository.save(updated));
+    }
+
+    @Override
+    public ApplicationDto revokeToken(String id) {
+        Application existing = applicationRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Application not found"));
+        Application updated = new Application(
+            existing.getId(),
+            existing.getName(),
+            existing.getWebsiteUrl(),
+            null,
+            existing.getGallery()
+        );
+        return toDto(applicationRepository.save(updated));
+    }
+
+    @Override
     public void delete(String id) {
         if (!applicationRepository.existsById(id)) {
             throw new NotFoundException("Application not found");

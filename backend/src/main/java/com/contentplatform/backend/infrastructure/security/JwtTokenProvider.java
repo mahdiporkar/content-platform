@@ -35,9 +35,10 @@ public class JwtTokenProvider implements TokenProvider {
         return Jwts.builder()
             .setSubject(adminUser.getId())
             .claim("email", adminUser.getEmail())
+            .claim("role", roleFor(adminUser))
             .claim("applicationIds", adminUser.getAllowedApplicationIds())
-            .claim("systemPermissions", adminUser.getSystemPermissions().stream().map(Enum::name).toList())
-            .claim("servicePermissions", adminUser.getServicePermissions().stream().map(Enum::name).toList())
+            .claim("systemPermissions", adminUser.getSystemPermissions().stream().map(SystemPermission::wireValue).toList())
+            .claim("servicePermissions", adminUser.getServicePermissions().stream().map(ServicePermission::wireValue).toList())
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(expiry))
             .signWith(Keys.hmacShaKeyFor(secret), SignatureAlgorithm.HS256)
@@ -67,7 +68,7 @@ public class JwtTokenProvider implements TokenProvider {
         return values.stream()
             .map(value -> {
                 try {
-                    return SystemPermission.valueOf(value);
+                    return SystemPermission.fromWireValue(value);
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
@@ -83,12 +84,20 @@ public class JwtTokenProvider implements TokenProvider {
         return values.stream()
             .map(value -> {
                 try {
-                    return ServicePermission.valueOf(value);
+                    return ServicePermission.fromWireValue(value);
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
             })
             .filter(permission -> permission != null)
             .toList();
+    }
+
+    private String roleFor(AdminUser adminUser) {
+        if (adminUser.getSystemPermissions().contains(SystemPermission.APPLICATIONS_MANAGE)
+            && adminUser.getSystemPermissions().contains(SystemPermission.USERS_MANAGE)) {
+            return "super_admin";
+        }
+        return "admin";
     }
 }

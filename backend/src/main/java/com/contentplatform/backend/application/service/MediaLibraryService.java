@@ -636,13 +636,9 @@ public class MediaLibraryService implements MediaLibraryUseCase {
     }
 
     private void ensureUniqueCombo(String mediaAssetId, String purpose, String sizeKey, String device, String currentVariantId) {
-        boolean duplicate = mediaVariantJpaRepository.existsDuplicateExcept(
-            mediaAssetId,
-            purpose,
-            sizeKey,
-            device,
-            currentVariantId == null ? "__new__" : currentVariantId
-        );
+        boolean duplicate = currentVariantId == null
+            ? mediaVariantJpaRepository.existsByMediaAssetIdAndPurposeAndSizeKeyAndDevice(mediaAssetId, purpose, sizeKey, device)
+            : mediaVariantJpaRepository.existsDuplicateExcept(mediaAssetId, purpose, sizeKey, device, currentVariantId);
         if (duplicate) {
             throw new ConflictException("Duplicate variant for same purpose/size/device");
         }
@@ -792,6 +788,8 @@ public class MediaLibraryService implements MediaLibraryUseCase {
         if (requestedFormat != null) {
             if (requestedFormat.equals(variant.format())) {
                 score += 150;
+            } else if (!variant.isDefault() && variant.format() != null) {
+                candidate = false;
             } else if (variant.format() != null) {
                 score -= 5;
             }

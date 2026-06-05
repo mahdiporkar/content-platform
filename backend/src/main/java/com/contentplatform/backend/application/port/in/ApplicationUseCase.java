@@ -14,6 +14,8 @@ public interface ApplicationUseCase {
     ApplicationDto getById(String id);
     ApplicationDto create(CreateApplicationCommand command);
     ApplicationDto update(UpdateApplicationCommand command);
+    ApplicationDto rotateToken(String id);
+    ApplicationDto revokeToken(String id);
     void delete(String id);
     PageResult<GalleryImageDto> listGallery(String applicationId, PageRequest pageRequest);
     GalleryImageDto getGalleryItem(String applicationId, int index);
