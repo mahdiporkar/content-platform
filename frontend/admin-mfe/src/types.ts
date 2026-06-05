@@ -94,6 +94,76 @@ export type Article = {
   updatedAt: string;
 };
 
+export type DynamicPage = {
+  id: string;
+  applicationId: string;
+  title: string;
+  slug: string;
+  content: string;
+  html?: string | null;
+  coverImage?: string | null;
+  languageCode: string;
+  status: ContentStatus;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoKeywords?: string[] | null;
+  parentId?: string | null;
+  sortOrder?: number | null;
+  showInMenu: boolean;
+  publishedAt?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MenuLocation = "HEADER" | "FOOTER" | "SIDEBAR" | "MOBILE";
+export type MenuStatus = "ACTIVE" | "INACTIVE";
+export type MenuItemType = "PAGE" | "ARTICLE" | "POST" | "GALLERY" | "CUSTOM_URL" | "EXTERNAL_URL" | "GROUP";
+export type MenuItemTarget = "SELF" | "BLANK";
+
+export type MenuItem = {
+  id: string;
+  menuId: string;
+  parentId?: string | null;
+  title: string;
+  itemType: MenuItemType;
+  referenceId?: string | null;
+  url?: string | null;
+  target: MenuItemTarget;
+  icon?: string | null;
+  cssClass?: string | null;
+  sortOrder: number;
+  isVisible: boolean;
+  children: MenuItem[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SiteMenu = {
+  id: string;
+  applicationId: string;
+  code: string;
+  title: string;
+  location: MenuLocation;
+  languageCode: string;
+  status: MenuStatus;
+  items: MenuItem[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MenuContentCandidate = {
+  id: string;
+  type: "PAGE" | "POST" | "GALLERY";
+  title: string;
+  slug: string;
+  url: string;
+  alreadyInMenu: boolean;
+  publishedAt?: string | null;
+  updatedAt: string;
+};
+
 export type GalleryContent = {
   id: string;
   applicationId: string;
@@ -348,6 +418,8 @@ export type AdminUser = {
   servicePermissions: (
     | "posts.manage"
     | "articles.manage"
+    | "pages.manage"
+    | "menus.manage"
     | "galleries.manage"
     | "images.manage"
     | "videos.manage"

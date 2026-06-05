@@ -14,6 +14,10 @@ import { PostsListPage } from "./features/posts/PostsListPage";
 import { PostEditorPage } from "./features/posts/PostEditorPage";
 import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
+import { PagesListPage } from "./features/pages/PagesListPage";
+import { PageEditorPage } from "./features/pages/PageEditorPage";
+import { MenusListPage } from "./features/menus/MenusListPage";
+import { MenuEditorPage } from "./features/menus/MenuEditorPage";
 import { GalleriesListPage } from "./features/galleries/GalleriesListPage";
 import { GalleryEditorPage } from "./features/galleries/GalleryEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
@@ -97,6 +101,12 @@ const LocalizedAdminApp = () => {
               <Route path="articles" element={<ArticlesListPage />} />
               <Route path="articles/new" element={<ArticleEditorPage mode="create" />} />
               <Route path="articles/:id" element={<ArticleEditorPage mode="edit" />} />
+              <Route path="pages" element={<PagesListPage />} />
+              <Route path="pages/new" element={<PageEditorPage mode="create" />} />
+              <Route path="pages/:id" element={<PageEditorPage mode="edit" />} />
+              <Route path="menus" element={<MenusListPage />} />
+              <Route path="menus/new" element={<MenuEditorPage mode="create" />} />
+              <Route path="menus/:id" element={<MenuEditorPage mode="edit" />} />
               <Route path="galleries" element={<GalleriesListPage />} />
               <Route path="galleries/new" element={<GalleryEditorPage mode="create" />} />
               <Route path="galleries/:id" element={<GalleryEditorPage mode="edit" />} />

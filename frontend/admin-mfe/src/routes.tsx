@@ -7,6 +7,10 @@ import { PostsListPage } from "./features/posts/PostsListPage";
 import { PostEditorPage } from "./features/posts/PostEditorPage";
 import { ArticlesListPage } from "./features/articles/ArticlesListPage";
 import { ArticleEditorPage } from "./features/articles/ArticleEditorPage";
+import { PagesListPage } from "./features/pages/PagesListPage";
+import { PageEditorPage } from "./features/pages/PageEditorPage";
+import { MenusListPage } from "./features/menus/MenusListPage";
+import { MenuEditorPage } from "./features/menus/MenuEditorPage";
 import { GalleriesListPage } from "./features/galleries/GalleriesListPage";
 import { GalleryEditorPage } from "./features/galleries/GalleryEditorPage";
 import { VideoListPage } from "./features/videos/VideoListPage";
@@ -57,6 +61,12 @@ export const routes: RouteObject[] = [
       { path: "articles", element: <ArticlesListPage /> },
       { path: "articles/new", element: <ArticleEditorPage mode="create" /> },
       { path: "articles/:id", element: <ArticleEditorPage mode="edit" /> },
+      { path: "pages", element: <PagesListPage /> },
+      { path: "pages/new", element: <PageEditorPage mode="create" /> },
+      { path: "pages/:id", element: <PageEditorPage mode="edit" /> },
+      { path: "menus", element: <MenusListPage /> },
+      { path: "menus/new", element: <MenuEditorPage mode="create" /> },
+      { path: "menus/:id", element: <MenuEditorPage mode="edit" /> },
       { path: "galleries", element: <GalleriesListPage /> },
       { path: "galleries/new", element: <GalleryEditorPage mode="create" /> },
       { path: "galleries/:id", element: <GalleryEditorPage mode="edit" /> },

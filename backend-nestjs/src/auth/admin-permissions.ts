@@ -8,6 +8,8 @@ export enum SystemPermission {
 export enum ServicePermission {
   POSTS_MANAGE = 'posts.manage',
   ARTICLES_MANAGE = 'articles.manage',
+  PAGES_MANAGE = 'pages.manage',
+  MENUS_MANAGE = 'menus.manage',
   GALLERIES_MANAGE = 'galleries.manage',
   IMAGES_MANAGE = 'images.manage',
   VIDEOS_MANAGE = 'videos.manage',
@@ -23,6 +25,8 @@ export const DEFAULT_SYSTEM_PERMISSIONS: SystemPermission[] = [
 export const DEFAULT_SERVICE_PERMISSIONS: ServicePermission[] = [
   ServicePermission.POSTS_MANAGE,
   ServicePermission.ARTICLES_MANAGE,
+  ServicePermission.PAGES_MANAGE,
+  ServicePermission.MENUS_MANAGE,
   ServicePermission.GALLERIES_MANAGE,
   ServicePermission.IMAGES_MANAGE,
   ServicePermission.VIDEOS_MANAGE,

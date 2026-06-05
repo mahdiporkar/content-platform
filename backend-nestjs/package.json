@@ -7,7 +7,7 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "start:prod": "node dist/main.js",
-    "test": "ts-node test/security-hardening.test.ts"
+    "test": "ts-node test/security-hardening.test.ts && ts-node test/page-menu-management.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

@@ -11,6 +11,7 @@ import {
   TeamOutlined,
   FolderOpenOutlined,
   GlobalOutlined,
+  MenuOutlined,
   UnorderedListOutlined,
   VideoCameraOutlined
 } from "@ant-design/icons";
@@ -44,7 +45,9 @@ export const AppLayout = () => {
       servicePermissions.includes("videos.manage") ||
       servicePermissions.includes("posts.manage") ||
       servicePermissions.includes("galleries.manage") ||
-      servicePermissions.includes("articles.manage")
+      servicePermissions.includes("articles.manage") ||
+      servicePermissions.includes("pages.manage") ||
+      servicePermissions.includes("menus.manage")
     );
   }, [tokenPayload?.role, tokenPayload?.servicePermissions]);
 
@@ -91,6 +94,8 @@ export const AppLayout = () => {
     { key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") },
     { key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") },
     { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
+    { key: "pages", icon: <FileTextOutlined />, label: t("menu.pages") },
+    { key: "menus", icon: <MenuOutlined />, label: t("menu.menus") },
     { key: "galleries", icon: <PictureOutlined />, label: t("menu.galleries") },
     { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
     { key: "images", icon: <PictureOutlined />, label: t("menu.images") },

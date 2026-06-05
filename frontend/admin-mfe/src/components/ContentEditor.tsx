@@ -1183,80 +1183,78 @@ export const ContentEditor = ({ applicationId, value, onChange }: Props) => {
         {uploading && <div className="asset-status">{t("editor.uploading")}</div>}
       </div>
       {error && <div className="editor-error">{error}</div>}
-      <div className="editor-content editor-content--relative">
-        {editor.isEmpty && (
-          <div className="editor-placeholder">{t("editor.placeholder")}</div>
-        )}
-        <BubbleMenu
-          editor={editor}
-          tippyOptions={{ duration: 100, placement: "top" }}
-          shouldShow={({ editor: tiptap }) => {
-            if (!tiptap.isFocused) {
-              return false;
-            }
-            if (tiptap.isActive("table")) {
-              return true;
-            }
-            if (tiptap.state.selection.empty) {
-              return false;
-            }
+      <BubbleMenu
+        editor={editor}
+        tippyOptions={{ duration: 100, placement: "top", appendTo: () => document.body }}
+        shouldShow={({ editor: tiptap }) => {
+          if (!tiptap.isFocused) {
+            return false;
+          }
+          if (tiptap.isActive("table")) {
             return true;
-          }}
-        >
-          <div className="editor-bubble">
-            <button
-              type="button"
-              className={`editor-button icon ${editor.isActive("bold") ? "active" : ""}`}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              aria-label="Bold"
-            >
-              <span className="editor-text">B</span>
-            </button>
-            <button
-              type="button"
-              className={`editor-button icon ${editor.isActive("italic") ? "active" : ""}`}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              aria-label="Italic"
-            >
-              <span className="editor-text">I</span>
-            </button>
-            <button
-              type="button"
-              className={`editor-button icon ${editor.isActive("underline") ? "active" : ""}`}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              aria-label="Underline"
-            >
-              <span className="editor-text">U</span>
-            </button>
-            <button
-              type="button"
-              className={`editor-button icon ${editor.isActive("link") ? "active" : ""}`}
-              onClick={openLinkModal}
-              aria-label={t("editor.linkTitle")}
-            >
-              <Icon>
-                <path d="M10 7h3v2h-3a2 2 0 1 0 0 4h3v2h-3a4 4 0 1 1 0-8zm4 0h3a4 4 0 1 1 0 8h-3v-2h3a2 2 0 1 0 0-4h-3V7zM11 10h2v4h-2v-4z" />
-              </Icon>
-            </button>
-            <div className="editor-bubble__divider" />
-            <button
-              type="button"
-              className="editor-button"
-              onClick={() => editor.chain().focus().addRowAfter().run()}
-              disabled={!editor.isActive("table")}
-            >
-              {t("editor.addRow")}
-            </button>
-            <button
-              type="button"
-              className="editor-button"
-              onClick={() => editor.chain().focus().addColumnAfter().run()}
-              disabled={!editor.isActive("table")}
-            >
-              {t("editor.addCol")}
-            </button>
-          </div>
-        </BubbleMenu>
+          }
+          if (tiptap.state.selection.empty) {
+            return false;
+          }
+          return true;
+        }}
+      >
+        <div className="editor-bubble">
+          <button
+            type="button"
+            className={`editor-button icon ${editor.isActive("bold") ? "active" : ""}`}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            aria-label="Bold"
+          >
+            <span className="editor-text">B</span>
+          </button>
+          <button
+            type="button"
+            className={`editor-button icon ${editor.isActive("italic") ? "active" : ""}`}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            aria-label="Italic"
+          >
+            <span className="editor-text">I</span>
+          </button>
+          <button
+            type="button"
+            className={`editor-button icon ${editor.isActive("underline") ? "active" : ""}`}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            aria-label="Underline"
+          >
+            <span className="editor-text">U</span>
+          </button>
+          <button
+            type="button"
+            className={`editor-button icon ${editor.isActive("link") ? "active" : ""}`}
+            onClick={openLinkModal}
+            aria-label={t("editor.linkTitle")}
+          >
+            <Icon>
+              <path d="M10 7h3v2h-3a2 2 0 1 0 0 4h3v2h-3a4 4 0 1 1 0-8zm4 0h3a4 4 0 1 1 0 8h-3v-2h3a2 2 0 1 0 0-4h-3V7zM11 10h2v4h-2v-4z" />
+            </Icon>
+          </button>
+          <div className="editor-bubble__divider" />
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            disabled={!editor.isActive("table")}
+          >
+            {t("editor.addRow")}
+          </button>
+          <button
+            type="button"
+            className="editor-button"
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            disabled={!editor.isActive("table")}
+          >
+            {t("editor.addCol")}
+          </button>
+        </div>
+      </BubbleMenu>
+      <div className="editor-content editor-content--relative">
+        {editor.isEmpty && <div className="editor-placeholder">{t("editor.placeholder")}</div>}
         <EditorContent editor={editor} />
       </div>
 
