@@ -61,7 +61,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, "index.html")
+      template: path.resolve(__dirname, "index.html"),
+      inject: "body"
     }),
     new ModuleFederationPlugin({
       name: "admin_mfe",

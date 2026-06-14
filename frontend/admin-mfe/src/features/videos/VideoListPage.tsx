@@ -7,6 +7,7 @@ import axios from "axios";
 import client from "../../api/client";
 import { resolveMediaAssetByObjectKey } from "../../api/media";
 import { useTenant } from "../../app/tenant";
+import { apiBaseUrl } from "../../config/env";
 import { ContentStatus, ContentUsage, PageResponse, Video } from "../../types";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
@@ -18,7 +19,7 @@ const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "p
 };
 
 const resolveBackendOrigin = (): string => {
-  const apiBase = (process.env.API_BASE_URL || "").trim();
+  const apiBase = apiBaseUrl.trim();
   if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
     try {
       return new URL(apiBase).origin;

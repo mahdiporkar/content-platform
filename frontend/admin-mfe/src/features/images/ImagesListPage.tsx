@@ -33,9 +33,10 @@ import {
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
+import { apiBaseUrl } from "../../config/env";
 
 const resolveBackendOrigin = (): string => {
-  const apiBase = (process.env.API_BASE_URL || "").trim();
+  const apiBase = apiBaseUrl.trim();
   if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
     try {
       return new URL(apiBase).origin;

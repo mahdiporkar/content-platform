@@ -76,7 +76,7 @@ services:
       API_PROXY_TARGET: ${API_PROXY_TARGET:-http://localhost:3001}
       CHOKIDAR_USEPOLLING: "true"
     ports:
-      - "3002:3002"
+      - "3002:80"
     volumes:
       - ./frontend/admin-mfe:/app
       - /app/node_modules
