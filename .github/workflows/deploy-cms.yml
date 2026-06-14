@@ -20,9 +20,10 @@ jobs:
         run: npm install -g caprover
 
       - name: Deploy CMS
-        working-directory: frontend/admin-mfe
         run: |
+          tar -czf cms.tar.gz -C frontend/admin-mfe .
           caprover deploy \
             --caproverUrl "${{ secrets.CAPROVER_URL }}" \
             --caproverPassword "${{ secrets.CAPROVER_PASSWORD }}" \
-            --appName "cms"
+            --appName "cms" \
+            --tarFile cms.tar.gz
