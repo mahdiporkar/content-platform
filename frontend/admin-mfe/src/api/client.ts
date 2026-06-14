@@ -1,9 +1,10 @@
 import axios from "axios";
 import { authStore } from "../app/auth";
 import { tenantStore } from "../app/tenantStore";
+import { apiBaseUrl } from "../config/env";
 
 const client = axios.create({
-  baseURL: process.env.API_BASE_URL || "/",
+  baseURL: apiBaseUrl,
   headers: {
     "Content-Type": "application/json"
   }

@@ -79,7 +79,15 @@ module.exports = {
       }
     }),
     new webpack.DefinePlugin({
-      "process.env.API_BASE_URL": JSON.stringify(process.env.API_BASE_URL || "http://localhost:3001")
+      "import.meta.env.VITE_API_BASE_URL": JSON.stringify(
+        process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || "http://localhost:3001"
+      ),
+      "import.meta.env.API_BASE_URL": JSON.stringify(
+        process.env.API_BASE_URL || process.env.VITE_API_BASE_URL || "http://localhost:3001"
+      ),
+      "import.meta.env.API_PROXY_TARGET": JSON.stringify(
+        process.env.API_PROXY_TARGET || resolveProxyTarget()
+      )
     })
   ]
 };

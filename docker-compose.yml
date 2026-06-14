@@ -71,6 +71,9 @@ services:
       context: ./frontend/admin-mfe
     container_name: content-platform-admin-mfe
     environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3001}
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://localhost:3001}
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3002:3002"
