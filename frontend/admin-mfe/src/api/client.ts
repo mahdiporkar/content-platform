@@ -13,12 +13,13 @@ let redirectingToLogin = false;
 
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
+  const isLoginRequest = config.url?.split("?")[0] === "/api/v1/auth/login";
   const token = authStore.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   const applicationId = tenantStore.getApplicationId();
-  if (applicationId) {
+  if (applicationId && !isLoginRequest) {
     config.headers["X-Application-Id"] = applicationId;
   }
   return config;
