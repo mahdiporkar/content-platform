@@ -11,15 +11,38 @@ const client = axios.create({
 });
 let redirectingToLogin = false;
 
+const normalizeRequestPath = (url?: string): string => {
+  if (!url) {
+    return "";
+  }
+
+  try {
+    const baseUrl = apiBaseUrl.startsWith("http") ? apiBaseUrl : window.location.origin;
+    return new URL(url, baseUrl).pathname;
+  } catch {
+    return url.split("?")[0] ?? "";
+  }
+};
+
+const shouldSkipApplicationHeader = (path: string): boolean => {
+  return (
+    path === "/api/v1/auth/login" ||
+    path === "/api/v1/admin/applications" ||
+    path.startsWith("/api/v1/admin/applications/") ||
+    path === "/api/v1/admin/users" ||
+    path.startsWith("/api/v1/admin/users/")
+  );
+};
+
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
-  const isLoginRequest = config.url?.split("?")[0] === "/api/v1/auth/login";
+  const requestPath = normalizeRequestPath(config.url);
   const token = authStore.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   const applicationId = tenantStore.getApplicationId();
-  if (applicationId && !isLoginRequest) {
+  if (applicationId && !shouldSkipApplicationHeader(requestPath)) {
     config.headers["X-Application-Id"] = applicationId;
   }
   return config;
