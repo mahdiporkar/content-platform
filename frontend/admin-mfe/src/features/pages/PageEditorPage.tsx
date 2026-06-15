@@ -6,6 +6,7 @@ import { useTenant } from "../../app/tenant";
 import { ContentEditor } from "../../components/ContentEditor";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { ContentStatus, DynamicPage } from "../../types";
+import { useI18n } from "../../i18n";
 
 type EditorMode = "create" | "edit";
 
@@ -13,6 +14,7 @@ const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
 export const PageEditorPage = ({ mode }: { mode: EditorMode }) => {
   const { applicationId } = useTenant();
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -73,37 +75,37 @@ export const PageEditorPage = ({ mode }: { mode: EditorMode }) => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            {mode === "create" ? "Create Page" : "Edit Page"}
+            {mode === "create" ? `${t("common.create")} ${t("page.pages")}` : `${t("common.edit")} ${t("page.pages")}`}
           </Typography.Title>
-          <Typography.Text type="secondary">Manage dynamic multilingual site pages.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.pagesDescription")}</Typography.Text>
         </div>
       </div>
       {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 24 }} />}
       <Form layout="vertical">
-        <Form.Item label="Title" required>
+        <Form.Item label={t("common.title")} required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
         </Form.Item>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item label="Slug" required>
+            <Form.Item label={t("common.slug")} required>
               <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Status">
-              <Select value={status} onChange={setStatus} options={statusOptions.map((option) => ({ value: option, label: option }))} />
+            <Form.Item label={t("common.status")}>
+              <Select value={status} onChange={setStatus} options={statusOptions.map((option) => ({ value: option, label: v(option) }))} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Language">
+            <Form.Item label={t("common.language")}>
               <Select value={languageCode} onChange={(value) => setLanguageCode(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item label="Cover image URL">
+        <Form.Item label={t("field.coverImage")}>
           <Input value={coverImage} onChange={(event) => setCoverImage(event.target.value)} />
         </Form.Item>
-        <Form.Item label="Content">
+        <Form.Item label={t("editor.mediaTitle")}>
           <ContentEditor applicationId={applicationId} value={content} onChange={setContent} />
         </Form.Item>
         <Card size="small" title="Page Options" style={{ marginBottom: 16 }}>
@@ -114,35 +116,35 @@ export const PageEditorPage = ({ mode }: { mode: EditorMode }) => {
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Sort order">
+              <Form.Item label={t("field.sortOrder")}>
                 <InputNumber value={sortOrder ?? undefined} onChange={(value) => setSortOrder(value ?? null)} min={0} style={{ width: "100%" }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Show in menu">
+              <Form.Item label={t("field.showInMenu")}>
                 <Switch checked={showInMenu} onChange={setShowInMenu} />
               </Form.Item>
             </Col>
           </Row>
         </Card>
         <Card size="small" title="SEO" style={{ marginBottom: 16 }}>
-          <Form.Item label="SEO title">
+          <Form.Item label={t("field.metaTitle")}>
             <Input value={seoTitle} onChange={(event) => setSeoTitle(event.target.value)} />
           </Form.Item>
-          <Form.Item label="SEO description">
+          <Form.Item label={t("field.metaDescription")}>
             <Input.TextArea value={seoDescription} onChange={(event) => setSeoDescription(event.target.value)} rows={3} />
           </Form.Item>
-          <Form.Item label="SEO keywords">
+          <Form.Item label={t("field.metaKeywords")}>
             <Select mode="tags" value={seoKeywords} onChange={setSeoKeywords} tokenSeparators={[","]} />
           </Form.Item>
         </Card>
       </Form>
       <Space>
         <Button type="primary" onClick={handleSave} loading={saving} size="large">
-          Save Page
+          {t("common.save")}
         </Button>
         <Button onClick={() => navigate("/pages")} disabled={saving} size="large">
-          Cancel
+          {t("common.cancel")}
         </Button>
       </Space>
     </Card>

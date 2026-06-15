@@ -5,6 +5,7 @@ import type { ColumnsType } from "antd/es/table";
 import { listAdminMedia, listMediaReferences, purgeMediaAsset, restoreMediaAsset } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import type { MediaAsset, MediaReference } from "../../types";
+import { useI18n } from "../../i18n";
 
 const toSizeLabel = (sizeBytes: number): string => {
   const mb = sizeBytes / 1024 / 1024;
@@ -32,6 +33,7 @@ const purgeErrorMessage = (error: unknown): string => {
 export const MediaSafetyPage = () => {
   const navigate = useNavigate();
   const { applicationId } = useTenant();
+  const { t, v } = useI18n();
   const [items, setItems] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -115,7 +117,7 @@ export const MediaSafetyPage = () => {
           if (asset.kind === "video") {
             return <video src={asset.mediaUrl} width={72} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />;
           }
-          return <Typography.Text type="secondary">FILE</Typography.Text>;
+          return <Typography.Text type="secondary">{t("common.file")}</Typography.Text>;
         }
       },
       {
@@ -152,7 +154,7 @@ export const MediaSafetyPage = () => {
         title: "Purge",
         dataIndex: "canPurge",
         width: 90,
-        render: (value?: boolean) => (value ? <Tag color="green">YES</Tag> : <Tag color="red">NO</Tag>)
+        render: (value?: boolean) => (value ? <Tag color="green">{t("common.yes")}</Tag> : <Tag color="red">{t("common.no")}</Tag>)
       },
       {
         title: "Actions",
@@ -160,7 +162,7 @@ export const MediaSafetyPage = () => {
         width: 260,
         render: (_, asset) => (
           <Space size="small">
-            <Button onClick={() => void openReferences(asset)}>References</Button>
+            <Button onClick={() => void openReferences(asset)}>{t("common.references")}</Button>
             <Button
               onClick={async () => {
                 if (!applicationId) {
@@ -175,7 +177,7 @@ export const MediaSafetyPage = () => {
                 }
               }}
             >
-              Restore
+              {t("common.restore")}
             </Button>
             <Popconfirm
               title="Purge this file permanently?"
@@ -197,14 +199,14 @@ export const MediaSafetyPage = () => {
               }}
             >
               <Button danger type="primary" disabled={!asset.canPurge}>
-                Purge
+                {t("common.purge")}
               </Button>
             </Popconfirm>
           </Space>
         )
       }
     ],
-    [applicationId, fetchItems, messageApi, openReferences]
+    [applicationId, fetchItems, messageApi, openReferences, t]
   );
 
   const referenceColumns = useMemo<ColumnsType<MediaReference>>(
@@ -232,9 +234,9 @@ export const MediaSafetyPage = () => {
       </div>
       <div className="page-actions">
         <Space wrap>
-          <Button onClick={() => navigate("/media")}>Back to File Manager</Button>
+          <Button onClick={() => navigate("/media")}>{t("common.back")}</Button>
           <Button onClick={() => void fetchItems()} loading={loading}>
-            Refresh
+            {t("common.refresh")}
           </Button>
         </Space>
       </div>
@@ -255,7 +257,7 @@ export const MediaSafetyPage = () => {
         open={referencesOpen}
         title={`References${selectedAsset ? ` - ${selectedAsset.originalName || selectedAsset.objectKey}` : ""}`}
         onCancel={() => setReferencesOpen(false)}
-        footer={<Button onClick={() => setReferencesOpen(false)}>Close</Button>}
+        footer={<Button onClick={() => setReferencesOpen(false)}>{t("common.close")}</Button>}
         width={960}
       >
         <Table
@@ -264,7 +266,7 @@ export const MediaSafetyPage = () => {
           dataSource={references}
           loading={referencesLoading}
           pagination={false}
-          locale={{ emptyText: "No references found." }}
+          locale={{ emptyText: t("common.noResults") }}
         />
       </Modal>
     </Card>

@@ -456,7 +456,28 @@ const uiMessages: Record<SupportedLocale, Dictionary> = {
     "page.menus": "Menus", "page.menusDescription": "Build multilingual navigation menus.", "page.newMenu": "New menu",
     "page.applications": "Applications", "page.applicationsDescription": "Manage applications and their settings.",
     "page.newApplication": "New application", "page.deleteApplication": "Delete this application?",
-    "page.createFirst": "Create the first item"
+    "page.createFirst": "Create the first item", "page.users": "Users", "page.usersDescription": "Manage admin users and roles.",
+    "page.newUser": "New user", "page.analytics": "Analytics", "page.analyticsDescription": "View counts and engagement trends.",
+    "page.topContent": "Top content", "page.viewsTimeline": "Views timeline (30 days)",
+    "page.collections": "Collections", "page.collectionsDescription": "Curated content lists per application.",
+    "page.newCollection": "New collection", "common.email": "Email", "common.password": "Password",
+    "common.role": "Role", "common.systemAccess": "System access", "common.serviceAccess": "Service access",
+    "common.priority": "Priority", "common.items": "Items", "common.visibility": "Visibility",
+    "common.presentation": "Presentation", "common.allowedTypes": "Allowed types", "common.date": "Date"
+    ,"common.open": "Open", "common.upload": "Upload", "common.restore": "Restore", "common.trash": "Trash",
+    "common.usage": "Usage", "common.variants": "Variants", "common.references": "References", "common.purge": "Purge",
+    "value.image": "Image", "value.video": "Video", "value.other": "File", "value.trash": "Trash", "value.purged": "Purged",
+    "page.videos": "Videos", "page.videosDescription": "Manage video content and uploads.", "page.uploadVideo": "Upload video",
+    "page.fileManager": "File manager", "page.fileManagerDescription": "Shared media library for the selected application.",
+    "page.trashSafety": "Trash and safety", "field.content": "Content", "field.tags": "Tags",
+    "field.bannerImage": "Banner image", "field.coverImage": "Cover image URL", "field.readTime": "Estimated read time",
+    "field.metaTitle": "Meta title", "field.metaDescription": "Meta description", "field.metaKeywords": "Meta keywords",
+    "field.canonicalUrl": "Canonical URL", "field.robots": "Robots", "field.ogTitle": "Open Graph title",
+    "field.ogDescription": "Open Graph description", "field.ogImage": "Open Graph image URL",
+    "field.twitterTitle": "Twitter title", "field.twitterDescription": "Twitter description",
+    "field.twitterImage": "Twitter image URL", "field.schema": "Schema JSON-LD", "field.altText": "Alternative text",
+    "field.width": "Width", "field.height": "Height", "field.publishAt": "Publish date and time",
+    "field.sortOrder": "Sort order", "field.showInMenu": "Show in menu"
   },
   fa: {
     "common.title": "عنوان", "common.name": "نام", "common.status": "وضعیت", "common.actions": "عملیات",
@@ -482,7 +503,28 @@ const uiMessages: Record<SupportedLocale, Dictionary> = {
     "page.menus": "منوها", "page.menusDescription": "ساخت و مدیریت منوهای چندزبانه.", "page.newMenu": "منوی جدید",
     "page.applications": "اپلیکیشن‌ها", "page.applicationsDescription": "مدیریت اپلیکیشن‌ها و تنظیمات آن‌ها.",
     "page.newApplication": "اپلیکیشن جدید", "page.deleteApplication": "این اپلیکیشن حذف شود؟",
-    "page.createFirst": "ایجاد اولین مورد"
+    "page.createFirst": "ایجاد اولین مورد", "page.users": "کاربران", "page.usersDescription": "مدیریت کاربران پنل و نقش‌های دسترسی.",
+    "page.newUser": "کاربر جدید", "page.analytics": "آمار و تحلیل", "page.analyticsDescription": "بررسی بازدیدها و روند تعامل کاربران.",
+    "page.topContent": "محتوای پربازدید", "page.viewsTimeline": "روند بازدید ۳۰ روز اخیر",
+    "page.collections": "کالکشن‌ها", "page.collectionsDescription": "مدیریت فهرست‌های منتخب محتوا برای هر اپلیکیشن.",
+    "page.newCollection": "کالکشن جدید", "common.email": "ایمیل", "common.password": "رمز عبور",
+    "common.role": "نقش", "common.systemAccess": "دسترسی سیستمی", "common.serviceAccess": "دسترسی سرویس‌ها",
+    "common.priority": "اولویت", "common.items": "آیتم‌ها", "common.visibility": "سطح نمایش",
+    "common.presentation": "نحوه نمایش", "common.allowedTypes": "انواع مجاز", "common.date": "تاریخ"
+    ,"common.open": "باز کردن", "common.upload": "بارگذاری", "common.restore": "بازیابی", "common.trash": "زباله‌دان",
+    "common.usage": "موارد استفاده", "common.variants": "نسخه‌ها", "common.references": "ارجاعات", "common.purge": "حذف دائمی",
+    "value.image": "تصویر", "value.video": "ویدیو", "value.other": "فایل", "value.trash": "حذف‌شده", "value.purged": "حذف دائمی",
+    "page.videos": "ویدیوها", "page.videosDescription": "مدیریت و بارگذاری محتوای ویدیویی.", "page.uploadVideo": "بارگذاری ویدیو",
+    "page.fileManager": "مدیریت فایل‌ها", "page.fileManagerDescription": "کتابخانه مشترک رسانه برای اپلیکیشن انتخاب‌شده.",
+    "page.trashSafety": "زباله‌دان و ایمنی فایل", "field.content": "محتوا", "field.tags": "برچسب‌ها",
+    "field.bannerImage": "تصویر شاخص", "field.coverImage": "نشانی تصویر کاور", "field.readTime": "زمان تقریبی مطالعه",
+    "field.metaTitle": "عنوان متا", "field.metaDescription": "توضیحات متا", "field.metaKeywords": "کلمات کلیدی متا",
+    "field.canonicalUrl": "نشانی canonical", "field.robots": "تنظیمات ربات‌ها", "field.ogTitle": "عنوان Open Graph",
+    "field.ogDescription": "توضیحات Open Graph", "field.ogImage": "تصویر Open Graph",
+    "field.twitterTitle": "عنوان توییتر", "field.twitterDescription": "توضیحات توییتر",
+    "field.twitterImage": "تصویر توییتر", "field.schema": "ساختار JSON-LD", "field.altText": "متن جایگزین",
+    "field.width": "عرض", "field.height": "ارتفاع", "field.publishAt": "تاریخ و زمان انتشار",
+    "field.sortOrder": "ترتیب نمایش", "field.showInMenu": "نمایش در منو"
   },
   ar: {
     "common.title": "العنوان", "common.name": "الاسم", "common.status": "الحالة", "common.actions": "الإجراءات",
@@ -507,7 +549,27 @@ const uiMessages: Record<SupportedLocale, Dictionary> = {
     "page.pages": "الصفحات", "page.pagesDescription": "إنشاء صفحات ديناميكية متعددة اللغات.", "page.newPage": "صفحة جديدة",
     "page.menus": "القوائم", "page.menusDescription": "إنشاء قوائم تنقل متعددة اللغات.", "page.newMenu": "قائمة جديدة",
     "page.applications": "التطبيقات", "page.applicationsDescription": "إدارة التطبيقات وإعداداتها.",
-    "page.newApplication": "تطبيق جديد", "page.deleteApplication": "حذف هذا التطبيق؟", "page.createFirst": "إنشاء أول عنصر"
+    "page.newApplication": "تطبيق جديد", "page.deleteApplication": "حذف هذا التطبيق؟", "page.createFirst": "إنشاء أول عنصر",
+    "page.users": "المستخدمون", "page.usersDescription": "إدارة مستخدمي لوحة التحكم والأدوار.", "page.newUser": "مستخدم جديد",
+    "page.analytics": "التحليلات", "page.analyticsDescription": "عرض المشاهدات واتجاهات التفاعل.",
+    "page.topContent": "أفضل المحتوى", "page.viewsTimeline": "المشاهدات خلال 30 يوماً",
+    "page.collections": "المجموعات", "page.collectionsDescription": "قوائم محتوى منسقة لكل تطبيق.", "page.newCollection": "مجموعة جديدة",
+    "common.email": "البريد الإلكتروني", "common.password": "كلمة المرور", "common.role": "الدور",
+    "common.systemAccess": "صلاحيات النظام", "common.serviceAccess": "صلاحيات الخدمات", "common.priority": "الأولوية",
+    "common.items": "العناصر", "common.visibility": "الظهور", "common.presentation": "العرض",
+    "common.allowedTypes": "الأنواع المسموحة", "common.date": "التاريخ"
+    ,"common.open": "فتح", "common.upload": "رفع", "common.restore": "استعادة", "common.trash": "المهملات",
+    "common.usage": "الاستخدام", "common.variants": "النسخ", "common.references": "المراجع", "common.purge": "حذف نهائي",
+    "value.image": "صورة", "value.video": "فيديو", "value.other": "ملف", "value.trash": "المهملات", "value.purged": "محذوف نهائياً",
+    "page.videos": "الفيديوهات", "page.videosDescription": "إدارة محتوى الفيديو والملفات المرفوعة.", "page.uploadVideo": "رفع فيديو",
+    "page.fileManager": "مدير الملفات", "page.fileManagerDescription": "مكتبة الوسائط المشتركة للتطبيق المحدد.", "page.trashSafety": "المهملات والأمان",
+    "field.content": "المحتوى", "field.tags": "الوسوم", "field.bannerImage": "صورة الغلاف", "field.coverImage": "رابط صورة الغلاف",
+    "field.readTime": "وقت القراءة المقدر", "field.metaTitle": "عنوان Meta", "field.metaDescription": "وصف Meta",
+    "field.metaKeywords": "كلمات Meta", "field.canonicalUrl": "الرابط الأساسي", "field.robots": "إعدادات الروبوت",
+    "field.ogTitle": "عنوان Open Graph", "field.ogDescription": "وصف Open Graph", "field.ogImage": "صورة Open Graph",
+    "field.twitterTitle": "عنوان تويتر", "field.twitterDescription": "وصف تويتر", "field.twitterImage": "صورة تويتر",
+    "field.schema": "بنية JSON-LD", "field.altText": "النص البديل", "field.width": "العرض", "field.height": "الارتفاع",
+    "field.publishAt": "تاريخ ووقت النشر", "field.sortOrder": "ترتيب العرض", "field.showInMenu": "إظهار في القائمة"
   },
   zh: {
     "common.title": "标题", "common.name": "名称", "common.status": "状态", "common.actions": "操作",
@@ -532,7 +594,26 @@ const uiMessages: Record<SupportedLocale, Dictionary> = {
     "page.pages": "页面", "page.pagesDescription": "创建多语言动态页面。", "page.newPage": "新建页面",
     "page.menus": "菜单", "page.menusDescription": "构建多语言导航菜单。", "page.newMenu": "新建菜单",
     "page.applications": "应用", "page.applicationsDescription": "管理应用及其设置。",
-    "page.newApplication": "新建应用", "page.deleteApplication": "删除此应用？", "page.createFirst": "创建第一项"
+    "page.newApplication": "新建应用", "page.deleteApplication": "删除此应用？", "page.createFirst": "创建第一项",
+    "page.users": "用户", "page.usersDescription": "管理后台用户和角色。", "page.newUser": "新建用户",
+    "page.analytics": "分析", "page.analyticsDescription": "查看浏览量和互动趋势。", "page.topContent": "热门内容",
+    "page.viewsTimeline": "30 天浏览趋势", "page.collections": "集合", "page.collectionsDescription": "每个应用的精选内容列表。",
+    "page.newCollection": "新建集合", "common.email": "邮箱", "common.password": "密码", "common.role": "角色",
+    "common.systemAccess": "系统权限", "common.serviceAccess": "服务权限", "common.priority": "优先级",
+    "common.items": "项目", "common.visibility": "可见性", "common.presentation": "展示方式",
+    "common.allowedTypes": "允许类型", "common.date": "日期"
+    ,"common.open": "打开", "common.upload": "上传", "common.restore": "恢复", "common.trash": "回收站",
+    "common.usage": "使用情况", "common.variants": "变体", "common.references": "引用", "common.purge": "永久删除",
+    "value.image": "图片", "value.video": "视频", "value.other": "文件", "value.trash": "回收站", "value.purged": "已永久删除",
+    "page.videos": "视频", "page.videosDescription": "管理视频内容和上传。", "page.uploadVideo": "上传视频",
+    "page.fileManager": "文件管理", "page.fileManagerDescription": "所选应用的共享媒体库。", "page.trashSafety": "回收站与安全",
+    "field.content": "内容", "field.tags": "标签", "field.bannerImage": "横幅图片", "field.coverImage": "封面图片网址",
+    "field.readTime": "预计阅读时间", "field.metaTitle": "Meta 标题", "field.metaDescription": "Meta 描述",
+    "field.metaKeywords": "Meta 关键词", "field.canonicalUrl": "规范网址", "field.robots": "Robots 设置",
+    "field.ogTitle": "Open Graph 标题", "field.ogDescription": "Open Graph 描述", "field.ogImage": "Open Graph 图片",
+    "field.twitterTitle": "Twitter 标题", "field.twitterDescription": "Twitter 描述", "field.twitterImage": "Twitter 图片",
+    "field.schema": "JSON-LD 结构", "field.altText": "替代文本", "field.width": "宽度", "field.height": "高度",
+    "field.publishAt": "发布日期和时间", "field.sortOrder": "排序", "field.showInMenu": "在菜单中显示"
   },
   ru: {
     "common.title": "Название", "common.name": "Имя", "common.status": "Статус", "common.actions": "Действия",
@@ -557,7 +638,29 @@ const uiMessages: Record<SupportedLocale, Dictionary> = {
     "page.pages": "Страницы", "page.pagesDescription": "Создание многоязычных динамических страниц.", "page.newPage": "Новая страница",
     "page.menus": "Меню", "page.menusDescription": "Создание многоязычных меню навигации.", "page.newMenu": "Новое меню",
     "page.applications": "Приложения", "page.applicationsDescription": "Управление приложениями и настройками.",
-    "page.newApplication": "Новое приложение", "page.deleteApplication": "Удалить это приложение?", "page.createFirst": "Создать первый элемент"
+    "page.newApplication": "Новое приложение", "page.deleteApplication": "Удалить это приложение?", "page.createFirst": "Создать первый элемент",
+    "page.users": "Пользователи", "page.usersDescription": "Управление администраторами и ролями.", "page.newUser": "Новый пользователь",
+    "page.analytics": "Аналитика", "page.analyticsDescription": "Просмотры и тенденции вовлечения.", "page.topContent": "Популярный контент",
+    "page.viewsTimeline": "Просмотры за 30 дней", "page.collections": "Коллекции",
+    "page.collectionsDescription": "Подборки контента для каждого приложения.", "page.newCollection": "Новая коллекция",
+    "common.email": "Эл. почта", "common.password": "Пароль", "common.role": "Роль",
+    "common.systemAccess": "Системный доступ", "common.serviceAccess": "Доступ к сервисам", "common.priority": "Приоритет",
+    "common.items": "Элементы", "common.visibility": "Видимость", "common.presentation": "Представление",
+    "common.allowedTypes": "Разрешённые типы", "common.date": "Дата"
+    ,"common.open": "Открыть", "common.upload": "Загрузить", "common.restore": "Восстановить", "common.trash": "Корзина",
+    "common.usage": "Использование", "common.variants": "Варианты", "common.references": "Ссылки", "common.purge": "Удалить навсегда",
+    "value.image": "Изображение", "value.video": "Видео", "value.other": "Файл", "value.trash": "Корзина", "value.purged": "Удалено",
+    "page.videos": "Видео", "page.videosDescription": "Управление видеоконтентом и загрузками.", "page.uploadVideo": "Загрузить видео",
+    "page.fileManager": "Файловый менеджер", "page.fileManagerDescription": "Общая медиатека выбранного приложения.",
+    "page.trashSafety": "Корзина и безопасность", "field.content": "Содержимое", "field.tags": "Теги",
+    "field.bannerImage": "Баннер", "field.coverImage": "URL обложки", "field.readTime": "Примерное время чтения",
+    "field.metaTitle": "Meta-заголовок", "field.metaDescription": "Meta-описание", "field.metaKeywords": "Meta-ключевые слова",
+    "field.canonicalUrl": "Канонический URL", "field.robots": "Robots", "field.ogTitle": "Заголовок Open Graph",
+    "field.ogDescription": "Описание Open Graph", "field.ogImage": "Изображение Open Graph",
+    "field.twitterTitle": "Заголовок Twitter", "field.twitterDescription": "Описание Twitter",
+    "field.twitterImage": "Изображение Twitter", "field.schema": "Схема JSON-LD", "field.altText": "Альтернативный текст",
+    "field.width": "Ширина", "field.height": "Высота", "field.publishAt": "Дата и время публикации",
+    "field.sortOrder": "Порядок", "field.showInMenu": "Показывать в меню"
   }
 };
 
@@ -608,7 +711,7 @@ export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
         if (!input) {
           return "";
         }
-        const key = `value.${input.toLowerCase().replaceAll("-", "_")}`;
+        const key = `value.${input.toLowerCase().replace(/-/g, "_")}`;
         return uiMessages[locale][key] ?? uiMessages.en[key] ?? input;
       }
     }),

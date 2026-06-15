@@ -6,6 +6,7 @@ import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, GalleryContent, PageResponse } from "../../types";
+import { useI18n } from "../../i18n";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
@@ -17,6 +18,7 @@ const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "p
 
 export const GalleriesListPage = () => {
   const { applicationId } = useTenant();
+  const { locale, t, v } = useI18n();
   const navigate = useNavigate();
   const [status, setStatus] = useState<ContentStatus | "">("");
   const [galleries, setGalleries] = useState<GalleryContent[]>([]);
@@ -46,33 +48,33 @@ export const GalleriesListPage = () => {
 
   const columns = useMemo<ColumnsType<GalleryContent>>(
     () => [
-      { title: "Title", dataIndex: "title", width: "30%" },
+      { title: t("common.title"), dataIndex: "title", width: "30%" },
       {
-        title: "Slug",
+        title: t("common.slug"),
         dataIndex: "slug",
         width: "24%",
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
       },
       {
-        title: "Images",
+        title: t("common.images"),
         key: "gallery",
         width: "10%",
         render: (_, gallery) => gallery.gallery?.length ?? 0
       },
       {
-        title: "Status",
+        title: t("common.status"),
         dataIndex: "status",
         width: "12%",
-        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
+        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{v(value)}</Tag>
       },
       {
-        title: "Updated",
+        title: t("common.updated"),
         dataIndex: "updatedAt",
         width: "14%",
-        render: (value: string) => new Date(value).toLocaleString()
+        render: (value: string) => new Date(value).toLocaleString(locale)
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: "10%",
         render: (_, gallery) => (
@@ -81,12 +83,12 @@ export const GalleriesListPage = () => {
             icon={<EditOutlined />}
             onClick={() => navigate(`/galleries/${gallery.id}`, { state: { gallery } })}
           >
-            Edit
+            {t("common.edit")}
           </Button>
         )
       }
     ],
-    [navigate]
+    [locale, navigate, t, v]
   );
 
   return (
@@ -94,29 +96,29 @@ export const GalleriesListPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Galleries
+            {t("page.galleries")}
           </Typography.Title>
-          <Typography.Text type="secondary">Manage published gallery content.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.galleriesDescription")}</Typography.Text>
         </div>
       </div>
 
       <div className="page-actions">
         <Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/galleries/new")}>
-            New Gallery
+            {t("page.newGallery")}
           </Button>
           <Select
             value={status || "ALL"}
             onChange={(value) => setStatus(value === "ALL" ? "" : (value as ContentStatus))}
             style={{ width: 150 }}
             options={[
-              { label: "All Status", value: "ALL" },
-              ...statusOptions.map((option) => ({ value: option, label: option }))
+              { label: t("common.allStatuses"), value: "ALL" },
+              ...statusOptions.map((option) => ({ value: option, label: v(option) }))
             ]}
           />
         </Space>
         <Button icon={<ReloadOutlined />} onClick={fetchGalleries} loading={loading}>
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
 

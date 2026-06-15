@@ -9,6 +9,7 @@ import { resolveMediaAssetByObjectKey } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import { apiBaseUrl } from "../../config/env";
 import { ContentStatus, ContentUsage, PageResponse, Video } from "../../types";
+import { useI18n } from "../../i18n";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
@@ -59,6 +60,7 @@ const toSameOriginMediaUrl = (value: string | null | undefined): string | null =
 
 export const VideoListPage = () => {
   const { applicationId } = useTenant();
+  const { locale, t, v } = useI18n();
   const navigate = useNavigate();
   const [status, setStatus] = useState<ContentStatus | "">("");
   const [videos, setVideos] = useState<Video[]>([]);
@@ -155,7 +157,7 @@ export const VideoListPage = () => {
   const columns = useMemo<ColumnsType<Video>>(
     () => [
       {
-        title: "Preview",
+        title: t("common.preview"),
         key: "preview",
         width: "10%",
         render: (_, video) => {
@@ -171,44 +173,44 @@ export const VideoListPage = () => {
                 setPreviewVideo(video);
               }}
             >
-              Preview
+              {t("common.preview")}
             </Button>
           );
         }
       },
-      { title: "Title", dataIndex: "title", width: "25%" },
+      { title: t("common.title"), dataIndex: "title", width: "25%" },
       {
-        title: "Locale",
+        title: t("common.locale"),
         dataIndex: "locale",
         width: "8%",
         render: (value?: string | null) => value || "fa"
       },
       {
-        title: "Status",
+        title: t("common.status"),
         dataIndex: "status",
         width: "12%",
-        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
+        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{v(value)}</Tag>
       },
       {
-        title: "File (Object Key)",
+        title: t("common.file"),
         dataIndex: "objectKey",
         width: "30%",
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
       },
       {
-        title: "Updated",
+        title: t("common.updated"),
         dataIndex: "updatedAt",
         width: "13%",
-        render: (value: string) => new Date(value).toLocaleString()
+        render: (value: string) => new Date(value).toLocaleString(locale)
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: "22%",
         render: (_, video) => (
           <Space size="small">
             <Button type="text" onClick={() => void openUsage(video)}>
-              Usage
+              {t("common.usage")}
             </Button>
             {viewMode === "active" ? (
               <>
@@ -217,46 +219,47 @@ export const VideoListPage = () => {
                   icon={<EditOutlined />}
                   onClick={() => navigate(`/videos/${video.id}`, { state: { video } })}
                 >
-                  Edit
+                  {t("common.edit")}
                 </Button>
                 <Button type="text" onClick={() => void openVariants(video)}>
-                  Variants
+                  {t("common.variants")}
                 </Button>
                 <Popconfirm
                   title="Delete this video record?"
                   description="The file remains in File Manager. Delete is blocked if the file is used elsewhere."
-                  okText="Delete"
+                  okText={t("common.delete")}
+                  cancelText={t("common.cancel")}
                   okButtonProps={{ danger: true }}
                   onConfirm={() => void handleDelete(video)}
                 >
                   <Button danger type="text">
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </Popconfirm>
               </>
             ) : (
               <Button type="text" onClick={() => void handleRestore(video)}>
-                Restore
+                {t("common.restore")}
               </Button>
             )}
           </Space>
         )
       }
     ],
-    [applicationId, handleDelete, handleRestore, messageApi, navigate, openUsage, viewMode]
+    [applicationId, handleDelete, handleRestore, locale, messageApi, navigate, openUsage, t, v, viewMode]
   );
 
   const usageColumns = useMemo<ColumnsType<ContentUsage>>(
     () => [
-      { title: "Type", dataIndex: "refType", width: 110 },
+      { title: t("common.type"), dataIndex: "refType", width: 110, render: (value) => v(value) },
       {
-        title: "Title",
+        title: t("common.title"),
         key: "title",
         render: (_, usage) => usage.title || usage.refId
       },
       { title: "Field", dataIndex: "refField", width: 120 },
       {
-        title: "Open",
+        title: t("common.open"),
         key: "open",
         width: 110,
         render: (_, usage) => (
@@ -271,12 +274,12 @@ export const VideoListPage = () => {
               navigate(usage.routePath);
             }}
           >
-            Go
+            {t("common.open")}
           </Button>
         )
       }
     ],
-    [navigate]
+    [navigate, t, v]
   );
 
   return (
@@ -285,35 +288,35 @@ export const VideoListPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Videos
+            {t("page.videos")}
           </Typography.Title>
-          <Typography.Text type="secondary">Manage your video content and uploads.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.videosDescription")}</Typography.Text>
         </div>
       </div>
 
       <div className="page-actions">
         <Space>
           <Button type={viewMode === "active" ? "primary" : "default"} onClick={() => setViewMode("active")}>
-            Videos
+            {t("page.videos")}
           </Button>
           <Button type={viewMode === "trash" ? "primary" : "default"} onClick={() => setViewMode("trash")}>
-            Trash
+            {t("common.trash")}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/videos/upload")} disabled={viewMode === "trash"}>
-            Upload Video
+            {t("page.uploadVideo")}
           </Button>
           <Select
             value={status || "ALL"}
             onChange={(value) => setStatus(value === "ALL" ? "" : (value as ContentStatus))}
             style={{ width: 150 }}
             options={[
-              { label: "All Status", value: "ALL" },
-              ...statusOptions.map((option) => ({ value: option, label: option }))
+              { label: t("common.allStatuses"), value: "ALL" },
+              ...statusOptions.map((option) => ({ value: option, label: v(option) }))
             ]}
           />
         </Space>
         <Button icon={<ReloadOutlined />} onClick={fetchVideos} loading={loading}>
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
 
@@ -326,10 +329,10 @@ export const VideoListPage = () => {
         locale={{
           emptyText: (
             <div className="table-empty">
-              <Typography.Text type="secondary">No videos found</Typography.Text>
+              <Typography.Text type="secondary">{t("common.noResults")}</Typography.Text>
               <div>
                 <Button type="primary" onClick={() => navigate("/videos/upload")}>
-                  Upload your first video
+                  {t("page.uploadVideo")}
                 </Button>
               </div>
             </div>
@@ -375,7 +378,7 @@ export const VideoListPage = () => {
             }}
           />
         ) : (
-          <Typography.Text type="secondary">Preview URL is not available for this video.</Typography.Text>
+          <Typography.Text type="secondary">{t("common.noResults")}</Typography.Text>
         )}
       </Modal>
 
@@ -383,7 +386,7 @@ export const VideoListPage = () => {
         open={usageOpen}
         title={`Usage${usageTargetTitle ? ` - ${usageTargetTitle}` : ""}`}
         onCancel={() => setUsageOpen(false)}
-        footer={<Button onClick={() => setUsageOpen(false)}>Close</Button>}
+        footer={<Button onClick={() => setUsageOpen(false)}>{t("common.close")}</Button>}
         width={900}
       >
         <Table
@@ -392,7 +395,7 @@ export const VideoListPage = () => {
           columns={usageColumns}
           loading={usageLoading}
           pagination={false}
-          locale={{ emptyText: "No usage found. This file is not used elsewhere." }}
+          locale={{ emptyText: t("common.noResults") }}
         />
       </Modal>
     </Card>

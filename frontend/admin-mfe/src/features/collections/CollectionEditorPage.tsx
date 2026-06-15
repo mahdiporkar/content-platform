@@ -23,6 +23,7 @@ import client from "../../api/client";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
 import { Collection, CollectionItem, ContentStatus, MediaAsset, PageResponse } from "../../types";
 import { useTenant } from "../../app/tenant";
+import { useI18n } from "../../i18n";
 
 type Mode = "create" | "edit";
 type ContentType = "post" | "article" | "video" | "gallery" | "image";
@@ -102,6 +103,7 @@ const stringifyJsonObject = (value: Record<string, unknown> | null | undefined) 
 
 export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
   const navigate = useNavigate();
+  const { t, v } = useI18n();
   const params = useParams();
   const location = useLocation();
   const state = location.state as LocationState | undefined;
@@ -495,7 +497,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       { title: "Title", dataIndex: "title", width: "20%", render: (value, item) => value || item.display?.titleOverride || "-" },
       { title: "Item", dataIndex: "type", width: "8%", render: (value) => value || "content" },
       { title: "Type", dataIndex: "contentType", width: "8%", render: (value) => value || "custom" },
-      { title: "Active", dataIndex: "isActive", width: "8%", render: (value) => (value === false ? <Tag color="orange">Inactive</Tag> : <Tag color="green">Active</Tag>) },
+      { title: t("common.status"), dataIndex: "isActive", width: "8%", render: (value) => (value === false ? <Tag color="orange">{v("inactive")}</Tag> : <Tag color="green">{v("active")}</Tag>) },
       { title: "Status", dataIndex: "status", width: "10%" },
       { title: "Locale", dataIndex: "locale", width: "8%", render: (value) => value || "-" },
       {
@@ -601,19 +603,19 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
             {mode === "create" ? "New Collection" : "Collection Detail"}
           </Typography.Title>
-          <Typography.Text type="secondary">Configure curated list and item order.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.collectionsDescription")}</Typography.Text>
         </div>
       </div>
 
       <Card size="small" title="Settings" style={{ marginBottom: 16 }}>
         <Form layout="vertical" onSubmitCapture={saveCollection}>
-          <Form.Item label="Title" required>
+          <Form.Item label={t("common.title")} required>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} />
           </Form.Item>
-          <Form.Item label="Slug">
+          <Form.Item label={t("common.slug")}>
             <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title if empty" />
           </Form.Item>
-          <Form.Item label="Description">
+          <Form.Item label={t("common.description")}>
             <Input.TextArea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} />
           </Form.Item>
           <Form.Item label="Allowed Types">
@@ -631,15 +633,15 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             <Switch checked={isPublic} onChange={setIsPublic} />
           </Form.Item>
           <Space wrap align="start">
-            <Form.Item label="Status">
+            <Form.Item label={t("common.status")}>
               <Select
                 style={{ width: 160 }}
                 value={status}
                 onChange={setStatus}
                 options={[
-                  { label: "Draft", value: "draft" },
-                  { label: "Published", value: "published" },
-                  { label: "Archived", value: "archived" }
+                  { label: v("draft"), value: "draft" },
+                  { label: v("published"), value: "published" },
+                  { label: v("archived"), value: "archived" }
                 ]}
               />
             </Form.Item>
@@ -709,7 +711,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             <Button type="primary" htmlType="submit" loading={saving || loading} disabled={!title.trim()}>
               Save
             </Button>
-            <Button onClick={() => navigate("/collections")}>Back</Button>
+            <Button onClick={() => navigate("/collections")}>{t("common.back")}</Button>
           </Space>
         </Form>
       </Card>
@@ -720,7 +722,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           title="Collection Items"
           extra={
             <Space>
-              <Button onClick={() => setCustomModalOpen(true)}>+ Custom Item</Button>
+              <Button onClick={() => setCustomModalOpen(true)}>+ {t("common.create")}</Button>
               <Button type="primary" onClick={openAddModal}>
                 + Add Content
               </Button>
@@ -781,10 +783,10 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             value={candidateStatus}
             onChange={(value) => setCandidateStatus(value)}
             options={[
-              { label: "Published", value: "PUBLISHED" },
-              { label: "Draft", value: "DRAFT" },
-              { label: "Scheduled", value: "SCHEDULED" },
-              { label: "Archived", value: "ARCHIVED" }
+              { label: v("PUBLISHED"), value: "PUBLISHED" },
+              { label: v("DRAFT"), value: "DRAFT" },
+              { label: v("SCHEDULED"), value: "SCHEDULED" },
+              { label: v("ARCHIVED"), value: "ARCHIVED" }
             ]}
           />
           <Input
@@ -806,7 +808,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             value={candidateTagSearch}
             onChange={(event) => setCandidateTagSearch(event.target.value)}
           />
-          <Button onClick={() => void fetchCandidates()}>Apply</Button>
+          <Button onClick={() => void fetchCandidates()}>{t("common.search")}</Button>
         </Space>
         <Table
           size="small"
@@ -843,14 +845,14 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       >
         <Form layout="vertical">
           <Space wrap style={{ width: "100%" }} align="start">
-            <Form.Item label="Title Override" required>
+            <Form.Item label={t("common.title")} required>
               <Input value={customTitle} onChange={(event) => setCustomTitle(event.target.value)} style={{ width: 320 }} />
             </Form.Item>
             <Form.Item label="Subtitle">
               <Input value={customSubtitle} onChange={(event) => setCustomSubtitle(event.target.value)} style={{ width: 320 }} />
             </Form.Item>
           </Space>
-          <Form.Item label="Description">
+          <Form.Item label={t("common.description")}>
             <Input.TextArea value={customDescription} onChange={(event) => setCustomDescription(event.target.value)} rows={2} />
           </Form.Item>
           <Space wrap style={{ width: "100%" }} align="start">

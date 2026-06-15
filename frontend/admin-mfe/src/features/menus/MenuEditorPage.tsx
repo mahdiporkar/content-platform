@@ -7,6 +7,7 @@ import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MenuContentCandidate, MenuItem, MenuItemTarget, MenuItemType, MenuLocation, MenuStatus, SiteMenu } from "../../types";
+import { useI18n } from "../../i18n";
 
 type EditorMode = "create" | "edit";
 type ItemForm = {
@@ -48,6 +49,7 @@ const defaultItemForm: ItemForm = {
 
 export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
   const { applicationId } = useTenant();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -286,7 +288,7 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
         render: (value: string, item) => <Typography.Text style={{ paddingInlineStart: item.depth * 20 }}>{value}</Typography.Text>
       },
       { title: "Type", dataIndex: "itemType", width: 130, render: (value: MenuItemType) => <Tag>{value}</Tag> },
-      { title: "Reference", dataIndex: "referenceId", width: 210, render: (value?: string | null) => value ? <Typography.Text code>{value}</Typography.Text> : "-" },
+      { title: t("common.references"), dataIndex: "referenceId", width: 210, render: (value?: string | null) => value ? <Typography.Text code>{value}</Typography.Text> : "-" },
       { title: "URL", dataIndex: "url", width: 220, render: (value?: string | null) => value || "-" },
       {
         title: "Parent",
@@ -371,7 +373,7 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
         title: "Menu",
         dataIndex: "alreadyInMenu",
         width: 120,
-        render: (value: boolean) => (value ? <Tag color="success">Added</Tag> : <Tag>Missing</Tag>)
+        render: (value: boolean) => (value ? <Tag color="success">{t("common.yes")}</Tag> : <Tag>{t("common.no")}</Tag>)
       },
       {
         title: "Actions",
@@ -395,14 +397,14 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
             <Typography.Title level={4} style={{ marginBottom: 0 }}>
               {mode === "create" ? "Create Menu" : "Edit Menu"}
             </Typography.Title>
-            <Typography.Text type="secondary">Configure multilingual menus and their tree items.</Typography.Text>
+            <Typography.Text type="secondary">{t("page.menusDescription")}</Typography.Text>
           </div>
         </div>
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 24 }} />}
         <Form layout="vertical">
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item label="Title" required>
+              <Form.Item label={t("common.title")} required>
                 <Input value={title} onChange={(event) => setTitle(event.target.value)} />
               </Form.Item>
             </Col>
@@ -419,12 +421,12 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Language">
+              <Form.Item label={t("common.language")}>
                 <Select value={languageCode} onChange={(value) => setLanguageCode(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Status">
+              <Form.Item label={t("common.status")}>
                 <Select value={status} onChange={setStatus} options={statusOptions.map((value) => ({ value, label: value }))} />
               </Form.Item>
             </Col>
@@ -459,7 +461,7 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
             <Form layout="vertical">
               <Row gutter={12}>
                 <Col span={8}>
-                  <Form.Item label="Title" required>
+                  <Form.Item label={t("common.title")} required>
                     <Input value={itemForm.title} onChange={(event) => setItemForm((prev) => ({ ...prev, title: event.target.value }))} />
                   </Form.Item>
                 </Col>
@@ -518,7 +520,7 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
               <Button type="primary" icon={<PlusOutlined />} onClick={saveItem}>
                 {itemForm.id ? "Update Item" : "Add Item"}
               </Button>
-              {itemForm.id && <Button onClick={() => setItemForm(defaultItemForm)}>Cancel Edit</Button>}
+              {itemForm.id && <Button onClick={() => setItemForm(defaultItemForm)}>{t("common.cancel")}</Button>}
             </Space>
           </Card>
           <Table rowKey="id" dataSource={flatItems} columns={columns} pagination={false} />
@@ -532,7 +534,7 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
               <Typography.Title level={5} style={{ margin: 0 }}>
                 Published Content
               </Typography.Title>
-              <Typography.Text type="secondary">Add published pages, posts, and galleries to this menu.</Typography.Text>
+              <Typography.Text type="secondary">{t("page.menusDescription")}</Typography.Text>
             </div>
             <Space>
               <Button icon={<ReloadOutlined />} onClick={fetchCandidates} loading={loadingCandidates}>

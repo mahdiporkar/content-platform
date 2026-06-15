@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Card, Table, Typography } from "antd";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
+import { useI18n } from "../../i18n";
 
 type TimelinePoint = { date: string; views: number };
 
 export const AnalyticsDashboardPage = () => {
   const { applicationId } = useTenant();
+  const { t, v } = useI18n();
   const [topItems, setTopItems] = useState<{ id: string; title: string; type: string; viewCount: number }[]>([]);
   const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,35 +36,35 @@ export const AnalyticsDashboardPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Analytics
+            {t("page.analytics")}
           </Typography.Title>
-          <Typography.Text type="secondary">View counts and engagement trends.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.analyticsDescription")}</Typography.Text>
         </div>
       </div>
 
-      <Card size="small" title="Top Content" style={{ marginBottom: 16 }}>
+      <Card size="small" title={t("page.topContent")} style={{ marginBottom: 16 }}>
         <Table
           rowKey="id"
           dataSource={topItems}
           loading={loading}
           pagination={false}
           columns={[
-            { title: "Title", dataIndex: "title" },
-            { title: "Type", dataIndex: "type" },
-            { title: "Views", dataIndex: "viewCount" }
+            { title: t("common.title"), dataIndex: "title" },
+            { title: t("common.type"), dataIndex: "type", render: (value) => v(value) },
+            { title: t("common.views"), dataIndex: "viewCount" }
           ]}
         />
       </Card>
 
-      <Card size="small" title="Views Timeline (30 days)">
+      <Card size="small" title={t("page.viewsTimeline")}>
         <Table
           rowKey="date"
           dataSource={timeline}
           loading={loading}
           pagination={false}
           columns={[
-            { title: "Date", dataIndex: "date" },
-            { title: "Views", dataIndex: "views" }
+            { title: t("common.date"), dataIndex: "date" },
+            { title: t("common.views"), dataIndex: "views" }
           ]}
         />
       </Card>

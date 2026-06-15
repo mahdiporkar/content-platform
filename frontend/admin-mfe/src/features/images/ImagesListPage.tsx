@@ -34,6 +34,7 @@ import { useTenant } from "../../app/tenant";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
 import { apiBaseUrl } from "../../config/env";
+import { useI18n } from "../../i18n";
 
 const resolveBackendOrigin = (): string => {
   const apiBase = apiBaseUrl.trim();
@@ -60,6 +61,7 @@ const toGatewayMediaUrl = (image: ImageContent): string => {
 };
 
 export const ImagesListPage = () => {
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const { applicationId } = useTenant();
   const [images, setImages] = useState<ImageContent[]>([]);
@@ -380,7 +382,7 @@ export const ImagesListPage = () => {
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
             Images
           </Typography.Title>
-          <Typography.Text type="secondary">Upload and manage image assets.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.fileManagerDescription")}</Typography.Text>
         </div>
       </div>
       <div className="page-actions">
@@ -410,22 +412,22 @@ export const ImagesListPage = () => {
         title="Upload Image"
       >
         <Form layout="vertical">
-          <Form.Item label="Title" required>
+          <Form.Item label={t("common.title")} required>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} />
           </Form.Item>
-          <Form.Item label="Status">
+          <Form.Item label={t("common.status")}>
             <Select
               value={status}
               onChange={(value) => setStatus(value)}
               options={[
-                { value: "DRAFT", label: "Draft" },
-                { value: "PUBLISHED", label: "Published" },
-                { value: "ARCHIVED", label: "Archived" },
-                { value: "SCHEDULED", label: "Scheduled" }
+                { value: "DRAFT", label: v("DRAFT") },
+                { value: "PUBLISHED", label: v("PUBLISHED") },
+                { value: "ARCHIVED", label: v("ARCHIVED") },
+                { value: "SCHEDULED", label: v("SCHEDULED") }
               ]}
             />
           </Form.Item>
-          <Form.Item label="Language" required>
+          <Form.Item label={t("common.language")} required>
             <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
           {status === "SCHEDULED" && (
@@ -462,7 +464,7 @@ export const ImagesListPage = () => {
               onRemove={() => setFileList([])}
               fileList={fileList as any}
             >
-              <Button icon={<UploadOutlined />}>Select file</Button>
+              <Button icon={<UploadOutlined />}>{t("common.file")}</Button>
             </Upload>
           </Form.Item>
           <Form.Item label="Variants (mobile/tablet/desktop)">
@@ -543,7 +545,7 @@ export const ImagesListPage = () => {
         open={usageOpen}
         title={`Usage${usageTargetTitle ? ` - ${usageTargetTitle}` : ""}`}
         onCancel={() => setUsageOpen(false)}
-        footer={<Button onClick={() => setUsageOpen(false)}>Close</Button>}
+        footer={<Button onClick={() => setUsageOpen(false)}>{t("common.close")}</Button>}
         width={900}
       >
         <Table

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { listMediaAssets, trashMediaAsset, type MediaKind } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import type { MediaAsset } from "../../types";
+import { useI18n } from "../../i18n";
 
 const toSizeLabel = (sizeBytes: number): string => {
   const mb = sizeBytes / 1024 / 1024;
@@ -19,6 +20,7 @@ const toSizeLabel = (sizeBytes: number): string => {
 export const MediaLibraryPage = () => {
   const navigate = useNavigate();
   const { applicationId } = useTenant();
+  const { t, v } = useI18n();
   const [items, setItems] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -58,7 +60,7 @@ export const MediaLibraryPage = () => {
   const columns = useMemo<ColumnsType<MediaAsset>>(
     () => [
       {
-        title: "Preview",
+        title: t("common.preview"),
         key: "preview",
         width: 110,
         render: (_, asset) => {
@@ -77,11 +79,11 @@ export const MediaLibraryPage = () => {
           if (asset.kind === "video") {
             return <video src={asset.mediaUrl} width={72} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />;
           }
-          return <Typography.Text type="secondary">FILE</Typography.Text>;
+          return <Typography.Text type="secondary">{t("common.file")}</Typography.Text>;
         }
       },
       {
-        title: "File",
+        title: t("common.file"),
         key: "name",
         render: (_, asset) => (
           <Space direction="vertical" size={2}>
@@ -93,39 +95,39 @@ export const MediaLibraryPage = () => {
         )
       },
       {
-        title: "Type",
+        title: t("common.type"),
         dataIndex: "kind",
         width: 110,
-        render: (value: MediaKind) => <Tag>{value.toUpperCase()}</Tag>
+        render: (value: MediaKind) => <Tag>{v(value)}</Tag>
       },
       {
-        title: "State",
+        title: t("common.status"),
         dataIndex: "state",
         width: 110,
         render: (value?: MediaAsset["state"]) => {
           const state = value ?? "ACTIVE";
           const color = state === "ACTIVE" ? "green" : state === "TRASH" ? "orange" : "red";
-          return <Tag color={color}>{state}</Tag>;
+          return <Tag color={color}>{v(state)}</Tag>;
         }
       },
       {
-        title: "Size",
+        title: t("common.size"),
         dataIndex: "sizeBytes",
         width: 120,
         render: (value: number) => toSizeLabel(value)
       },
       {
-        title: "URL",
+        title: t("common.url"),
         dataIndex: "mediaUrl",
         width: 120,
         render: (value: string) => (
           <a href={value} target="_blank" rel="noreferrer">
-            Open
+            {t("common.open")}
           </a>
         )
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: 220,
         render: (_, asset) => {
@@ -139,7 +141,7 @@ export const MediaLibraryPage = () => {
 
           const button = (
             <Button danger type="text" disabled={trashDisabled} title={trashDisabledReason}>
-              Trash
+              {t("common.trash")}
             </Button>
           );
 
@@ -147,7 +149,7 @@ export const MediaLibraryPage = () => {
             return (
               <Space>
                 <Button type="text" onClick={() => navigate(`/media/${asset.id}/variants`)}>
-                  Variants
+                  {t("common.variants")}
                 </Button>
                 {button}
               </Space>
@@ -157,11 +159,12 @@ export const MediaLibraryPage = () => {
           return (
             <Space>
               <Button type="text" onClick={() => navigate(`/media/${asset.id}/variants`)}>
-                Variants
+                {t("common.variants")}
               </Button>
               <Popconfirm
                 title="Move this file to trash?"
-                okText="Move to Trash"
+                okText={t("common.trash")}
+                cancelText={t("common.cancel")}
                 okButtonProps={{ danger: true }}
                 onConfirm={async () => {
                   if (!applicationId) {
@@ -190,7 +193,7 @@ export const MediaLibraryPage = () => {
         }
       }
     ],
-    [applicationId, fetchItems, messageApi, navigate]
+    [applicationId, fetchItems, messageApi, navigate, t, v]
   );
 
   return (
@@ -199,18 +202,18 @@ export const MediaLibraryPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            File Manager
+            {t("page.fileManager")}
           </Typography.Title>
           <Typography.Text type="secondary">
-            Shared media library for the selected application.
+            {t("page.fileManagerDescription")}
           </Typography.Text>
         </div>
       </div>
       <div className="page-actions">
         <Space wrap>
-          <Button onClick={() => navigate("/media/safety")}>Trash & Safety</Button>
+          <Button onClick={() => navigate("/media/safety")}>{t("page.trashSafety")}</Button>
           <Input.Search
-            placeholder="Search by filename or path"
+            placeholder={t("common.search")}
             allowClear
             style={{ width: 320 }}
             value={search}
@@ -222,7 +225,7 @@ export const MediaLibraryPage = () => {
           />
           <Select
             allowClear
-            placeholder="Type"
+            placeholder={t("common.type")}
             style={{ width: 160 }}
             value={kind}
             onChange={(value) => {
@@ -230,13 +233,13 @@ export const MediaLibraryPage = () => {
               setPage(1);
             }}
             options={[
-              { value: "image", label: "Image" },
-              { value: "video", label: "Video" },
-              { value: "other", label: "File" }
+              { value: "image", label: v("image") },
+              { value: "video", label: v("video") },
+              { value: "other", label: v("other") }
             ]}
           />
           <Button onClick={() => void fetchItems()} loading={loading}>
-            Refresh
+            {t("common.refresh")}
           </Button>
         </Space>
       </div>

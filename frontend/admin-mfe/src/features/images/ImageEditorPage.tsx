@@ -6,8 +6,10 @@ import client from "../../api/client";
 import { resolveMediaAssetByObjectKey } from "../../api/media";
 import { ImageContent } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { useI18n } from "../../i18n";
 
 export const ImageEditorPage = () => {
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const params = useParams();
   const [image, setImage] = useState<ImageContent | null>(null);
@@ -81,7 +83,7 @@ export const ImageEditorPage = () => {
   if (!image) {
     return (
       <Card className="page-card">
-        <Typography.Text type="secondary">Loading...</Typography.Text>
+        <Typography.Text type="secondary">{t("editor.loading")}</Typography.Text>
       </Card>
     );
   }
@@ -91,56 +93,56 @@ export const ImageEditorPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Edit Image
+            {t("common.edit")} {v("image")}
           </Typography.Title>
-          <Typography.Text type="secondary">Update image metadata and status.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.fileManagerDescription")}</Typography.Text>
         </div>
       </div>
       <Form layout="vertical" onSubmitCapture={handleSave} style={{ maxWidth: 600 }}>
-        <Form.Item label="Title" required>
+        <Form.Item label={t("common.title")} required>
           <Input
             value={image.title}
             onChange={(event) => setImage({ ...image, title: event.target.value })}
           />
         </Form.Item>
-        <Form.Item label="Description">
+        <Form.Item label={t("common.description")}>
           <Input.TextArea
             value={image.description ?? ""}
             onChange={(event) => setImage({ ...image, description: event.target.value })}
             rows={3}
           />
         </Form.Item>
-        <Form.Item label="Locale">
+        <Form.Item label={t("common.locale")}>
           <Select
             value={(image.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE}
             onChange={(value) => setImage({ ...image, locale: value })}
             options={CONTENT_LOCALE_OPTIONS}
           />
         </Form.Item>
-        <Form.Item label="Alt Text">
+        <Form.Item label={t("field.altText")}>
           <Input value={image.altText ?? ""} onChange={(event) => setImage({ ...image, altText: event.target.value })} />
         </Form.Item>
-        <Form.Item label="Width">
+        <Form.Item label={t("field.width")}>
           <Input
             value={image.width ?? ""}
             onChange={(event) => setImage({ ...image, width: Number(event.target.value) || null })}
           />
         </Form.Item>
-        <Form.Item label="Height">
+        <Form.Item label={t("field.height")}>
           <Input
             value={image.height ?? ""}
             onChange={(event) => setImage({ ...image, height: Number(event.target.value) || null })}
           />
         </Form.Item>
-        <Form.Item label="Status">
+        <Form.Item label={t("common.status")}>
           <Select
             value={image.status}
             onChange={(value) => setImage({ ...image, status: value })}
             options={[
-              { value: "DRAFT", label: "Draft" },
-              { value: "PUBLISHED", label: "Published" },
-              { value: "ARCHIVED", label: "Archived" },
-              { value: "SCHEDULED", label: "Scheduled" }
+              { value: "DRAFT", label: v("DRAFT") },
+              { value: "PUBLISHED", label: v("PUBLISHED") },
+              { value: "ARCHIVED", label: v("ARCHIVED") },
+              { value: "SCHEDULED", label: v("SCHEDULED") }
             ]}
           />
         </Form.Item>
@@ -160,12 +162,12 @@ export const ImageEditorPage = () => {
         )}
         <Space>
           <Button onClick={() => void openVariants()} disabled={!image}>
-            Manage Variants
+            {t("common.variants")}
           </Button>
           <Button type="primary" htmlType="submit" loading={loading}>
-            Save
+            {t("common.save")}
           </Button>
-          <Button onClick={() => navigate("/images")}>Cancel</Button>
+          <Button onClick={() => navigate("/images")}>{t("common.cancel")}</Button>
         </Space>
       </Form>
     </Card>

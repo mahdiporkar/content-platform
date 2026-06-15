@@ -10,6 +10,7 @@ import {
 } from "../../api/media";
 import { useTenant } from "../../app/tenant";
 import type { MediaVariant, MediaVariantDevice, MediaVariantPurpose, MediaVariantSizeKey } from "../../types";
+import { useI18n } from "../../i18n";
 
 const PURPOSE_OPTIONS: MediaVariantPurpose[] = [
   "default",
@@ -28,6 +29,7 @@ export const MediaVariantsPage = () => {
   const { id } = useParams<{ id: string }>();
   const mediaId = id || "";
   const { applicationId } = useTenant();
+  const { locale, t, v } = useI18n();
   const [messageApi, contextHolder] = message.useMessage();
   const [variants, setVariants] = useState<MediaVariant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ export const MediaVariantsPage = () => {
   const columns = useMemo<ColumnsType<MediaVariant>>(
     () => [
       {
-        title: "Preview",
+        title: t("common.preview"),
         key: "preview",
         width: 110,
         render: (_, entry) => {
@@ -134,18 +136,18 @@ export const MediaVariantsPage = () => {
         render: (value: string, row) => (
           <Space>
             <Tag>{value}</Tag>
-            {row.isDefault && <Tag color="blue">DEFAULT</Tag>}
+            {row.isDefault && <Tag color="blue">{v("default")}</Tag>}
           </Space>
         )
       },
       {
-        title: "Size",
+        title: t("common.size"),
         dataIndex: "sizeKey",
         width: 90,
         render: (value?: string | null) => value || "-"
       },
       {
-        title: "Device",
+        title: t("common.type"),
         dataIndex: "device",
         width: 100,
         render: (value?: string | null) => value || "-"
@@ -162,13 +164,13 @@ export const MediaVariantsPage = () => {
         width: 80
       },
       {
-        title: "Created",
+        title: t("common.created"),
         dataIndex: "createdAt",
         width: 170,
-        render: (value: string) => new Date(value).toLocaleString()
+        render: (value: string) => new Date(value).toLocaleString(locale)
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: 220,
         render: (_, row) => (
@@ -176,7 +178,7 @@ export const MediaVariantsPage = () => {
             <Button
               onClick={() => window.open(row.url, "_blank")}
             >
-              Preview
+              {t("common.preview")}
             </Button>
             <Button
               onClick={() => {
@@ -184,7 +186,7 @@ export const MediaVariantsPage = () => {
                 uploadRef.current?.setAttribute("data-replace-id", row.id);
               }}
             >
-              Replace
+              {t("common.upload")}
             </Button>
             <Popconfirm
               title="Delete this variant?"
@@ -201,13 +203,13 @@ export const MediaVariantsPage = () => {
                 }
               }}
             >
-              <Button danger>Delete</Button>
+              <Button danger>{t("common.delete")}</Button>
             </Popconfirm>
           </Space>
         )
       }
     ],
-    [applicationId, mediaId, messageApi]
+    [applicationId, locale, mediaId, messageApi, t, v]
   );
 
   return (
@@ -216,7 +218,7 @@ export const MediaVariantsPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Media Variants
+            {t("common.variants")}
           </Typography.Title>
           <Typography.Text type="secondary">
             Manage art-direction variants for this media item.
@@ -229,9 +231,9 @@ export const MediaVariantsPage = () => {
       <Card size="small" title="Add Variant" style={{ marginBottom: 16 }}>
         <Form layout="vertical">
           <Space wrap style={{ width: "100%" }}>
-            <Form.Item label="File" required>
+            <Form.Item label={t("common.file")} required>
               <Space>
-                <Button onClick={() => uploadRef.current?.click()}>Choose File</Button>
+                <Button onClick={() => uploadRef.current?.click()}>{t("common.file")}</Button>
                 <Typography.Text type="secondary">{uploadFile?.name || "No file selected"}</Typography.Text>
               </Space>
               <input
@@ -296,9 +298,9 @@ export const MediaVariantsPage = () => {
           </Space>
           <Space>
             <Button type="primary" onClick={addVariant} loading={saving} disabled={!uploadFile}>
-              Add variant
+              {t("common.create")}
             </Button>
-            <Button onClick={() => navigate("/media")}>Back</Button>
+            <Button onClick={() => navigate("/media")}>{t("common.back")}</Button>
           </Space>
         </Form>
       </Card>

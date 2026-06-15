@@ -3,23 +3,13 @@ import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typ
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { AdminUser, Application } from "../../types";
+import { useI18n } from "../../i18n";
 
-const systemPermissionOptions = [
-  { value: "applications.manage", label: "Manage Applications" },
-  { value: "users.manage", label: "Manage Users" }
-];
-
-const servicePermissionOptions = [
-  { value: "posts.manage", label: "Manage Posts" },
-  { value: "articles.manage", label: "Manage Articles" },
-  { value: "galleries.manage", label: "Manage Galleries" },
-  { value: "images.manage", label: "Manage Images" },
-  { value: "videos.manage", label: "Manage Videos" },
-  { value: "collections.manage", label: "Manage Collections" },
-  { value: "analytics.view", label: "View Analytics" }
-];
+const systemPermissions = ["applications.manage", "users.manage"];
+const servicePermissions = ["posts.manage", "articles.manage", "galleries.manage", "images.manage", "videos.manage", "collections.manage", "analytics.view"];
 
 export const UsersListPage = () => {
+  const { t, v } = useI18n();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,10 +39,10 @@ export const UsersListPage = () => {
   const handleDelete = async (id: string) => {
     try {
       await client.delete(`/api/v1/admin/users/${id}`);
-      messageApi.success("User deleted.");
+      messageApi.success(`${t("page.users")} - ${t("common.delete")}`);
       await fetchUsers();
     } catch {
-      messageApi.error("Failed to delete user.");
+      messageApi.error(t("common.noResults"));
     }
   };
 
@@ -86,7 +76,7 @@ export const UsersListPage = () => {
       } else {
         await client.post("/api/v1/admin/users", payload);
       }
-      messageApi.success(editing ? "User updated." : "User created.");
+      messageApi.success(editing ? t("common.updated") : t("common.create"));
       setModalOpen(false);
       form.resetFields();
       await fetchUsers();
@@ -104,11 +94,11 @@ export const UsersListPage = () => {
 
   const columns = useMemo<ColumnsType<AdminUser>>(
     () => [
-      { title: "Email", dataIndex: "email", width: "35%" },
-      { title: "Role", dataIndex: "role", width: "15%" },
-      { title: "Status", dataIndex: "status", width: "15%" },
+      { title: t("common.email"), dataIndex: "email", width: "35%" },
+      { title: t("common.role"), dataIndex: "role", width: "15%", render: (value) => v(value) },
+      { title: t("common.status"), dataIndex: "status", width: "15%", render: (value) => v(value) },
       {
-        title: "Applications",
+        title: t("common.applications"),
         dataIndex: "applicationIds",
         width: "20%",
         render: (value: string[]) =>
@@ -119,7 +109,7 @@ export const UsersListPage = () => {
           )
       },
       {
-        title: "System Access",
+        title: t("common.systemAccess"),
         dataIndex: "systemPermissions",
         width: "20%",
         render: (value: string[]) =>
@@ -130,7 +120,7 @@ export const UsersListPage = () => {
           )
       },
       {
-        title: "Service Access",
+        title: t("common.serviceAccess"),
         dataIndex: "servicePermissions",
         width: "20%",
         render: (value: string[]) =>
@@ -141,29 +131,30 @@ export const UsersListPage = () => {
           )
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: "10%",
         render: (_, user) => (
           <Space size="small">
             <Button type="text" onClick={() => openModal(user)}>
-              Edit
+              {t("common.edit")}
             </Button>
             <Popconfirm
-              title="Delete this user?"
-              okText="Delete"
+              title={`${t("common.delete")} ${t("page.users")}؟`}
+              okText={t("common.delete")}
+              cancelText={t("common.cancel")}
               okButtonProps={{ danger: true }}
               onConfirm={() => handleDelete(user.id)}
             >
               <Button danger type="text">
-                Delete
+                {t("common.delete")}
               </Button>
             </Popconfirm>
           </Space>
         )
       }
     ],
-    []
+    [t, v]
   );
 
   return (
@@ -172,71 +163,72 @@ export const UsersListPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Users
+            {t("page.users")}
           </Typography.Title>
-          <Typography.Text type="secondary">Manage admin users and roles.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.usersDescription")}</Typography.Text>
         </div>
       </div>
       <div className="page-actions">
         <Button type="primary" onClick={() => openModal()}>
-          New User
+          {t("page.newUser")}
         </Button>
       </div>
       <Table rowKey="id" dataSource={users} columns={columns} loading={loading} pagination={false} />
 
       <Modal
         open={modalOpen}
-        title={editing ? "Edit User" : "Create User"}
+        title={editing ? `${t("common.edit")} ${t("page.users")}` : t("page.newUser")}
         onCancel={() => setModalOpen(false)}
         onOk={handleSubmit}
-        okText={editing ? "Save" : "Create"}
+        okText={editing ? t("common.save") : t("common.create")}
+        cancelText={t("common.cancel")}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+          <Form.Item label={t("common.email")} name="email" rules={[{ required: true, type: "email" }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Password" name="password" rules={editing ? [] : [{ required: true }]}>
+          <Form.Item label={t("common.password")} name="password" rules={editing ? [] : [{ required: true }]}>
             <Input.Password />
           </Form.Item>
-          <Form.Item label="Role" name="role" rules={[{ required: true }]}>
+          <Form.Item label={t("common.role")} name="role" rules={[{ required: true }]}>
             <Select
               options={[
-                { value: "super_admin", label: "Super Admin" },
-                { value: "editor", label: "Editor" },
-                { value: "publisher", label: "Publisher" }
+                { value: "super_admin", label: v("super_admin") },
+                { value: "editor", label: v("editor") },
+                { value: "publisher", label: v("publisher") }
               ]}
             />
           </Form.Item>
-          <Form.Item label="Status" name="status" rules={[{ required: true }]}>
+          <Form.Item label={t("common.status")} name="status" rules={[{ required: true }]}>
             <Select
               options={[
-                { value: "active", label: "Active" },
-                { value: "suspended", label: "Suspended" }
+                { value: "active", label: v("active") },
+                { value: "suspended", label: v("suspended") }
               ]}
             />
           </Form.Item>
-          <Form.Item label="Accessible Applications" name="applicationIds">
+          <Form.Item label={t("common.applications")} name="applicationIds">
             <Select
               mode="multiple"
               allowClear
-              placeholder="Select one or more applications"
+              placeholder={t("common.applications")}
               options={applications.map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }))}
             />
           </Form.Item>
-          <Form.Item label="System Permissions" name="systemPermissions">
+          <Form.Item label={t("common.systemAccess")} name="systemPermissions">
             <Select
               mode="multiple"
               allowClear
-              placeholder="Select system-level permissions"
-              options={systemPermissionOptions}
+              placeholder={t("common.systemAccess")}
+              options={systemPermissions.map((value) => ({ value, label: value }))}
             />
           </Form.Item>
-          <Form.Item label="Service Permissions" name="servicePermissions">
+          <Form.Item label={t("common.serviceAccess")} name="servicePermissions">
             <Select
               mode="multiple"
               allowClear
-              placeholder="Select content-service permissions"
-              options={servicePermissionOptions}
+              placeholder={t("common.serviceAccess")}
+              options={servicePermissions.map((value) => ({ value, label: value }))}
             />
           </Form.Item>
         </Form>

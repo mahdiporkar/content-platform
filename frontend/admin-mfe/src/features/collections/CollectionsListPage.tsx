@@ -5,10 +5,12 @@ import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import client from "../../api/client";
 import { Collection, PageResponse } from "../../types";
 import { useTenant } from "../../app/tenant";
+import { useI18n } from "../../i18n";
 
 export const CollectionsListPage = () => {
   const navigate = useNavigate();
   const { applicationId } = useTenant();
+  const { locale, t, v } = useI18n();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -58,7 +60,7 @@ export const CollectionsListPage = () => {
   const columns = useMemo<ColumnsType<Collection>>(
     () => [
       {
-        title: "Title",
+        title: t("common.title"),
         dataIndex: "title",
         width: "22%",
         render: (_, record) => (
@@ -67,65 +69,66 @@ export const CollectionsListPage = () => {
           </Button>
         )
       },
-      { title: "Slug", dataIndex: "slug", width: "16%" },
+      { title: t("common.slug"), dataIndex: "slug", width: "16%" },
       {
-        title: "Status",
+        title: t("common.status"),
         dataIndex: "status",
         width: "9%",
         render: (value: string | undefined) => {
           const color = value === "published" ? "green" : value === "archived" ? "red" : "default";
-          return <Tag color={color}>{value || "draft"}</Tag>;
+          return <Tag color={color}>{v(value || "draft")}</Tag>;
         }
       },
-      { title: "Presentation", dataIndex: ["presentation", "type"], width: "10%", render: (value) => value || "list" },
-      { title: "Priority", dataIndex: "priority", width: "8%", render: (value) => value ?? 0 },
+      { title: t("common.presentation"), dataIndex: ["presentation", "type"], width: "10%", render: (value) => v(value || "list") },
+      { title: t("common.priority"), dataIndex: "priority", width: "8%", render: (value) => value ?? 0 },
       {
-        title: "Allowed Types",
+        title: t("common.allowedTypes"),
         dataIndex: "allowedTypes",
         width: "16%",
         render: (value: string[] | null | undefined) =>
           value && value.length > 0 ? (
             <Space wrap>
               {value.map((type) => (
-                <Tag key={type}>{type}</Tag>
+                <Tag key={type}>{v(type)}</Tag>
               ))}
             </Space>
           ) : (
-            <Typography.Text type="secondary">All</Typography.Text>
+            <Typography.Text type="secondary">{t("common.allStatuses")}</Typography.Text>
           )
       },
-      { title: "Items", dataIndex: "itemsCount", width: "7%" },
+      { title: t("common.items"), dataIndex: "itemsCount", width: "7%" },
       {
-        title: "Visibility",
+        title: t("common.visibility"),
         dataIndex: "isPublic",
         width: "9%",
-        render: (value: boolean | undefined) => (value === false ? <Tag color="orange">Private</Tag> : <Tag color="green">Public</Tag>)
+        render: (value: boolean | undefined) => (value === false ? <Tag color="orange">{v("private")}</Tag> : <Tag color="green">{v("public")}</Tag>)
       },
-      { title: "Updated", dataIndex: "updatedAt", width: "14%", render: (value: string) => new Date(value).toLocaleString() },
+      { title: t("common.updated"), dataIndex: "updatedAt", width: "14%", render: (value: string) => new Date(value).toLocaleString(locale) },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: "10%",
         render: (_, collection) => (
           <Space size="small">
             <Button type="text" onClick={() => navigate(`/collections/${collection.id}`, { state: { collection } })}>
-              Edit
+              {t("common.edit")}
             </Button>
             <Popconfirm
-              title="Delete this collection?"
-              okText="Delete"
+              title={`${t("common.delete")} ${t("page.collections")}؟`}
+              okText={t("common.delete")}
+              cancelText={t("common.cancel")}
               okButtonProps={{ danger: true }}
               onConfirm={() => void handleDelete(collection)}
             >
               <Button danger type="text">
-                Delete
+                {t("common.delete")}
               </Button>
             </Popconfirm>
           </Space>
         )
       }
     ],
-    [navigate]
+    [locale, navigate, t, v]
   );
 
   const onTableChange = (nextPagination: TablePaginationConfig) => {
@@ -140,22 +143,22 @@ export const CollectionsListPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Collections
+            {t("page.collections")}
           </Typography.Title>
-          <Typography.Text type="secondary">Curated content lists per application.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.collectionsDescription")}</Typography.Text>
         </div>
       </div>
       <Space style={{ marginBottom: 16 }}>
         <Input.Search
           allowClear
-          placeholder="Search title or slug"
+          placeholder={t("common.search")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           onSearch={() => void fetchCollections({ page: 0 })}
           style={{ width: 280 }}
         />
         <Button type="primary" onClick={() => navigate("/collections/new")} disabled={!applicationId}>
-          New Collection
+          {t("page.newCollection")}
         </Button>
       </Space>
       <Table

@@ -7,6 +7,7 @@ import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
 import { ContentStatus, DynamicPage, PageResponse } from "../../types";
 import { CONTENT_LOCALE_OPTIONS } from "../../constants/locales";
+import { useI18n } from "../../i18n";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "processing"> = {
@@ -18,6 +19,7 @@ const statusColors: Record<ContentStatus, "default" | "success" | "warning" | "p
 
 export const PagesListPage = () => {
   const { applicationId } = useTenant();
+  const { locale, t, v } = useI18n();
   const navigate = useNavigate();
   const [status, setStatus] = useState<ContentStatus | "">("");
   const [languageCode, setLanguageCode] = useState<string>("");
@@ -48,44 +50,44 @@ export const PagesListPage = () => {
 
   const columns = useMemo<ColumnsType<DynamicPage>>(
     () => [
-      { title: "Title", dataIndex: "title", width: "28%" },
+      { title: t("common.title"), dataIndex: "title", width: "28%" },
       {
-        title: "Slug",
+        title: t("common.slug"),
         dataIndex: "slug",
         width: "22%",
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
       },
-      { title: "Language", dataIndex: "languageCode", width: "10%" },
+      { title: t("common.language"), dataIndex: "languageCode", width: "10%" },
       {
-        title: "Menu",
+        title: t("menu.menus"),
         dataIndex: "showInMenu",
         width: "10%",
-        render: (value: boolean) => (value ? <Tag color="blue">Shown</Tag> : <Tag>Hidden</Tag>)
+        render: (value: boolean) => (value ? <Tag color="blue">{t("common.visible")}</Tag> : <Tag>{t("common.hidden")}</Tag>)
       },
       {
-        title: "Status",
+        title: t("common.status"),
         dataIndex: "status",
         width: "12%",
-        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{value}</Tag>
+        render: (value: ContentStatus) => <Tag color={statusColors[value]}>{v(value)}</Tag>
       },
       {
-        title: "Updated",
+        title: t("common.updated"),
         dataIndex: "updatedAt",
         width: "13%",
-        render: (value: string) => new Date(value).toLocaleString()
+        render: (value: string) => new Date(value).toLocaleString(locale)
       },
       {
-        title: "Actions",
+        title: t("common.actions"),
         key: "actions",
         width: "10%",
         render: (_, page) => (
           <Button type="text" icon={<EditOutlined />} onClick={() => navigate(`/pages/${page.id}`, { state: { page } })}>
-            Edit
+            {t("common.edit")}
           </Button>
         )
       }
     ],
-    [navigate]
+    [locale, navigate, t, v]
   );
 
   return (
@@ -93,31 +95,31 @@ export const PagesListPage = () => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            Pages
+            {t("page.pages")}
           </Typography.Title>
-          <Typography.Text type="secondary">Create multilingual dynamic pages for the selected application.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.pagesDescription")}</Typography.Text>
         </div>
       </div>
       <div className="page-actions">
         <Space wrap>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/pages/new")}>
-            New Page
+            {t("page.newPage")}
           </Button>
           <Select
             value={status || "ALL"}
             onChange={(value) => setStatus(value === "ALL" ? "" : (value as ContentStatus))}
             style={{ width: 150 }}
-            options={[{ label: "All Status", value: "ALL" }, ...statusOptions.map((option) => ({ value: option, label: option }))]}
+            options={[{ label: t("common.allStatuses"), value: "ALL" }, ...statusOptions.map((option) => ({ value: option, label: v(option) }))]}
           />
           <Select
             value={languageCode || "ALL"}
             onChange={(value) => setLanguageCode(value === "ALL" ? "" : value)}
             style={{ width: 150 }}
-            options={[{ label: "All Languages", value: "ALL" }, ...CONTENT_LOCALE_OPTIONS]}
+            options={[{ label: t("common.allLanguages"), value: "ALL" }, ...CONTENT_LOCALE_OPTIONS]}
           />
         </Space>
         <Button icon={<ReloadOutlined />} onClick={fetchPages} loading={loading}>
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
       <Table rowKey="id" dataSource={pages} columns={columns} loading={loading} pagination={false} />

@@ -6,10 +6,12 @@ import client from "../../api/client";
 import { resolveMediaAssetByObjectKey, uploadMedia } from "../../api/media";
 import { ContentStatus, GalleryImage, SeoMeta, Video } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
+import { useI18n } from "../../i18n";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
 export const VideoEditorPage = () => {
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -146,34 +148,34 @@ export const VideoEditorPage = () => {
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
             Video Details
           </Typography.Title>
-          <Typography.Text type="secondary">View and edit video metadata.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.videosDescription")}</Typography.Text>
         </div>
       </div>
 
       {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 24 }} />}
 
       {loading ? (
-        <Typography.Text type="secondary">Loading...</Typography.Text>
+        <Typography.Text type="secondary">{t("editor.loading")}</Typography.Text>
       ) : (
         <Form layout="vertical" style={{ maxWidth: 720 }}>
-          <Form.Item label="Title" required>
+          <Form.Item label={t("common.title")} required>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
           </Form.Item>
-          <Form.Item label="Description">
+          <Form.Item label={t("common.description")}>
             <Input.TextArea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={4}
             />
           </Form.Item>
-          <Form.Item label="Status">
+          <Form.Item label={t("common.status")}>
             <Select
               value={status}
               onChange={(value) => setStatus(value)}
-              options={statusOptions.map((option) => ({ value: option, label: option }))}
+              options={statusOptions.map((option) => ({ value: option, label: v(option) }))}
             />
           </Form.Item>
-          <Form.Item label="Language" required>
+          <Form.Item label={t("common.language")} required>
             <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
           </Form.Item>
           {status === "SCHEDULED" && (
@@ -191,28 +193,28 @@ export const VideoEditorPage = () => {
             </Form.Item>
           )}
           <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
-            <Form.Item label="Tags">
+            <Form.Item label={t("field.tags")}>
               <Select
                 mode="tags"
                 value={tags}
                 onChange={(value) => setTags(value)}
                 tokenSeparators={[","]}
-                placeholder="Enter tags"
+                placeholder={t("field.tags")}
               />
             </Form.Item>
           </Card>
           <Card size="small" title="SEO" style={{ marginBottom: 16 }}>
-            <Form.Item label="Meta title">
+            <Form.Item label={t("field.metaTitle")}>
               <Input value={seo.metaTitle ?? ""} onChange={(event) => updateSeo("metaTitle", event.target.value)} />
             </Form.Item>
-            <Form.Item label="Meta description">
+            <Form.Item label={t("field.metaDescription")}>
               <Input.TextArea
                 value={seo.metaDescription ?? ""}
                 onChange={(event) => updateSeo("metaDescription", event.target.value)}
                 rows={3}
               />
             </Form.Item>
-            <Form.Item label="Meta keywords">
+            <Form.Item label={t("field.metaKeywords")}>
               <Input
                 value={(seo.metaKeywords ?? []).join(", ")}
                 onChange={(event) =>
@@ -224,16 +226,16 @@ export const VideoEditorPage = () => {
                       .filter(Boolean)
                   )
                 }
-                placeholder="keyword1, keyword2"
+                placeholder={t("field.metaKeywords")}
               />
             </Form.Item>
-            <Form.Item label="Canonical URL">
+            <Form.Item label={t("field.canonicalUrl")}>
               <Input
                 value={seo.canonicalUrl ?? ""}
                 onChange={(event) => updateSeo("canonicalUrl", event.target.value)}
               />
             </Form.Item>
-            <Form.Item label="Robots">
+            <Form.Item label={t("field.robots")}>
               <Space>
                 <Button
                   type={seo.noIndex ? "primary" : "default"}
@@ -249,33 +251,33 @@ export const VideoEditorPage = () => {
                 </Button>
               </Space>
             </Form.Item>
-            <Form.Item label="Open Graph title">
+            <Form.Item label={t("field.ogTitle")}>
               <Input value={seo.ogTitle ?? ""} onChange={(event) => updateSeo("ogTitle", event.target.value)} />
             </Form.Item>
-            <Form.Item label="Open Graph description">
+            <Form.Item label={t("field.ogDescription")}>
               <Input.TextArea
                 value={seo.ogDescription ?? ""}
                 onChange={(event) => updateSeo("ogDescription", event.target.value)}
                 rows={3}
               />
             </Form.Item>
-            <Form.Item label="Open Graph image URL">
+            <Form.Item label={t("field.ogImage")}>
               <Input value={seo.ogImage ?? ""} onChange={(event) => updateSeo("ogImage", event.target.value)} />
             </Form.Item>
-            <Form.Item label="Twitter title">
+            <Form.Item label={t("field.twitterTitle")}>
               <Input value={seo.twitterTitle ?? ""} onChange={(event) => updateSeo("twitterTitle", event.target.value)} />
             </Form.Item>
-            <Form.Item label="Twitter description">
+            <Form.Item label={t("field.twitterDescription")}>
               <Input.TextArea
                 value={seo.twitterDescription ?? ""}
                 onChange={(event) => updateSeo("twitterDescription", event.target.value)}
                 rows={3}
               />
             </Form.Item>
-            <Form.Item label="Twitter image URL">
+            <Form.Item label={t("field.twitterImage")}>
               <Input value={seo.twitterImage ?? ""} onChange={(event) => updateSeo("twitterImage", event.target.value)} />
             </Form.Item>
-            <Form.Item label="Schema JSON-LD">
+            <Form.Item label={t("field.schema")}>
               <Input.TextArea
                 value={seo.schemaJsonLd ?? ""}
                 onChange={(event) => updateSeo("schemaJsonLd", event.target.value)}
@@ -317,17 +319,17 @@ export const VideoEditorPage = () => {
                 <Card key={`${item.url}-${index}`} size="small" style={{ background: "#fafafa" }}>
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Input
-                      placeholder="Image URL"
+                      placeholder={t("field.coverImage")}
                       value={item.url}
                       onChange={(event) => updateGallery(index, { url: event.target.value })}
                     />
                     <Input
-                      placeholder="Alt text"
+                      placeholder={t("field.altText")}
                       value={item.alt ?? ""}
                       onChange={(event) => updateGallery(index, { alt: event.target.value })}
                     />
                     <Input
-                      placeholder="Caption"
+                      placeholder={t("common.description")}
                       value={item.caption ?? ""}
                       onChange={(event) => updateGallery(index, { caption: event.target.value })}
                     />
@@ -368,14 +370,14 @@ export const VideoEditorPage = () => {
       )}
 
       <Space>
-        <Button onClick={() => void openVariants()} disabled={!video}>
-          Manage Variants
+          <Button onClick={() => void openVariants()} disabled={!video}>
+            {t("common.variants")}
         </Button>
         <Button type="primary" onClick={handleSave} loading={saving} size="large" disabled={loading}>
-          Save Changes
+          {t("common.save")}
         </Button>
         <Button onClick={() => navigate("/videos")} disabled={saving} size="large">
-          Cancel
+          {t("common.cancel")}
         </Button>
       </Space>
     </Card>

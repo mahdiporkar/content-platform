@@ -3,6 +3,7 @@ import { Button, Image, Input, Modal, Select, Space, Table, Tag, Typography } fr
 import type { ColumnsType } from "antd/es/table";
 import { listMediaAssets, type MediaKind } from "../api/media";
 import type { MediaAsset } from "../types";
+import { useI18n } from "../i18n";
 
 type Props = {
   open: boolean;
@@ -30,6 +31,7 @@ export const MediaPickerModal = ({
   onCancel,
   onSelect
 }: Props) => {
+  const { t, v } = useI18n();
   const [items, setItems] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -75,7 +77,7 @@ export const MediaPickerModal = ({
   const columns = useMemo<ColumnsType<MediaAsset>>(
     () => [
       {
-        title: "Preview",
+        title: t("common.preview"),
         key: "preview",
         width: 110,
         render: (_, asset) => {
@@ -96,11 +98,11 @@ export const MediaPickerModal = ({
               <video src={asset.mediaUrl} width={72} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />
             );
           }
-          return <Typography.Text type="secondary">FILE</Typography.Text>;
+          return <Typography.Text type="secondary">{t("common.file")}</Typography.Text>;
         }
       },
       {
-        title: "Name",
+        title: t("common.name"),
         key: "name",
         render: (_, asset) => (
           <Space direction="vertical" size={2}>
@@ -112,29 +114,29 @@ export const MediaPickerModal = ({
         )
       },
       {
-        title: "Type",
+        title: t("common.type"),
         dataIndex: "kind",
         width: 90,
-        render: (value: MediaKind) => <Tag>{value.toUpperCase()}</Tag>
+        render: (value: MediaKind) => <Tag>{v(value)}</Tag>
       },
       {
-        title: "Size",
+        title: t("common.size"),
         dataIndex: "sizeBytes",
         width: 110,
         render: (value: number) => toSizeLabel(value)
       },
       {
-        title: "Action",
+        title: t("common.actions"),
         key: "action",
         width: 100,
         render: (_, asset) => (
           <Button type="link" onClick={() => onSelect(asset)}>
-            Use
+            {t("common.create")}
           </Button>
         )
       }
     ],
-    [onSelect]
+    [onSelect, t, v]
   );
 
   return (
@@ -149,7 +151,7 @@ export const MediaPickerModal = ({
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <Space wrap>
           <Input.Search
-            placeholder="Search by filename or path"
+            placeholder={t("common.search")}
             allowClear
             style={{ width: 300 }}
             value={search}
@@ -162,16 +164,16 @@ export const MediaPickerModal = ({
           <Select
             allowClear={allowedKinds.length > 1}
             style={{ width: 160 }}
-            placeholder="Type"
+            placeholder={t("common.type")}
             value={kind}
             onChange={(value) => {
               setPage(1);
               setKind(value);
             }}
-            options={allowedKinds.map((entry) => ({ value: entry, label: entry }))}
+            options={allowedKinds.map((entry) => ({ value: entry, label: v(entry) }))}
           />
           <Button onClick={() => void loadAssets()} loading={loading}>
-            Refresh
+            {t("common.refresh")}
           </Button>
         </Space>
         <Table

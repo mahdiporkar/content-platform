@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Form, Input, Select, Space, Typography, message } from "antd";
 import client from "../../api/client";
 import { Application, SeoMeta } from "../../types";
+import { useI18n } from "../../i18n";
 
 type Mode = "create" | "edit";
 
@@ -11,6 +12,7 @@ type LocationState = {
 };
 
 export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const params = useParams();
   const location = useLocation();
@@ -221,20 +223,20 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
         <Form.Item label="Name" required>
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="App name" />
         </Form.Item>
-        <Form.Item label="Description">
+        <Form.Item label={t("common.description")}>
           <Input.TextArea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
           />
         </Form.Item>
-        <Form.Item label="Status">
+        <Form.Item label={t("common.status")}>
           <Select
             value={status}
             onChange={(value) => setStatus(value)}
             options={[
-              { value: "active", label: "Active" },
-              { value: "suspended", label: "Suspended" }
+              { value: "active", label: v("active") },
+              { value: "suspended", label: v("suspended") }
             ]}
           />
         </Form.Item>
@@ -316,7 +318,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
           </Card>
         )}
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
-          <Form.Item label="Tags">
+          <Form.Item label={t("field.tags")}>
             <Input
               value={tagsInput}
               onChange={(event) =>
@@ -332,17 +334,17 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
           </Form.Item>
         </Card>
         <Card size="small" title="SEO" style={{ marginBottom: 16 }}>
-          <Form.Item label="Meta title">
+          <Form.Item label={t("field.metaTitle")}>
             <Input value={seo.metaTitle ?? ""} onChange={(event) => updateSeo("metaTitle", event.target.value)} />
           </Form.Item>
-          <Form.Item label="Meta description">
+          <Form.Item label={t("field.metaDescription")}>
             <Input.TextArea
               value={seo.metaDescription ?? ""}
               onChange={(event) => updateSeo("metaDescription", event.target.value)}
               rows={3}
             />
           </Form.Item>
-          <Form.Item label="Meta keywords">
+          <Form.Item label={t("field.metaKeywords")}>
             <Input
               value={(seo.metaKeywords ?? []).join(", ")}
               onChange={(event) =>

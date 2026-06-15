@@ -9,6 +9,7 @@ import { useTenant } from "../../app/tenant";
 import { ContentStatus, GalleryContent, GalleryImage, SeoMeta } from "../../types";
 import { CONTENT_LOCALE_OPTIONS, DEFAULT_CONTENT_LOCALE, type ContentLocale } from "../../constants/locales";
 import { MediaPickerModal } from "../../components/MediaPickerModal";
+import { useI18n } from "../../i18n";
 
 const statusOptions: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"];
 
@@ -16,6 +17,7 @@ type EditorMode = "create" | "edit";
 
 export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
   const { applicationId } = useTenant();
+  const { t, v } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -96,34 +98,34 @@ export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
       <div className="page-header">
         <div>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
-            {mode === "create" ? "Create Gallery" : "Edit Gallery"}
+            {mode === "create" ? `${t("common.create")} ${t("page.galleries")}` : `${t("common.edit")} ${t("page.galleries")}`}
           </Typography.Title>
-          <Typography.Text type="secondary">Create a gallery content item from managed images.</Typography.Text>
+          <Typography.Text type="secondary">{t("page.galleriesDescription")}</Typography.Text>
         </div>
       </div>
 
       {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 24 }} />}
 
       <Form layout="vertical">
-        <Form.Item label="Title" required>
+        <Form.Item label={t("common.title")} required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
         </Form.Item>
-        <Form.Item label="Description">
+        <Form.Item label={t("common.description")}>
           <Input.TextArea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} />
         </Form.Item>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item label="Slug" required>
+            <Form.Item label={t("common.slug")} required>
               <Input value={slug} onChange={(event) => setSlug(event.target.value)} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Status">
-              <Select value={status} onChange={(value) => setStatus(value)} options={statusOptions.map((option) => ({ value: option, label: option }))} />
+            <Form.Item label={t("common.status")}>
+              <Select value={status} onChange={(value) => setStatus(value)} options={statusOptions.map((option) => ({ value: option, label: v(option) }))} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Language" required>
+            <Form.Item label={t("common.language")} required>
               <Select value={locale} onChange={(value) => setLocale(value as ContentLocale)} options={CONTENT_LOCALE_OPTIONS} />
             </Form.Item>
           </Col>
@@ -138,10 +140,10 @@ export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Space>
               <Button onClick={() => inputRef.current?.click()} disabled={!applicationId}>
-                Upload image
+                {t("common.upload")}
               </Button>
               <Button onClick={() => setPickerOpen(true)} disabled={!applicationId}>
-                Add from File Manager
+                {t("page.fileManager")}
               </Button>
               <Button type="dashed" onClick={addGalleryItem}>
                 Add URL
@@ -171,11 +173,11 @@ export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
               <Card key={`${item.url}-${index}`} size="small" style={{ background: "#fafafa" }}>
                 <Space direction="vertical" style={{ width: "100%" }}>
                   {item.url && <img src={item.url} alt={item.alt || ""} style={{ width: 160, height: 100, objectFit: "cover" }} />}
-                  <Input placeholder="Image URL" value={item.url} onChange={(event) => updateGallery(index, { url: event.target.value })} />
-                  <Input placeholder="Alt text" value={item.alt ?? ""} onChange={(event) => updateGallery(index, { alt: event.target.value })} />
-                  <Input placeholder="Caption" value={item.caption ?? ""} onChange={(event) => updateGallery(index, { caption: event.target.value })} />
+                  <Input placeholder={t("field.coverImage")} value={item.url} onChange={(event) => updateGallery(index, { url: event.target.value })} />
+                  <Input placeholder={t("field.altText")} value={item.alt ?? ""} onChange={(event) => updateGallery(index, { alt: event.target.value })} />
+                  <Input placeholder={t("common.description")} value={item.caption ?? ""} onChange={(event) => updateGallery(index, { caption: event.target.value })} />
                   <Button danger icon={<DeleteOutlined />} onClick={() => removeGalleryItem(index)}>
-                    Remove
+                    {t("common.delete")}
                   </Button>
                 </Space>
               </Card>
@@ -184,13 +186,13 @@ export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
         </Card>
 
         <Card size="small" title="Tags & SEO" style={{ marginBottom: 16 }}>
-          <Form.Item label="Tags">
-            <Select mode="tags" value={tags} onChange={(value) => setTags(value)} tokenSeparators={[","]} placeholder="Enter tags" />
+          <Form.Item label={t("field.tags")}>
+            <Select mode="tags" value={tags} onChange={(value) => setTags(value)} tokenSeparators={[","]} placeholder={t("field.tags")} />
           </Form.Item>
-          <Form.Item label="Meta title">
+          <Form.Item label={t("field.metaTitle")}>
             <Input value={seo.metaTitle ?? ""} onChange={(event) => updateSeo("metaTitle", event.target.value)} />
           </Form.Item>
-          <Form.Item label="Meta description">
+          <Form.Item label={t("field.metaDescription")}>
             <Input.TextArea value={seo.metaDescription ?? ""} onChange={(event) => updateSeo("metaDescription", event.target.value)} rows={3} />
           </Form.Item>
         </Card>
@@ -198,10 +200,10 @@ export const GalleryEditorPage = ({ mode }: { mode: EditorMode }) => {
 
       <Space>
         <Button type="primary" onClick={handleSave} loading={saving} size="large">
-          {saving ? "Saving..." : "Save Gallery"}
+          {t("common.save")}
         </Button>
         <Button onClick={() => navigate("/galleries")} disabled={saving} size="large">
-          Cancel
+          {t("common.cancel")}
         </Button>
       </Space>
       <MediaPickerModal
