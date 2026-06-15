@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ValidationError } from 'class-validator';
 import { validateJwtSecret } from './common/jwt-secret';
+import { buildCorsConfiguration } from './common/cors-config';
 
 function buildFieldErrors(errors: ValidationError[]) {
   return errors.flatMap((error) => {
@@ -21,11 +22,15 @@ function buildFieldErrors(errors: ValidationError[]) {
 async function bootstrap() {
   validateJwtSecret(process.env);
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+  const cors = buildCorsConfiguration(process.env);
 
-  app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:3002'],
-    credentials: true,
-  });
+  if (cors.missingInProduction) {
+    logger.warn(
+      'CORS_ALLOWED_ORIGINS is not configured in production; browser cross-origin requests will be rejected.',
+    );
+  }
+  app.enableCors(cors.options);
 
   app.useGlobalPipes(
     new ValidationPipe({

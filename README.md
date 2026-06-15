@@ -252,6 +252,22 @@ MEDIA_BASE_PATH=/media
 
 Do not set public media URLs to MinIO, such as `http://localhost:9000`, for browser-facing delivery.
 
+### CORS
+
+Configure allowed admin frontend origins as a comma-separated environment variable:
+
+```bash
+CORS_ALLOWED_ORIGINS=http://localhost:3002,http://localhost:5173
+```
+
+Production example:
+
+```bash
+CORS_ALLOWED_ORIGINS=https://cms.magigateac.com
+```
+
+Requests without an `Origin` header, such as curl and health checks, remain allowed. In production, browser cross-origin requests are rejected when `CORS_ALLOWED_ORIGINS` is not configured.
+
 ## Quick Start
 
 ```bash

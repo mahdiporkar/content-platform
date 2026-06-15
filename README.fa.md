@@ -149,6 +149,22 @@ PUBLIC_BASE_URL=http://localhost:3001
 MEDIA_BASE_PATH=/media
 ```
 
+## تنظیمات CORS
+
+دامنه‌های مجاز پنل مدیریت را به‌صورت comma-separated تعریف کنید:
+
+```bash
+CORS_ALLOWED_ORIGINS=http://localhost:3002,http://localhost:5173
+```
+
+نمونه Production:
+
+```bash
+CORS_ALLOWED_ORIGINS=https://cms.magigateac.com
+```
+
+درخواست‌های بدون هدر `Origin` مانند curl و health check مجاز می‌مانند. در production، اگر `CORS_ALLOWED_ORIGINS` تعریف نشده باشد، درخواست‌های cross-origin مرورگر رد می‌شوند.
+
 ## راه‌اندازی سریع
 
 ```bash

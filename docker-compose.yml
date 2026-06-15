@@ -56,6 +56,7 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3001}
       MEDIA_BASE_PATH: ${MEDIA_BASE_PATH:-/media}
       CONTENT_BASE_PATH: ${CONTENT_BASE_PATH:-/api/v1/content}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3002,http://localhost:5173}
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3001:3001"

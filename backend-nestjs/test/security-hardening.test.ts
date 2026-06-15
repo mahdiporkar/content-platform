@@ -13,6 +13,7 @@ import { ViewRateLimitService } from '../src/services/view-rate-limit.service';
 import { ContentType } from '../src/common/content-type.enum';
 import { TooManyRequestsHttpException } from '../src/common/too-many-requests.exception';
 import { PublicMediaUrlService } from '../src/services/public-media-url.service';
+import { buildCorsConfiguration } from '../src/common/cors-config';
 
 function makeContext(request: Record<string, unknown>) {
   return {
@@ -20,6 +21,48 @@ function makeContext(request: Record<string, unknown>) {
       getRequest: () => request,
     }),
   } as never;
+}
+
+async function corsAllows(
+  env: NodeJS.ProcessEnv,
+  origin: string | undefined,
+): Promise<boolean> {
+  const configuration = buildCorsConfiguration(env);
+  const originHandler = configuration.options.origin;
+  assert.equal(typeof originHandler, 'function');
+
+  return new Promise((resolve, reject) => {
+    (originHandler as Exclude<typeof originHandler, boolean | string | RegExp | Array<string | RegExp>>)(
+      origin,
+      (error, allowed) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(Boolean(allowed));
+      },
+    );
+  });
+}
+
+async function testCorsConfiguration(): Promise<void> {
+  const configuredEnv = {
+    NODE_ENV: 'production',
+    CORS_ALLOWED_ORIGINS: 'https://cms.example.com, http://localhost:3002,https://cms.example.com',
+  };
+  assert.equal(await corsAllows(configuredEnv, 'https://cms.example.com'), true);
+  assert.equal(await corsAllows(configuredEnv, 'http://localhost:3002'), true);
+  assert.equal(await corsAllows(configuredEnv, 'https://blocked.example.com'), false);
+  assert.equal(await corsAllows(configuredEnv, undefined), true);
+
+  const developmentConfiguration = buildCorsConfiguration({ NODE_ENV: 'development' });
+  assert.equal(developmentConfiguration.missingInProduction, false);
+  assert.equal(await corsAllows({ NODE_ENV: 'development' }, 'https://local.example.com'), true);
+
+  const productionConfiguration = buildCorsConfiguration({ NODE_ENV: 'production' });
+  assert.equal(productionConfiguration.missingInProduction, true);
+  assert.equal(await corsAllows({ NODE_ENV: 'production' }, 'https://blocked.example.com'), false);
+  assert.equal(await corsAllows({ NODE_ENV: 'production' }, undefined), true);
 }
 
 async function testLoginRateLimit(): Promise<void> {
@@ -238,6 +281,7 @@ async function testPublicMediaUrlService(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await testCorsConfiguration();
   await testLoginRateLimit();
   await testJwtInvalidation();
   await testDeliveryGuardTokens();
