@@ -62,11 +62,12 @@ const antLocales: Record<SupportedLocale, typeof enUS> = {
 };
 
 const LocalizedAdminApp = () => {
-  const { locale } = useI18n();
+  const { locale, direction } = useI18n();
 
   return (
     <ConfigProvider
       locale={antLocales[locale]}
+      direction={direction}
       theme={{
         token: {
           colorPrimary: "#1890ff",

@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Alert, Button, Form, Input, Select, Typography } from "antd";
 import {
   AppstoreOutlined,
+  BarChartOutlined,
   CheckCircleFilled,
+  FileTextOutlined,
   GlobalOutlined,
   LockOutlined,
   MailOutlined,
+  PictureOutlined,
   SafetyCertificateOutlined
 } from "@ant-design/icons";
 import client from "../../api/client";
@@ -16,8 +19,8 @@ import { type SupportedLocale, useI18n } from "../../i18n";
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { locale, direction, setLocale, t } = useI18n();
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("Admin123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -66,6 +69,36 @@ export const LoginPage = () => {
                 </div>
               ))}
             </div>
+
+            <div className="login-dashboard-preview" aria-hidden="true">
+              <div className="login-preview__header">
+                <span>{t("login.preview.title")}</span>
+                <span className="login-preview__status">{t("login.preview.live")}</span>
+              </div>
+              <div className="login-preview__grid">
+                <div className="login-preview__card">
+                  <FileTextOutlined />
+                  <span>{t("menu.posts")}</span>
+                  <strong>۱۲۸</strong>
+                </div>
+                <div className="login-preview__card">
+                  <PictureOutlined />
+                  <span>{t("menu.media")}</span>
+                  <strong>۲.۴K</strong>
+                </div>
+                <div className="login-preview__card login-preview__card--chart">
+                  <BarChartOutlined />
+                  <span>{t("menu.analytics")}</span>
+                  <div className="login-preview__bars">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="login-showcase__footer">
@@ -98,6 +131,7 @@ export const LoginPage = () => {
               <span className="login-mobile-mark">
                 <AppstoreOutlined />
               </span>
+              <span className="login-form-eyebrow">{t("login.secure")}</span>
               <Typography.Title level={2}>{t("login.title")}</Typography.Title>
               <Typography.Paragraph>{t("login.subtitle")}</Typography.Paragraph>
             </div>
@@ -111,6 +145,7 @@ export const LoginPage = () => {
                   placeholder={t("login.emailPlaceholder")}
                   size="large"
                   autoComplete="username"
+                  autoFocus
                   dir="ltr"
                 />
               </Form.Item>

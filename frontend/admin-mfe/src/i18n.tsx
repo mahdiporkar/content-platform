@@ -31,6 +31,8 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "login.feature.content": "Manage every channel from one place",
     "login.feature.teams": "Control team and application access",
     "login.feature.delivery": "Publish reliable digital experiences",
+    "login.preview.title": "Workspace overview",
+    "login.preview.live": "Live",
     "login.footer": "Content Platform Admin",
     "menu.applications": "Applications",
     "menu.users": "Users",
@@ -99,9 +101,9 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "app.noAccessibleApplications": "اپلیکیشن قابل دسترسی وجود ندارد",
     "app.logout": "خروج",
     "login.eyebrow": "مدیریت محتوا، ساده و یکپارچه",
-    "login.title": "خوش آمدید",
-    "login.subtitle": "برای مدیریت محتوا، رسانه‌ها و تجربه‌های دیجیتال وارد حساب خود شوید.",
-    "login.email": "ایمیل",
+    "login.title": "به پنل مدیریت خوش آمدید",
+    "login.subtitle": "برای مدیریت یکپارچه محتوا، رسانه‌ها و سرویس‌های دیجیتال، وارد حساب کاربری خود شوید.",
+    "login.email": "نشانی ایمیل",
     "login.emailPlaceholder": "name@company.com",
     "login.password": "رمز عبور",
     "login.passwordPlaceholder": "رمز عبور خود را وارد کنید",
@@ -112,6 +114,8 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "login.feature.content": "مدیریت همه کانال‌های محتوا در یک مکان",
     "login.feature.teams": "کنترل دسترسی تیم‌ها و اپلیکیشن‌ها",
     "login.feature.delivery": "انتشار مطمئن تجربه‌های دیجیتال",
+    "login.preview.title": "نمای کلی فضای کاری",
+    "login.preview.live": "فعال",
     "login.footer": "پنل مدیریت پلتفرم محتوا",
     "menu.applications": "اپلیکیشن‌ها",
     "menu.users": "کاربران",
@@ -193,6 +197,8 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "login.feature.content": "إدارة جميع قنوات المحتوى من مكان واحد",
     "login.feature.teams": "التحكم في وصول الفرق والتطبيقات",
     "login.feature.delivery": "نشر تجارب رقمية موثوقة",
+    "login.preview.title": "نظرة عامة على مساحة العمل",
+    "login.preview.live": "مباشر",
     "login.footer": "إدارة منصة المحتوى",
     "menu.applications": "التطبيقات",
     "menu.users": "المستخدمون",
@@ -274,6 +280,8 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "login.feature.content": "在一个平台管理所有内容渠道",
     "login.feature.teams": "控制团队和应用访问权限",
     "login.feature.delivery": "可靠地发布数字体验",
+    "login.preview.title": "工作区概览",
+    "login.preview.live": "实时",
     "login.footer": "内容平台管理",
     "menu.applications": "应用",
     "menu.users": "用户",
@@ -355,6 +363,8 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "login.feature.content": "Управляйте всеми каналами в одном месте",
     "login.feature.teams": "Контролируйте доступ команд и приложений",
     "login.feature.delivery": "Надёжно публикуйте цифровые продукты",
+    "login.preview.title": "Обзор рабочего пространства",
+    "login.preview.live": "Онлайн",
     "login.footer": "Панель контент-платформы",
     "menu.applications": "Приложения",
     "menu.users": "Пользователи",
@@ -421,6 +431,136 @@ const directions: Record<SupportedLocale, Direction> = {
   ru: "ltr"
 };
 
+const uiMessages: Record<SupportedLocale, Dictionary> = {
+  en: {
+    "common.title": "Title", "common.name": "Name", "common.status": "Status", "common.actions": "Actions",
+    "common.edit": "Edit", "common.delete": "Delete", "common.refresh": "Refresh", "common.create": "Create",
+    "common.save": "Save", "common.cancel": "Cancel", "common.back": "Back", "common.close": "Close",
+    "common.search": "Search", "common.type": "Type", "common.language": "Language", "common.locale": "Locale",
+    "common.updated": "Updated", "common.created": "Created", "common.preview": "Preview", "common.file": "File",
+    "common.size": "Size", "common.views": "Views", "common.description": "Description", "common.slug": "Slug",
+    "common.allStatuses": "All statuses", "common.allLanguages": "All languages", "common.noResults": "No results found",
+    "common.yes": "Yes", "common.no": "No", "common.visible": "Visible", "common.hidden": "Hidden",
+    "common.readTime": "Read time", "common.images": "Images", "common.website": "Website",
+    "common.application": "Application", "common.applications": "Applications", "common.mediaPolicy": "Media policy",
+    "common.location": "Location", "common.code": "Code", "common.url": "URL",
+    "value.draft": "Draft", "value.published": "Published", "value.archived": "Archived",
+    "value.scheduled": "Scheduled", "value.active": "Active", "value.inactive": "Inactive",
+    "value.suspended": "Suspended", "value.public": "Public", "value.private": "Private",
+    "value.super_admin": "Super admin", "value.editor": "Editor", "value.publisher": "Publisher",
+    "value.header": "Header", "value.footer": "Footer", "value.sidebar": "Sidebar", "value.mobile": "Mobile",
+    "page.posts": "Posts", "page.postsDescription": "Manage blog posts and content.", "page.newPost": "New post",
+    "page.articles": "Articles", "page.articlesDescription": "Manage long-form articles and in-depth content.", "page.newArticle": "New article",
+    "page.galleries": "Galleries", "page.galleriesDescription": "Manage published gallery content.", "page.newGallery": "New gallery",
+    "page.pages": "Pages", "page.pagesDescription": "Create multilingual dynamic pages.", "page.newPage": "New page",
+    "page.menus": "Menus", "page.menusDescription": "Build multilingual navigation menus.", "page.newMenu": "New menu",
+    "page.applications": "Applications", "page.applicationsDescription": "Manage applications and their settings.",
+    "page.newApplication": "New application", "page.deleteApplication": "Delete this application?",
+    "page.createFirst": "Create the first item"
+  },
+  fa: {
+    "common.title": "عنوان", "common.name": "نام", "common.status": "وضعیت", "common.actions": "عملیات",
+    "common.edit": "ویرایش", "common.delete": "حذف", "common.refresh": "به‌روزرسانی", "common.create": "ایجاد",
+    "common.save": "ذخیره", "common.cancel": "انصراف", "common.back": "بازگشت", "common.close": "بستن",
+    "common.search": "جستجو", "common.type": "نوع", "common.language": "زبان", "common.locale": "زبان محتوا",
+    "common.updated": "آخرین تغییر", "common.created": "تاریخ ایجاد", "common.preview": "پیش‌نمایش", "common.file": "فایل",
+    "common.size": "حجم", "common.views": "بازدید", "common.description": "توضیحات", "common.slug": "نامک",
+    "common.allStatuses": "همه وضعیت‌ها", "common.allLanguages": "همه زبان‌ها", "common.noResults": "موردی پیدا نشد",
+    "common.yes": "بله", "common.no": "خیر", "common.visible": "نمایش داده می‌شود", "common.hidden": "پنهان",
+    "common.readTime": "زمان مطالعه", "common.images": "تصاویر", "common.website": "وب‌سایت",
+    "common.application": "اپلیکیشن", "common.applications": "اپلیکیشن‌ها", "common.mediaPolicy": "سیاست رسانه",
+    "common.location": "محل نمایش", "common.code": "کد", "common.url": "نشانی",
+    "value.draft": "پیش‌نویس", "value.published": "منتشرشده", "value.archived": "بایگانی‌شده",
+    "value.scheduled": "زمان‌بندی‌شده", "value.active": "فعال", "value.inactive": "غیرفعال",
+    "value.suspended": "تعلیق‌شده", "value.public": "عمومی", "value.private": "خصوصی",
+    "value.super_admin": "مدیر ارشد", "value.editor": "ویرایشگر", "value.publisher": "ناشر",
+    "value.header": "سربرگ", "value.footer": "پابرگ", "value.sidebar": "نوار کناری", "value.mobile": "موبایل",
+    "page.posts": "پست‌ها", "page.postsDescription": "مدیریت پست‌ها و محتوای وبلاگ.", "page.newPost": "پست جدید",
+    "page.articles": "مقاله‌ها", "page.articlesDescription": "مدیریت مقاله‌ها و محتوای تخصصی.", "page.newArticle": "مقاله جدید",
+    "page.galleries": "گالری‌ها", "page.galleriesDescription": "مدیریت محتوای تصویری و گالری‌ها.", "page.newGallery": "گالری جدید",
+    "page.pages": "صفحه‌ها", "page.pagesDescription": "ایجاد و مدیریت صفحه‌های چندزبانه.", "page.newPage": "صفحه جدید",
+    "page.menus": "منوها", "page.menusDescription": "ساخت و مدیریت منوهای چندزبانه.", "page.newMenu": "منوی جدید",
+    "page.applications": "اپلیکیشن‌ها", "page.applicationsDescription": "مدیریت اپلیکیشن‌ها و تنظیمات آن‌ها.",
+    "page.newApplication": "اپلیکیشن جدید", "page.deleteApplication": "این اپلیکیشن حذف شود؟",
+    "page.createFirst": "ایجاد اولین مورد"
+  },
+  ar: {
+    "common.title": "العنوان", "common.name": "الاسم", "common.status": "الحالة", "common.actions": "الإجراءات",
+    "common.edit": "تعديل", "common.delete": "حذف", "common.refresh": "تحديث", "common.create": "إنشاء",
+    "common.save": "حفظ", "common.cancel": "إلغاء", "common.back": "رجوع", "common.close": "إغلاق",
+    "common.search": "بحث", "common.type": "النوع", "common.language": "اللغة", "common.locale": "لغة المحتوى",
+    "common.updated": "آخر تحديث", "common.created": "تاريخ الإنشاء", "common.preview": "معاينة", "common.file": "ملف",
+    "common.size": "الحجم", "common.views": "المشاهدات", "common.description": "الوصف", "common.slug": "المعرّف",
+    "common.allStatuses": "كل الحالات", "common.allLanguages": "كل اللغات", "common.noResults": "لا توجد نتائج",
+    "common.yes": "نعم", "common.no": "لا", "common.visible": "ظاهر", "common.hidden": "مخفي",
+    "common.readTime": "وقت القراءة", "common.images": "الصور", "common.website": "الموقع",
+    "common.application": "التطبيق", "common.applications": "التطبيقات", "common.mediaPolicy": "سياسة الوسائط",
+    "common.location": "الموقع", "common.code": "الرمز", "common.url": "الرابط",
+    "value.draft": "مسودة", "value.published": "منشور", "value.archived": "مؤرشف",
+    "value.scheduled": "مجدول", "value.active": "نشط", "value.inactive": "غير نشط",
+    "value.suspended": "موقوف", "value.public": "عام", "value.private": "خاص",
+    "value.super_admin": "مدير عام", "value.editor": "محرر", "value.publisher": "ناشر",
+    "value.header": "الرأس", "value.footer": "التذييل", "value.sidebar": "الشريط الجانبي", "value.mobile": "الجوال",
+    "page.posts": "المنشورات", "page.postsDescription": "إدارة منشورات المدونة والمحتوى.", "page.newPost": "منشور جديد",
+    "page.articles": "المقالات", "page.articlesDescription": "إدارة المقالات والمحتوى المتعمق.", "page.newArticle": "مقال جديد",
+    "page.galleries": "المعارض", "page.galleriesDescription": "إدارة محتوى المعارض المنشور.", "page.newGallery": "معرض جديد",
+    "page.pages": "الصفحات", "page.pagesDescription": "إنشاء صفحات ديناميكية متعددة اللغات.", "page.newPage": "صفحة جديدة",
+    "page.menus": "القوائم", "page.menusDescription": "إنشاء قوائم تنقل متعددة اللغات.", "page.newMenu": "قائمة جديدة",
+    "page.applications": "التطبيقات", "page.applicationsDescription": "إدارة التطبيقات وإعداداتها.",
+    "page.newApplication": "تطبيق جديد", "page.deleteApplication": "حذف هذا التطبيق؟", "page.createFirst": "إنشاء أول عنصر"
+  },
+  zh: {
+    "common.title": "标题", "common.name": "名称", "common.status": "状态", "common.actions": "操作",
+    "common.edit": "编辑", "common.delete": "删除", "common.refresh": "刷新", "common.create": "创建",
+    "common.save": "保存", "common.cancel": "取消", "common.back": "返回", "common.close": "关闭",
+    "common.search": "搜索", "common.type": "类型", "common.language": "语言", "common.locale": "内容语言",
+    "common.updated": "更新时间", "common.created": "创建时间", "common.preview": "预览", "common.file": "文件",
+    "common.size": "大小", "common.views": "浏览量", "common.description": "说明", "common.slug": "别名",
+    "common.allStatuses": "所有状态", "common.allLanguages": "所有语言", "common.noResults": "未找到结果",
+    "common.yes": "是", "common.no": "否", "common.visible": "显示", "common.hidden": "隐藏",
+    "common.readTime": "阅读时间", "common.images": "图片", "common.website": "网站",
+    "common.application": "应用", "common.applications": "应用", "common.mediaPolicy": "媒体策略",
+    "common.location": "位置", "common.code": "代码", "common.url": "网址",
+    "value.draft": "草稿", "value.published": "已发布", "value.archived": "已归档",
+    "value.scheduled": "已计划", "value.active": "启用", "value.inactive": "停用",
+    "value.suspended": "已暂停", "value.public": "公开", "value.private": "私有",
+    "value.super_admin": "超级管理员", "value.editor": "编辑", "value.publisher": "发布者",
+    "value.header": "页眉", "value.footer": "页脚", "value.sidebar": "侧栏", "value.mobile": "移动端",
+    "page.posts": "帖子", "page.postsDescription": "管理博客帖子和内容。", "page.newPost": "新建帖子",
+    "page.articles": "文章", "page.articlesDescription": "管理长篇文章和深度内容。", "page.newArticle": "新建文章",
+    "page.galleries": "图库", "page.galleriesDescription": "管理已发布的图库内容。", "page.newGallery": "新建图库",
+    "page.pages": "页面", "page.pagesDescription": "创建多语言动态页面。", "page.newPage": "新建页面",
+    "page.menus": "菜单", "page.menusDescription": "构建多语言导航菜单。", "page.newMenu": "新建菜单",
+    "page.applications": "应用", "page.applicationsDescription": "管理应用及其设置。",
+    "page.newApplication": "新建应用", "page.deleteApplication": "删除此应用？", "page.createFirst": "创建第一项"
+  },
+  ru: {
+    "common.title": "Название", "common.name": "Имя", "common.status": "Статус", "common.actions": "Действия",
+    "common.edit": "Изменить", "common.delete": "Удалить", "common.refresh": "Обновить", "common.create": "Создать",
+    "common.save": "Сохранить", "common.cancel": "Отмена", "common.back": "Назад", "common.close": "Закрыть",
+    "common.search": "Поиск", "common.type": "Тип", "common.language": "Язык", "common.locale": "Язык контента",
+    "common.updated": "Обновлено", "common.created": "Создано", "common.preview": "Предпросмотр", "common.file": "Файл",
+    "common.size": "Размер", "common.views": "Просмотры", "common.description": "Описание", "common.slug": "Slug",
+    "common.allStatuses": "Все статусы", "common.allLanguages": "Все языки", "common.noResults": "Ничего не найдено",
+    "common.yes": "Да", "common.no": "Нет", "common.visible": "Показано", "common.hidden": "Скрыто",
+    "common.readTime": "Время чтения", "common.images": "Изображения", "common.website": "Сайт",
+    "common.application": "Приложение", "common.applications": "Приложения", "common.mediaPolicy": "Политика медиа",
+    "common.location": "Расположение", "common.code": "Код", "common.url": "URL",
+    "value.draft": "Черновик", "value.published": "Опубликовано", "value.archived": "В архиве",
+    "value.scheduled": "Запланировано", "value.active": "Активно", "value.inactive": "Неактивно",
+    "value.suspended": "Приостановлено", "value.public": "Публично", "value.private": "Приватно",
+    "value.super_admin": "Суперадминистратор", "value.editor": "Редактор", "value.publisher": "Издатель",
+    "value.header": "Шапка", "value.footer": "Подвал", "value.sidebar": "Боковая панель", "value.mobile": "Мобильное",
+    "page.posts": "Посты", "page.postsDescription": "Управление постами и контентом блога.", "page.newPost": "Новый пост",
+    "page.articles": "Статьи", "page.articlesDescription": "Управление статьями и подробным контентом.", "page.newArticle": "Новая статья",
+    "page.galleries": "Галереи", "page.galleriesDescription": "Управление опубликованными галереями.", "page.newGallery": "Новая галерея",
+    "page.pages": "Страницы", "page.pagesDescription": "Создание многоязычных динамических страниц.", "page.newPage": "Новая страница",
+    "page.menus": "Меню", "page.menusDescription": "Создание многоязычных меню навигации.", "page.newMenu": "Новое меню",
+    "page.applications": "Приложения", "page.applicationsDescription": "Управление приложениями и настройками.",
+    "page.newApplication": "Новое приложение", "page.deleteApplication": "Удалить это приложение?", "page.createFirst": "Создать первый элемент"
+  }
+};
+
 const localeStorageKey = "admin.locale";
 
 type I18nContextValue = {
@@ -428,6 +568,7 @@ type I18nContextValue = {
   direction: Direction;
   setLocale: (next: SupportedLocale) => void;
   t: (key: string) => string;
+  v: (value: string | null | undefined) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -462,7 +603,14 @@ export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
       locale,
       direction,
       setLocale,
-      t: (key: string) => messages[locale][key] ?? messages.en[key] ?? key
+      t: (key: string) => messages[locale][key] ?? uiMessages[locale][key] ?? messages.en[key] ?? uiMessages.en[key] ?? key,
+      v: (input) => {
+        if (!input) {
+          return "";
+        }
+        const key = `value.${input.toLowerCase().replaceAll("-", "_")}`;
+        return uiMessages[locale][key] ?? uiMessages.en[key] ?? input;
+      }
     }),
     [locale, direction]
   );
