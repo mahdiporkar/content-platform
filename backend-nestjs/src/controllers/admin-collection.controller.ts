@@ -19,8 +19,8 @@ export class AdminCollectionController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
   ): Promise<CollectionResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, applicationId);
     return await this.collectionService.list(applicationId);
   }

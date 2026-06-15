@@ -6,7 +6,7 @@ import faIR from "antd/locale/fa_IR";
 import arEG from "antd/locale/ar_EG";
 import zhCN from "antd/locale/zh_CN";
 import ruRU from "antd/locale/ru_RU";
-import { authStore } from "./app/auth";
+import { authStore, canAccessRoute, getDefaultAdminRoute } from "./app/auth";
 import { TenantProvider } from "./app/tenant";
 import { AppLayout } from "./layouts/AppLayout";
 import { LoginPage } from "./features/auth/LoginPage";
@@ -45,6 +45,20 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RequireRouteAccess = ({ route, children }: { route: string; children: React.ReactNode }) => {
+  const payload = authStore.getTokenPayload();
+  if (!canAccessRoute(payload, route)) {
+    const defaultRoute = getDefaultAdminRoute(payload);
+    return <Navigate to={defaultRoute === "login" ? "/login" : `/${defaultRoute}`} replace />;
+  }
+  return <>{children}</>;
+};
+
+const AuthorizedIndex = () => {
+  const defaultRoute = getDefaultAdminRoute(authStore.getTokenPayload());
+  return <Navigate to={defaultRoute === "login" ? "/login" : `/${defaultRoute}`} replace />;
+};
+
 export const AdminApp = () => {
   return (
     <I18nProvider>
@@ -63,6 +77,9 @@ const antLocales: Record<SupportedLocale, typeof enUS> = {
 
 const LocalizedAdminApp = () => {
   const { locale, direction } = useI18n();
+  const protect = (route: string, element: React.ReactNode) => (
+    <RequireRouteAccess route={route}>{element}</RequireRouteAccess>
+  );
 
   return (
     <ConfigProvider
@@ -88,39 +105,39 @@ const LocalizedAdminApp = () => {
                 </RequireAuth>
               }
             >
-              <Route index element={<Navigate to="/posts" replace />} />
-              <Route path="applications" element={<ApplicationsListPage />} />
-              <Route path="applications/new" element={<ApplicationEditorPage mode="create" />} />
-              <Route path="applications/:id" element={<ApplicationEditorPage mode="edit" />} />
-              <Route path="users" element={<UsersListPage />} />
-              <Route path="collections" element={<CollectionsListPage />} />
-              <Route path="collections/new" element={<CollectionEditorPage mode="create" />} />
-              <Route path="collections/:id" element={<CollectionEditorPage mode="edit" />} />
-              <Route path="posts" element={<PostsListPage />} />
-              <Route path="posts/new" element={<PostEditorPage mode="create" />} />
-              <Route path="posts/:id" element={<PostEditorPage mode="edit" />} />
-              <Route path="articles" element={<ArticlesListPage />} />
-              <Route path="articles/new" element={<ArticleEditorPage mode="create" />} />
-              <Route path="articles/:id" element={<ArticleEditorPage mode="edit" />} />
-              <Route path="pages" element={<PagesListPage />} />
-              <Route path="pages/new" element={<PageEditorPage mode="create" />} />
-              <Route path="pages/:id" element={<PageEditorPage mode="edit" />} />
-              <Route path="menus" element={<MenusListPage />} />
-              <Route path="menus/new" element={<MenuEditorPage mode="create" />} />
-              <Route path="menus/:id" element={<MenuEditorPage mode="edit" />} />
-              <Route path="galleries" element={<GalleriesListPage />} />
-              <Route path="galleries/new" element={<GalleryEditorPage mode="create" />} />
-              <Route path="galleries/:id" element={<GalleryEditorPage mode="edit" />} />
-              <Route path="videos" element={<VideoListPage />} />
-              <Route path="videos/:id" element={<VideoEditorPage />} />
-              <Route path="videos/upload" element={<VideoUploadPage />} />
-              <Route path="images" element={<ImagesListPage />} />
-              <Route path="images/:id" element={<ImageEditorPage />} />
-              <Route path="media" element={<MediaLibraryPage />} />
-              <Route path="media/:id/variants" element={<MediaVariantsPage />} />
-              <Route path="media/safety" element={<MediaSafetyPage />} />
-              <Route path="sitemap" element={<SitemapPage />} />
-              <Route path="analytics" element={<AnalyticsDashboardPage />} />
+              <Route index element={<AuthorizedIndex />} />
+              <Route path="applications" element={protect("applications", <ApplicationsListPage />)} />
+              <Route path="applications/new" element={protect("applications", <ApplicationEditorPage mode="create" />)} />
+              <Route path="applications/:id" element={protect("applications", <ApplicationEditorPage mode="edit" />)} />
+              <Route path="users" element={protect("users", <UsersListPage />)} />
+              <Route path="collections" element={protect("collections", <CollectionsListPage />)} />
+              <Route path="collections/new" element={protect("collections", <CollectionEditorPage mode="create" />)} />
+              <Route path="collections/:id" element={protect("collections", <CollectionEditorPage mode="edit" />)} />
+              <Route path="posts" element={protect("posts", <PostsListPage />)} />
+              <Route path="posts/new" element={protect("posts", <PostEditorPage mode="create" />)} />
+              <Route path="posts/:id" element={protect("posts", <PostEditorPage mode="edit" />)} />
+              <Route path="articles" element={protect("articles", <ArticlesListPage />)} />
+              <Route path="articles/new" element={protect("articles", <ArticleEditorPage mode="create" />)} />
+              <Route path="articles/:id" element={protect("articles", <ArticleEditorPage mode="edit" />)} />
+              <Route path="pages" element={protect("pages", <PagesListPage />)} />
+              <Route path="pages/new" element={protect("pages", <PageEditorPage mode="create" />)} />
+              <Route path="pages/:id" element={protect("pages", <PageEditorPage mode="edit" />)} />
+              <Route path="menus" element={protect("menus", <MenusListPage />)} />
+              <Route path="menus/new" element={protect("menus", <MenuEditorPage mode="create" />)} />
+              <Route path="menus/:id" element={protect("menus", <MenuEditorPage mode="edit" />)} />
+              <Route path="galleries" element={protect("galleries", <GalleriesListPage />)} />
+              <Route path="galleries/new" element={protect("galleries", <GalleryEditorPage mode="create" />)} />
+              <Route path="galleries/:id" element={protect("galleries", <GalleryEditorPage mode="edit" />)} />
+              <Route path="videos" element={protect("videos", <VideoListPage />)} />
+              <Route path="videos/:id" element={protect("videos", <VideoEditorPage />)} />
+              <Route path="videos/upload" element={protect("videos", <VideoUploadPage />)} />
+              <Route path="images" element={protect("images", <ImagesListPage />)} />
+              <Route path="images/:id" element={protect("images", <ImageEditorPage />)} />
+              <Route path="media" element={protect("media", <MediaLibraryPage />)} />
+              <Route path="media/:id/variants" element={protect("media", <MediaVariantsPage />)} />
+              <Route path="media/safety" element={protect("media-safety", <MediaSafetyPage />)} />
+              <Route path="sitemap" element={protect("sitemap", <SitemapPage />)} />
+              <Route path="analytics" element={protect("analytics", <AnalyticsDashboardPage />)} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

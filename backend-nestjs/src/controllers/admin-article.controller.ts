@@ -20,8 +20,9 @@ export class AdminArticleController {
 
   @Post()
   async create(@Req() request: Request, @Body() body: ArticleUpsertRequestDto): Promise<ArticleResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, body.applicationId);
-    const created = await this.articleService.create(body);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, applicationId);
+    const created = await this.articleService.create({ ...body, applicationId });
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
   }
@@ -55,11 +56,11 @@ export class AdminArticleController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<ArticleResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.ARTICLES_MANAGE, applicationId);
     return await this.articleService.list(applicationId, status, Number(page), Number(size));
   }

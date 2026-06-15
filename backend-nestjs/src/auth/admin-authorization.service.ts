@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtPayload } from './jwt-token.service';
 import { AdminUserRole } from '../entities/admin-user.entity';
@@ -67,6 +67,22 @@ export class AdminAuthorizationService {
     if (!applicationId || !allowed.has(applicationId)) {
       throw new ForbiddenException('You do not have access to this application.');
     }
+  }
+
+  getApplicationId(request: Request): string {
+    const headerValue = request.headers['x-application-id'];
+    const applicationId = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    if (!applicationId || typeof applicationId !== 'string' || !applicationId.trim()) {
+      throw new BadRequestException('X-Application-Id header is required.');
+    }
+    return applicationId.trim();
+  }
+
+  withApplicationId<T extends object>(request: Request, body: T): T & { applicationId: string } {
+    return {
+      ...body,
+      applicationId: this.getApplicationId(request),
+    };
   }
 
   assertServiceAccess(

@@ -51,7 +51,6 @@ export class AdminVideoController {
     @UploadedFile() file: Express.Multer.File,
     @Body('title') title: string,
     @Body('description') description: string | undefined,
-    @Body('applicationId') applicationId: string,
     @Body('status') status: ContentStatus,
     @Body('tags') tagsRaw?: string,
     @Body('seo') seoRaw?: string,
@@ -59,6 +58,7 @@ export class AdminVideoController {
     @Body('locale') locale?: string,
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<VideoResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
@@ -85,7 +85,6 @@ export class AdminVideoController {
     @Body('assetId') assetId: string,
     @Body('title') title: string,
     @Body('description') description: string | undefined,
-    @Body('applicationId') applicationId: string,
     @Body('status') status: ContentStatus,
     @Body('tags') tagsRaw?: string,
     @Body('seo') seoRaw?: string,
@@ -93,6 +92,7 @@ export class AdminVideoController {
     @Body('locale') locale?: string,
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<VideoResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
@@ -119,8 +119,9 @@ export class AdminVideoController {
     @Param('id') id: string,
     @Body() body: ChangeStatusRequestDto,
   ): Promise<VideoResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, body.applicationId);
-    const updated = await this.videoService.changeStatus(id, body);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
+    const updated = await this.videoService.changeStatus(id, { ...body, applicationId });
     await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
     return updated;
   }
@@ -172,12 +173,12 @@ export class AdminVideoController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('deleted') deleted = 'false',
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<VideoResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     return await this.videoService.list(applicationId, status, Number(page), Number(size), deleted === 'true');
   }

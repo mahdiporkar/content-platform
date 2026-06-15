@@ -28,8 +28,9 @@ export class AdminGalleryController {
 
   @Post()
   async create(@Req() request: Request, @Body() body: GalleryUpsertRequestDto): Promise<GalleryResponseDto> {
-    this.assertGalleryAccess(request, body.applicationId);
-    const created = await this.galleryService.create(body);
+    const applicationId = this.access.getApplicationId(request);
+    this.assertGalleryAccess(request, applicationId);
+    const created = await this.galleryService.create({ ...body, applicationId });
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
   }
@@ -63,11 +64,11 @@ export class AdminGalleryController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<GalleryResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertGalleryAccess(request, applicationId);
     return await this.galleryService.list(applicationId, status, Number(page), Number(size));
   }

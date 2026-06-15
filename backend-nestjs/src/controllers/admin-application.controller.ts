@@ -16,13 +16,19 @@ export class AdminApplicationController {
   @Get()
   async list(@Req() request: Request): Promise<ApplicationResponseDto[]> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.list();
+    return await this.applicationService.list({
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Get(':id')
   async getById(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.getById(id);
+    return await this.applicationService.getById(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Post()
@@ -31,7 +37,10 @@ export class AdminApplicationController {
     @Body() body: ApplicationUpsertRequestDto,
   ): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.create(body);
+    return await this.applicationService.create(body, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Put(':id')
@@ -41,25 +50,37 @@ export class AdminApplicationController {
     @Body() body: ApplicationUpsertRequestDto,
   ): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.update(id, body);
+    return await this.applicationService.update(id, body, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Post(':id/token/rotate')
   async rotateToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.rotateToken(id);
+    return await this.applicationService.rotateToken(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Post(':id/token/revoke')
   async revokeToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    return await this.applicationService.revokeToken(id);
+    return await this.applicationService.revokeToken(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
   }
 
   @Delete(':id')
   async remove(@Req() request: Request, @Param('id') id: string): Promise<{ id: string }> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
-    await this.applicationService.remove(id);
+    await this.applicationService.remove(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
     return { id };
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,6 +7,12 @@ import { ApplicationUpsertRequestDto } from '../dto/requests/application-upsert-
 import { ApplicationResponseDto } from '../dto/responses/application-response.dto';
 import { AuditLogService } from './audit-log.service';
 import { ApplicationTokenService } from './application-token.service';
+import { JwtPayload } from '../auth/jwt-token.service';
+
+type ApplicationScope = {
+  actor: JwtPayload;
+  superAdmin: boolean;
+};
 
 @Injectable()
 export class AdminApplicationService {
@@ -51,20 +57,26 @@ export class AdminApplicationService {
     return normalized.length > 0 ? normalized : null;
   }
 
-  async list(): Promise<ApplicationResponseDto[]> {
+  async list(scope: ApplicationScope): Promise<ApplicationResponseDto[]> {
     const applications = await this.applicationRepo.find({ order: { name: 'ASC' } });
-    return applications.map((application) => this.mapApplication(application));
+    return applications
+      .filter((application) => this.canManageApplication(scope, application.id))
+      .map((application) => this.mapApplication(application));
   }
 
-  async getById(id: string): Promise<ApplicationResponseDto> {
+  async getById(id: string, scope: ApplicationScope): Promise<ApplicationResponseDto> {
     const application = await this.applicationRepo.findOne({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found.');
     }
+    this.assertCanManageApplication(scope, application.id);
     return this.mapApplication(application);
   }
 
-  async create(request: ApplicationUpsertRequestDto): Promise<ApplicationResponseDto> {
+  async create(request: ApplicationUpsertRequestDto, scope: ApplicationScope): Promise<ApplicationResponseDto> {
+    if (!scope.superAdmin) {
+      throw new ForbiddenException('Only super admins can create applications.');
+    }
     const issuedToken = this.issueToken(request.apiToken?.trim());
     const application = this.applicationRepo.create({
       id: request.id?.trim() || uuidv4(),
@@ -94,11 +106,12 @@ export class AdminApplicationService {
     return this.mapApplication(saved, issuedToken.rawToken);
   }
 
-  async update(id: string, request: ApplicationUpsertRequestDto): Promise<ApplicationResponseDto> {
+  async update(id: string, request: ApplicationUpsertRequestDto, scope: ApplicationScope): Promise<ApplicationResponseDto> {
     const application = await this.applicationRepo.findOne({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found.');
     }
+    this.assertCanManageApplication(scope, application.id);
     application.name = request.name.trim();
     application.description = request.description?.trim() || null;
     application.status = request.status ?? application.status ?? ApplicationStatus.ACTIVE;
@@ -151,11 +164,12 @@ export class AdminApplicationService {
     return normalized.length > 0 ? Array.from(new Set(normalized)) : null;
   }
 
-  async rotateToken(id: string): Promise<ApplicationResponseDto> {
+  async rotateToken(id: string, scope: ApplicationScope): Promise<ApplicationResponseDto> {
     const application = await this.applicationRepo.findOne({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found.');
     }
+    this.assertCanManageApplication(scope, application.id);
     const issuedToken = this.issueToken();
     application.apiToken = null;
     application.apiTokenHash = issuedToken.tokenHash;
@@ -171,11 +185,12 @@ export class AdminApplicationService {
     return this.mapApplication(saved, issuedToken.rawToken);
   }
 
-  async revokeToken(id: string): Promise<ApplicationResponseDto> {
+  async revokeToken(id: string, scope: ApplicationScope): Promise<ApplicationResponseDto> {
     const application = await this.applicationRepo.findOne({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found.');
     }
+    this.assertCanManageApplication(scope, application.id);
     application.apiToken = null;
     application.apiTokenHash = null;
     application.apiTokenSalt = null;
@@ -190,10 +205,14 @@ export class AdminApplicationService {
     return this.mapApplication(saved);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, scope: ApplicationScope): Promise<void> {
     const existing = await this.applicationRepo.findOne({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Application not found.');
+    }
+    this.assertCanManageApplication(scope, existing.id);
+    if (!scope.superAdmin) {
+      throw new ForbiddenException('Only super admins can delete applications.');
     }
     await this.applicationRepo.remove(existing);
     await this.auditLog.record({
@@ -221,6 +240,20 @@ export class AdminApplicationService {
       return '***';
     }
     return `${token.slice(0, 6)}...${token.slice(-4)}`;
+  }
+
+  private canManageApplication(scope: ApplicationScope, applicationId: string): boolean {
+    if (scope.superAdmin) {
+      return true;
+    }
+    const allowed = new Set((scope.actor.applicationIds || []).map((entry) => entry.trim()).filter(Boolean));
+    return allowed.has(applicationId);
+  }
+
+  private assertCanManageApplication(scope: ApplicationScope, applicationId: string): void {
+    if (!this.canManageApplication(scope, applicationId)) {
+      throw new NotFoundException('Application not found.');
+    }
   }
 
 }

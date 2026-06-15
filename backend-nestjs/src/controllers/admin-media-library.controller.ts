@@ -17,13 +17,13 @@ export class AdminMediaLibraryController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('kind') kind?: string,
     @Query('state') state: MediaAssetState = MediaAssetState.ACTIVE,
     @Query('search') search?: string,
     @Query('page') page = '0',
     @Query('size') size = '30',
   ): Promise<PageResponseDto<MediaAssetResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -50,9 +50,9 @@ export class AdminMediaLibraryController {
   @Get('resolve')
   async resolveByObjectKey(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('objectKey') objectKey: string,
   ): Promise<MediaAssetResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,

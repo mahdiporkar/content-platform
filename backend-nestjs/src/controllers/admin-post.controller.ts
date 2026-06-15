@@ -20,8 +20,9 @@ export class AdminPostController {
 
   @Post()
   async create(@Req() request: Request, @Body() body: PostUpsertRequestDto): Promise<PostResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, body.applicationId);
-    const created = await this.postService.create(body);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, applicationId);
+    const created = await this.postService.create({ ...body, applicationId });
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
   }
@@ -55,11 +56,11 @@ export class AdminPostController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<PostResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.POSTS_MANAGE, applicationId);
     return await this.postService.list(applicationId, status, Number(page), Number(size));
   }

@@ -3,6 +3,7 @@ import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typ
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { authStore } from "../../app/auth";
+import { useTenant } from "../../app/tenant";
 import { AdminUser, Application } from "../../types";
 import { useI18n } from "../../i18n";
 
@@ -22,6 +23,7 @@ const servicePermissions = [
 
 export const UsersListPage = () => {
   const { t, v } = useI18n();
+  const { applicationId } = useTenant();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,11 +31,38 @@ export const UsersListPage = () => {
   const [editing, setEditing] = useState<AdminUser | null>(null);
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+  const tokenPayload = useMemo(() => authStore.getTokenPayload(), []);
+  const isSuperAdmin = tokenPayload?.role === "super_admin";
+  const currentApplicationId = applicationId || tokenPayload?.applicationIds?.[0] || "";
+  const availableSystemPermissions = useMemo(
+    () => (isSuperAdmin ? systemPermissions : systemPermissions.filter((permission) => (tokenPayload?.systemPermissions || []).includes(permission))),
+    [isSuperAdmin, tokenPayload?.systemPermissions]
+  );
+  const availableServicePermissions = useMemo(
+    () => (isSuperAdmin ? servicePermissions : servicePermissions.filter((permission) => (tokenPayload?.servicePermissions || []).includes(permission))),
+    [isSuperAdmin, tokenPayload?.servicePermissions]
+  );
+  const roleOptions = useMemo(
+    () => [
+      ...(isSuperAdmin ? [{ value: "super_admin", label: v("super_admin") }] : []),
+      { value: "system_admin", label: v("system_admin") },
+      { value: "editor", label: v("editor") },
+      { value: "publisher", label: v("publisher") }
+    ],
+    [isSuperAdmin, v]
+  );
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const usersResponse = await client.get<AdminUser[]>("/api/v1/admin/users");
+      if (!isSuperAdmin && !currentApplicationId) {
+        setUsers([]);
+        setApplications([]);
+        return;
+      }
+      const usersResponse = await client.get<AdminUser[]>("/api/v1/admin/users", {
+        params: currentApplicationId ? { applicationId: currentApplicationId } : undefined
+      });
       setUsers(usersResponse.data);
 
       try {
@@ -51,7 +80,7 @@ export const UsersListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentApplicationId, isSuperAdmin]);
 
   useEffect(() => {
     fetchUsers();
@@ -74,7 +103,7 @@ export const UsersListPage = () => {
       email: user?.email ?? "",
       role: user?.role ?? "system_admin",
       status: user?.status ?? "active",
-      applicationIds: user?.applicationIds ?? [],
+      applicationIds: isSuperAdmin ? user?.applicationIds ?? [] : currentApplicationId ? [currentApplicationId] : [],
       systemPermissions: user?.systemPermissions ?? [],
       servicePermissions: user?.servicePermissions ?? []
     });
@@ -87,7 +116,7 @@ export const UsersListPage = () => {
       password: values.password || undefined,
       role: values.role,
       status: values.status,
-      applicationIds: values.applicationIds || [],
+      applicationIds: isSuperAdmin ? values.applicationIds || [] : editing ? undefined : currentApplicationId ? [currentApplicationId] : [],
       systemPermissions: values.systemPermissions || [],
       servicePermissions: values.servicePermissions || []
     };
@@ -213,12 +242,7 @@ export const UsersListPage = () => {
           </Form.Item>
           <Form.Item label={t("common.role")} name="role" rules={[{ required: true }]}>
             <Select
-              options={[
-                { value: "super_admin", label: v("super_admin") },
-                { value: "system_admin", label: v("system_admin") },
-                { value: "editor", label: v("editor") },
-                { value: "publisher", label: v("publisher") }
-              ]}
+              options={roleOptions}
             />
           </Form.Item>
           <Form.Item label={t("common.status")} name="status" rules={[{ required: true }]}>
@@ -234,7 +258,8 @@ export const UsersListPage = () => {
               mode="multiple"
               allowClear
               placeholder={t("common.applications")}
-              options={applications.map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }))}
+              disabled={!isSuperAdmin}
+              options={(isSuperAdmin ? applications : applications.filter((app) => app.id === currentApplicationId)).map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }))}
             />
           </Form.Item>
           <Form.Item label={t("common.systemAccess")} name="systemPermissions">
@@ -242,7 +267,7 @@ export const UsersListPage = () => {
               mode="multiple"
               allowClear
               placeholder={t("common.systemAccess")}
-              options={systemPermissions.map((value) => ({ value, label: value }))}
+              options={availableSystemPermissions.map((value) => ({ value, label: value }))}
             />
           </Form.Item>
           <Form.Item label={t("common.serviceAccess")} name="servicePermissions">
@@ -250,7 +275,7 @@ export const UsersListPage = () => {
               mode="multiple"
               allowClear
               placeholder={t("common.serviceAccess")}
-              options={servicePermissions.map((value) => ({ value, label: value }))}
+              options={availableServicePermissions.map((value) => ({ value, label: value }))}
             />
           </Form.Item>
         </Form>

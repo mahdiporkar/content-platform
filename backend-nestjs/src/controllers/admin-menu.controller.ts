@@ -19,8 +19,9 @@ export class AdminMenuController {
 
   @Post()
   async create(@Req() request: Request, @Body() body: MenuUpsertRequestDto): Promise<MenuResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, body.applicationId);
-    return this.menuService.create(body);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
+    return this.menuService.create({ ...body, applicationId });
   }
 
   @Put(':id')
@@ -69,10 +70,10 @@ export class AdminMenuController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('languageCode') languageCode?: string,
     @Query('status') status?: MenuStatus,
   ): Promise<MenuResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
     return this.menuService.list(applicationId, languageCode, status);
   }

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { authStore } from "../app/auth";
 import { tenantStore } from "../app/tenantStore";
 import { apiBaseUrl } from "../config/env";
@@ -26,17 +26,33 @@ const normalizeRequestPath = (url?: string): string => {
 
 const shouldSkipApplicationHeader = (path: string): boolean => {
   return (
-    path === "/api/v1/auth/login" ||
-    path === "/api/v1/admin/applications" ||
-    path.startsWith("/api/v1/admin/applications/") ||
-    path === "/api/v1/admin/users" ||
-    path.startsWith("/api/v1/admin/users/")
+    path === "/api/v1/auth/login"
   );
+};
+
+const isAdminRequest = (path: string): boolean => path.startsWith("/api/v1/admin/") || path === "/api/v1/media" || path.startsWith("/api/v1/media/");
+
+const stripApplicationIdFromAdminRequest = (config: InternalAxiosRequestConfig, path: string) => {
+  if (!isAdminRequest(path)) {
+    return;
+  }
+  const params = config.params as Record<string, unknown> | undefined;
+  if (params && "applicationId" in params) {
+    delete params.applicationId;
+  }
+  if (config.data instanceof FormData) {
+    config.data.delete("applicationId");
+    return;
+  }
+  if (config.data && typeof config.data === "object" && !Array.isArray(config.data)) {
+    delete (config.data as Record<string, unknown>).applicationId;
+  }
 };
 
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
   const requestPath = normalizeRequestPath(config.url);
+  stripApplicationIdFromAdminRequest(config, requestPath);
   const token = authStore.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

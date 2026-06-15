@@ -39,9 +39,9 @@ export class AdminMediaController {
   async upload(
     @Req() request: Request,
     @UploadedFile() file: Express.Multer.File,
-    @Body('applicationId') applicationId: string,
     @Body('kind') kind?: string,
   ): Promise<MediaUploadResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -86,11 +86,11 @@ export class AdminMediaController {
   @Get()
   async listForAdmin(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('state') state: MediaAssetState = MediaAssetState.TRASH,
     @Query('page') page = '0',
     @Query('size') size = '30',
   ): Promise<PageResponseDto<MediaAssetResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertSuperAdmin(request);
     this.access.assertApplicationAccess(request, applicationId);
     return await this.lifecycle.listForAdmin(applicationId, state, Number(page), Number(size));
@@ -100,8 +100,8 @@ export class AdminMediaController {
   async references(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<MediaReferenceResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertSuperAdmin(request);
     this.access.assertApplicationAccess(request, applicationId);
     return await this.lifecycle.getReferences(applicationId, id);
@@ -111,8 +111,8 @@ export class AdminMediaController {
   async listVariants(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<MediaVariantResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -129,10 +129,10 @@ export class AdminMediaController {
   async addVariant(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body() body: Record<string, string | undefined>,
   ): Promise<MediaVariantResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -173,10 +173,10 @@ export class AdminMediaController {
     @Req() request: Request,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
-    @Query('applicationId') applicationId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: Record<string, string | undefined>,
   ): Promise<MediaVariantResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -222,8 +222,8 @@ export class AdminMediaController {
     @Req() request: Request,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<{ ok: boolean }> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -240,8 +240,8 @@ export class AdminMediaController {
   async purge(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<MediaAssetResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertSuperAdmin(request);
     this.access.assertApplicationAccess(request, applicationId);
     const user = this.access.getUser(request);

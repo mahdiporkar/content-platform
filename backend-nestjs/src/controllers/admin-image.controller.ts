@@ -27,7 +27,6 @@ export class AdminImageController {
     @UploadedFile() file: Express.Multer.File,
     @Body('title') title: string,
     @Body('description') description: string | undefined,
-    @Body('applicationId') applicationId: string,
     @Body('status') status: ContentStatus,
     @Body('tags') tags?: string[],
     @Body('seo') seo?: Record<string, unknown>,
@@ -36,6 +35,7 @@ export class AdminImageController {
     @Body('altText') altText?: string,
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<ImageResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
     const created = await this.imageService.upload(
       file,
@@ -60,7 +60,6 @@ export class AdminImageController {
     @Body('assetId') assetId: string,
     @Body('title') title: string,
     @Body('description') description: string | undefined,
-    @Body('applicationId') applicationId: string,
     @Body('status') status: ContentStatus,
     @Body('tags') tags?: string[],
     @Body('seo') seo?: Record<string, unknown>,
@@ -69,6 +68,7 @@ export class AdminImageController {
     @Body('altText') altText?: string,
     @Body('scheduledAt') scheduledAt?: string,
   ): Promise<ImageResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
     const created = await this.imageService.createFromAsset(
       assetId,
@@ -137,8 +137,9 @@ export class AdminImageController {
     @Param('id') id: string,
     @Body() body: ChangeStatusRequestDto,
   ): Promise<ImageResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, body.applicationId);
-    const updated = await this.imageService.changeStatus(id, body);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
+    const updated = await this.imageService.changeStatus(id, { ...body, applicationId });
     await this.sitemapService.invalidateTenantCacheIfOnPublish(updated.applicationId);
     return updated;
   }
@@ -146,12 +147,12 @@ export class AdminImageController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('deleted') deleted = 'false',
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<ImageResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.IMAGES_MANAGE, applicationId);
     return await this.imageService.list(applicationId, status, Number(page), Number(size), deleted === 'true');
   }

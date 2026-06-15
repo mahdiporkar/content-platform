@@ -15,10 +15,10 @@ export class AdminAnalyticsController {
   @Get('top')
   async topContent(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('type') type?: ContentType,
     @Query('limit') limit = '10',
   ) {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.ANALYTICS_VIEW, applicationId);
     return await this.analytics.topContent(applicationId, type, Number(limit));
   }
@@ -26,9 +26,9 @@ export class AdminAnalyticsController {
   @Get('timeline')
   async timeline(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('days') days = '30',
   ) {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.ANALYTICS_VIEW, applicationId);
     return await this.analytics.timeline(applicationId, Number(days));
   }

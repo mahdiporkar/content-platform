@@ -20,8 +20,9 @@ export class AdminPageController {
 
   @Post()
   async create(@Req() request: Request, @Body() body: PageUpsertRequestDto): Promise<PageContentResponseDto> {
-    this.access.assertServiceAccess(request, ServicePermission.PAGES_MANAGE, body.applicationId);
-    const created = await this.pageService.create(body, this.access.getUser(request).sub);
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.PAGES_MANAGE, applicationId);
+    const created = await this.pageService.create({ ...body, applicationId }, this.access.getUser(request).sub);
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
   }
@@ -54,12 +55,12 @@ export class AdminPageController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('status') status?: ContentStatus,
     @Query('languageCode') languageCode?: string,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<PageContentResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.PAGES_MANAGE, applicationId);
     return this.pageService.list(applicationId, status, languageCode, Number(page), Number(size));
   }

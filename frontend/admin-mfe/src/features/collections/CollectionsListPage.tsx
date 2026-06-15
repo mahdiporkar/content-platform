@@ -28,7 +28,7 @@ export const CollectionsListPage = () => {
       const searchValue = next?.search ?? search;
       setLoading(true);
       try {
-        const response = await client.get<PageResponse<Collection>>(`/api/v1/admin/apps/${applicationId}/collections`, {
+        const response = await client.get<PageResponse<Collection>>("/api/v1/admin/app-collections", {
           params: { page, size, search: searchValue || undefined }
         });
         setCollections(response.data.items);
@@ -49,7 +49,7 @@ export const CollectionsListPage = () => {
       return;
     }
     try {
-      await client.delete(`/api/v1/admin/apps/${applicationId}/collections/${collection.id}`);
+      await client.delete(`/api/v1/admin/app-collections/${collection.id}`);
       messageApi.success("Collection deleted.");
       await fetchCollections();
     } catch (error) {

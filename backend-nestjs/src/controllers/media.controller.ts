@@ -17,11 +17,11 @@ export class MediaController {
   @Get()
   async list(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('state') state: MediaAssetState = MediaAssetState.ACTIVE,
     @Query('page') page = '0',
     @Query('size') size = '30',
   ): Promise<PageResponseDto<MediaAssetResponseDto>> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -37,8 +37,8 @@ export class MediaController {
   async trash(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<MediaAssetResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
@@ -55,8 +55,8 @@ export class MediaController {
   async restore(
     @Req() request: Request,
     @Param('id') id: string,
-    @Query('applicationId') applicationId: string,
   ): Promise<MediaAssetResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.access.assertAnyServicePermission(request, [
       ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,

@@ -174,8 +174,8 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       setLoading(true);
       try {
         const [collectionResponse, itemResponse] = await Promise.all([
-          client.get<Collection>(`/api/v1/admin/apps/${applicationId}/collections/${id}`),
-          client.get<CollectionItem[]>(`/api/v1/admin/apps/${applicationId}/collections/${id}/items`)
+          client.get<Collection>(`/api/v1/admin/app-collections/${id}`),
+          client.get<CollectionItem[]>(`/api/v1/admin/app-collections/${id}/items`)
         ]);
         const collection = collectionResponse.data;
         setSlug(collection.slug);
@@ -253,11 +253,11 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
         } : undefined
       };
       if (mode === "create") {
-        const response = await client.post<Collection>(`/api/v1/admin/apps/${applicationId}/collections`, payload);
+        const response = await client.post<Collection>("/api/v1/admin/app-collections", payload);
         messageApi.success("Collection created.");
         navigate(`/collections/${response.data.id}`, { replace: true, state: { collection: response.data } });
       } else {
-        await client.patch(`/api/v1/admin/apps/${applicationId}/collections/${collectionId}`, payload);
+        await client.patch(`/api/v1/admin/app-collections/${collectionId}`, payload);
         messageApi.success("Collection updated.");
         await loadCollection(collectionId);
       }
@@ -333,7 +333,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
     }
     for (const entry of selected) {
       try {
-        await client.post(`/api/v1/admin/apps/${applicationId}/collections/${collectionId}/items`, {
+        await client.post(`/api/v1/admin/app-collections/${collectionId}/items`, {
           contentType: entry.type,
           contentId: entry.id
         });
@@ -394,7 +394,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       return;
     }
     try {
-      await client.post(`/api/v1/admin/apps/${applicationId}/collections/${collectionId}/items`, {
+      await client.post(`/api/v1/admin/app-collections/${collectionId}/items`, {
         type: "custom",
         display: {
           titleOverride: customTitle.trim() || undefined,
@@ -435,7 +435,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       return;
     }
     try {
-      await client.delete(`/api/v1/admin/apps/${applicationId}/collections/${collectionId}/items`, {
+      await client.delete(`/api/v1/admin/app-collections/${collectionId}/items`, {
         data: item.contentType && item.contentId ? { contentType: item.contentType, contentId: item.contentId } : { itemId: item.id }
       });
       await loadCollection(collectionId);
@@ -459,7 +459,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
     };
     try {
       const response = await client.patch<CollectionItem[]>(
-        `/api/v1/admin/apps/${applicationId}/collections/${collectionId}/items/reorder`,
+        `/api/v1/admin/app-collections/${collectionId}/items/reorder`,
         payload
       );
       setItems(response.data.sort((a, b) => a.position - b.position));

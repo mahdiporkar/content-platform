@@ -35,8 +35,8 @@ export class AdminSitemapController {
   @Get('settings')
   async getSettings(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
   ): Promise<SitemapSettingsResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.getSettings(applicationId);
   }
@@ -44,9 +44,9 @@ export class AdminSitemapController {
   @Put('settings')
   async putSettings(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Body() body: SitemapSettingsUpsertRequestDto,
   ): Promise<SitemapSettingsResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.putSettings(applicationId, body);
   }
@@ -54,8 +54,8 @@ export class AdminSitemapController {
   @Get('templates')
   async listTemplates(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
   ): Promise<SitemapTemplateResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.listTemplates(applicationId);
   }
@@ -63,10 +63,10 @@ export class AdminSitemapController {
   @Put('templates/:contentType')
   async putTemplate(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Param('contentType') contentType: string,
     @Body() body: SitemapTemplateUpsertRequestDto,
   ): Promise<SitemapTemplateResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.putTemplate(applicationId, contentType, body);
   }
@@ -74,11 +74,11 @@ export class AdminSitemapController {
   @Get('preview')
   async preview(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Query('contentType') contentType?: string,
     @Query('limit') limit = '50',
     @Query('offset') offset = '0',
   ): Promise<{ total: number; items: SitemapPreviewEntryResponseDto[] }> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.preview(applicationId, contentType, Number(limit), Number(offset));
   }
@@ -86,9 +86,9 @@ export class AdminSitemapController {
   @Post('test-url')
   async testUrl(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Body() body: SitemapTestUrlRequestDto,
   ): Promise<SitemapTestUrlResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.testUrl(applicationId, body.url);
   }
@@ -96,11 +96,11 @@ export class AdminSitemapController {
   @Put('override/:contentType/:contentId')
   async putOverride(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Param('contentType') contentType: string,
     @Param('contentId') contentId: string,
     @Body() body: SitemapOverrideUpsertRequestDto,
   ): Promise<{ ok: true }> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     await this.sitemapService.putOverride(applicationId, contentType, contentId, body);
     return { ok: true };
@@ -109,8 +109,8 @@ export class AdminSitemapController {
   @Get('custom-urls')
   async listCustomUrls(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
   ): Promise<SitemapCustomUrlResponseDto[]> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.listCustomUrls(applicationId);
   }
@@ -118,9 +118,9 @@ export class AdminSitemapController {
   @Post('custom-urls')
   async createCustomUrl(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Body() body: SitemapCustomUrlUpsertRequestDto,
   ): Promise<SitemapCustomUrlResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.createCustomUrl(applicationId, body);
   }
@@ -128,10 +128,10 @@ export class AdminSitemapController {
   @Put('custom-urls/:id')
   async updateCustomUrl(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() body: SitemapCustomUrlUpsertRequestDto,
   ): Promise<SitemapCustomUrlResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.updateCustomUrl(applicationId, id, body);
   }
@@ -139,12 +139,11 @@ export class AdminSitemapController {
   @Delete('custom-urls/:id')
   async deleteCustomUrl(
     @Req() request: Request,
-    @Query('applicationId') applicationId: string,
     @Param('id') id: string,
   ): Promise<{ ok: true }> {
+    const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     await this.sitemapService.deleteCustomUrl(applicationId, id);
     return { ok: true };
   }
 }
-

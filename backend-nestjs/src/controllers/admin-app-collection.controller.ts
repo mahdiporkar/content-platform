@@ -11,7 +11,7 @@ import { PageResponseDto } from '../dto/page-response.dto';
 import { AdminAuthorizationService } from '../auth/admin-authorization.service';
 import { ServicePermission } from '../auth/admin-permissions';
 
-@Controller('/api/v1/admin/apps/:appId/collections')
+@Controller('/api/v1/admin/app-collections')
 export class AdminAppCollectionController {
   constructor(
     private readonly collectionService: AdminCollectionService,
@@ -21,11 +21,11 @@ export class AdminAppCollectionController {
   @Get()
   async list(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Query('search') search?: string,
     @Query('page') page = '0',
     @Query('size') size = '10',
   ): Promise<PageResponseDto<CollectionResponseDto>> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.listByApplication(appId, search, Number(page), Number(size));
   }
@@ -33,9 +33,9 @@ export class AdminAppCollectionController {
   @Get(':collectionId')
   async getById(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
   ): Promise<CollectionResponseDto> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.getByIdForApplication(appId, collectionId);
   }
@@ -43,9 +43,9 @@ export class AdminAppCollectionController {
   @Post()
   async create(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Body() body: CollectionUpsertRequestDto,
   ): Promise<CollectionResponseDto> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.createForApplication(appId, body);
   }
@@ -53,10 +53,10 @@ export class AdminAppCollectionController {
   @Patch(':collectionId')
   async update(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
     @Body() body: CollectionUpsertRequestDto,
   ): Promise<CollectionResponseDto> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.updateForApplication(appId, collectionId, body);
   }
@@ -64,9 +64,9 @@ export class AdminAppCollectionController {
   @Delete(':collectionId')
   async remove(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
   ): Promise<{ id: string }> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     await this.collectionService.removeForApplication(appId, collectionId);
     return { id: collectionId };
@@ -75,9 +75,9 @@ export class AdminAppCollectionController {
   @Get(':collectionId/items')
   async listItems(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
   ): Promise<CollectionItemResponseDto[]> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.listItemsForApplication(appId, collectionId);
   }
@@ -85,10 +85,10 @@ export class AdminAppCollectionController {
   @Post(':collectionId/items')
   async addItem(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
     @Body() body: CollectionItemAddRequestDto,
   ): Promise<CollectionItemResponseDto> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.addItemForApplication(appId, collectionId, body);
   }
@@ -96,10 +96,10 @@ export class AdminAppCollectionController {
   @Delete(':collectionId/items')
   async removeItemByContent(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
     @Body() body: CollectionItemRemoveRequestDto,
   ): Promise<{ ok: boolean }> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     await this.collectionService.removeItemByContentForApplication(appId, collectionId, body);
     return { ok: true };
@@ -108,11 +108,11 @@ export class AdminAppCollectionController {
   @Patch(':collectionId/items/item/:itemId')
   async updateItem(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
     @Param('itemId') itemId: string,
     @Body() body: CollectionItemAddRequestDto,
   ): Promise<CollectionItemResponseDto> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.updateItemForApplication(appId, collectionId, itemId, body);
   }
@@ -120,10 +120,10 @@ export class AdminAppCollectionController {
   @Patch(':collectionId/items/reorder')
   async reorder(
     @Req() request: Request,
-    @Param('appId') appId: string,
     @Param('collectionId') collectionId: string,
     @Body() body: CollectionReorderRequestDto,
   ): Promise<CollectionItemResponseDto[]> {
+    const appId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.COLLECTIONS_MANAGE, appId);
     return await this.collectionService.reorderForApplication(appId, collectionId, body);
   }
