@@ -1,11 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Button, Card, Form, Input, Typography } from "antd";
+import { Alert, Button, Form, Input, Select, Typography } from "antd";
+import {
+  AppstoreOutlined,
+  CheckCircleFilled,
+  GlobalOutlined,
+  LockOutlined,
+  MailOutlined,
+  SafetyCertificateOutlined
+} from "@ant-design/icons";
 import client from "../../api/client";
 import { authStore } from "../../app/auth";
+import { type SupportedLocale, useI18n } from "../../i18n";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const { locale, direction, setLocale, t } = useI18n();
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("Admin123!");
   const [error, setError] = useState<string | null>(null);
@@ -20,34 +30,111 @@ export const LoginPage = () => {
       authStore.setToken(response.data.token);
       navigate("/");
     } catch (err) {
-      setError("Invalid credentials");
+      setError(t("login.error"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-shell">
-      <Card className="login-card">
-        <Typography.Title level={3} style={{ marginTop: 0 }}>
-          Admin Login
-        </Typography.Title>
-        <Typography.Paragraph type="secondary">
-          Use the seeded account to enter the admin panel.
-        </Typography.Paragraph>
-        <Form layout="vertical" onSubmitCapture={handleSubmit}>
-          <Form.Item label="Email" required>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} size="large" />
-          </Form.Item>
-          <Form.Item label="Password" required>
-            <Input.Password value={password} onChange={(e) => setPassword(e.target.value)} size="large" />
-          </Form.Item>
-          {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-          <Button type="primary" htmlType="submit" loading={loading} block size="large">
-            Sign in
-          </Button>
-        </Form>
-      </Card>
+    <div className="login-shell" dir={direction}>
+      <div className="login-orb login-orb--one" />
+      <div className="login-orb login-orb--two" />
+
+      <main className="login-panel">
+        <section className="login-showcase">
+          <div className="login-brand">
+            <span className="login-brand__mark">
+              <AppstoreOutlined />
+            </span>
+            <div>
+              <strong>{t("app.brand")}</strong>
+              <span>{t("app.console")}</span>
+            </div>
+          </div>
+
+          <div className="login-showcase__content">
+            <span className="login-kicker">{t("login.eyebrow")}</span>
+            <Typography.Title className="login-showcase__title">
+              {t("login.feature.content")}
+            </Typography.Title>
+            <div className="login-features">
+              {[t("login.feature.teams"), t("login.feature.delivery")].map((feature) => (
+                <div className="login-feature" key={feature}>
+                  <CheckCircleFilled />
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="login-showcase__footer">
+            <SafetyCertificateOutlined />
+            <span>{t("login.secure")}</span>
+          </div>
+        </section>
+
+        <section className="login-form-side">
+          <div className="login-language">
+            <GlobalOutlined />
+            <Select
+              variant="borderless"
+              value={locale}
+              onChange={(value) => setLocale(value as SupportedLocale)}
+              popupMatchSelectWidth={false}
+              aria-label={t("app.language")}
+              options={[
+                { value: "fa", label: "فارسی" },
+                { value: "en", label: "English" },
+                { value: "ar", label: "العربية" },
+                { value: "zh", label: "中文" },
+                { value: "ru", label: "Русский" }
+              ]}
+            />
+          </div>
+
+          <div className="login-form-wrap">
+            <div className="login-form-heading">
+              <span className="login-mobile-mark">
+                <AppstoreOutlined />
+              </span>
+              <Typography.Title level={2}>{t("login.title")}</Typography.Title>
+              <Typography.Paragraph>{t("login.subtitle")}</Typography.Paragraph>
+            </div>
+
+            <Form className="login-form" layout="vertical" onSubmitCapture={handleSubmit}>
+              <Form.Item label={t("login.email")} required>
+                <Input
+                  prefix={<MailOutlined />}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder={t("login.emailPlaceholder")}
+                  size="large"
+                  autoComplete="username"
+                  dir="ltr"
+                />
+              </Form.Item>
+              <Form.Item label={t("login.password")} required>
+                <Input.Password
+                  prefix={<LockOutlined />}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={t("login.passwordPlaceholder")}
+                  size="large"
+                  autoComplete="current-password"
+                  dir="ltr"
+                />
+              </Form.Item>
+              {error && <Alert type="error" message={error} showIcon className="login-alert" />}
+              <Button className="login-submit" type="primary" htmlType="submit" loading={loading} block size="large">
+                {loading ? t("login.loading") : t("login.submit")}
+              </Button>
+            </Form>
+
+            <span className="login-copyright">{t("login.footer")}</span>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
