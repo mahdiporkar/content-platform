@@ -57,7 +57,9 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  const applicationId = tenantStore.getApplicationId();
+  const tokenPayload = authStore.getTokenPayload();
+  const fallbackApplicationId = tokenPayload?.role === "super_admin" ? "" : tokenPayload?.applicationIds?.[0] ?? "";
+  const applicationId = tenantStore.getApplicationId() || fallbackApplicationId;
   if (applicationId && !shouldSkipApplicationHeader(requestPath)) {
     config.headers["X-Application-Id"] = applicationId;
   }
