@@ -3,6 +3,7 @@ import { AdminUserApplicationEntity } from './admin-user-application.entity';
 
 export enum AdminUserRole {
   SUPER_ADMIN = 'super_admin',
+  SYSTEM_ADMIN = 'system_admin',
   EDITOR = 'editor',
   PUBLISHER = 'publisher',
 }
@@ -24,7 +25,7 @@ export class AdminUserEntity {
   @Column({ name: 'password_hash', type: 'varchar' })
   passwordHash!: string;
 
-  @Column({ type: 'enum', enum: AdminUserRole, default: AdminUserRole.EDITOR })
+  @Column({ type: 'enum', enum: AdminUserRole, default: AdminUserRole.SYSTEM_ADMIN })
   role!: AdminUserRole;
 
   @Column({ type: 'enum', enum: AdminUserStatus, default: AdminUserStatus.ACTIVE })

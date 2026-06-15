@@ -8,6 +8,7 @@ export enum SystemPermission {
 export enum ServicePermission {
   POSTS_MANAGE = 'posts.manage',
   ARTICLES_MANAGE = 'articles.manage',
+  MEDIA_MANAGE = 'media.manage',
   PAGES_MANAGE = 'pages.manage',
   MENUS_MANAGE = 'menus.manage',
   GALLERIES_MANAGE = 'galleries.manage',
@@ -25,6 +26,7 @@ export const DEFAULT_SYSTEM_PERMISSIONS: SystemPermission[] = [
 export const DEFAULT_SERVICE_PERMISSIONS: ServicePermission[] = [
   ServicePermission.POSTS_MANAGE,
   ServicePermission.ARTICLES_MANAGE,
+  ServicePermission.MEDIA_MANAGE,
   ServicePermission.PAGES_MANAGE,
   ServicePermission.MENUS_MANAGE,
   ServicePermission.GALLERIES_MANAGE,
@@ -42,7 +44,7 @@ export const normalizeSystemPermissions = (
     return [];
   }
   if (!permissions) {
-    return [...DEFAULT_SYSTEM_PERMISSIONS];
+    return [];
   }
   const allowed = new Set<string>(Object.values(SystemPermission));
   return Array.from(
@@ -62,7 +64,7 @@ export const normalizeServicePermissions = (
     return [];
   }
   if (!permissions) {
-    return [...DEFAULT_SERVICE_PERMISSIONS];
+    return [];
   }
   const allowed = new Set<string>(Object.values(ServicePermission));
   return Array.from(

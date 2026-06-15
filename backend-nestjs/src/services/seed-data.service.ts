@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { ApplicationEntity } from '../entities/application.entity';
-import { AdminUserEntity } from '../entities/admin-user.entity';
+import { AdminUserEntity, AdminUserRole } from '../entities/admin-user.entity';
 import { AdminUserApplicationEntity } from '../entities/admin-user-application.entity';
 import { MenuEntity } from '../entities/menu.entity';
 import { MenuItemEntity } from '../entities/menu-item.entity';
@@ -85,6 +85,13 @@ export class SeedDataService implements OnModuleInit {
 
     const existing = await this.adminUserRepo.findOne({ where: { email: adminEmail } });
     if (existing) {
+      if (existing.role !== AdminUserRole.SUPER_ADMIN) {
+        existing.role = AdminUserRole.SUPER_ADMIN;
+        existing.systemPermissions = null;
+        existing.servicePermissions = null;
+        await this.adminUserRepo.save(existing);
+        this.logger.log('Updated seed admin user role to super_admin.');
+      }
       this.logger.log('Admin user already exists.');
       return;
     }
@@ -94,6 +101,7 @@ export class SeedDataService implements OnModuleInit {
       id: uuidv4(),
       email: adminEmail,
       passwordHash,
+      role: AdminUserRole.SUPER_ADMIN,
       tokenVersion: 1,
       applications: [],
     });

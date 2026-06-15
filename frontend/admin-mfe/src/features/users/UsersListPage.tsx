@@ -2,11 +2,23 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
+import { authStore } from "../../app/auth";
 import { AdminUser, Application } from "../../types";
 import { useI18n } from "../../i18n";
 
 const systemPermissions = ["applications.manage", "users.manage"];
-const servicePermissions = ["posts.manage", "articles.manage", "galleries.manage", "images.manage", "videos.manage", "collections.manage", "analytics.view"];
+const servicePermissions = [
+  "posts.manage",
+  "articles.manage",
+  "media.manage",
+  "pages.manage",
+  "menus.manage",
+  "galleries.manage",
+  "images.manage",
+  "videos.manage",
+  "collections.manage",
+  "analytics.view"
+];
 
 export const UsersListPage = () => {
   const { t, v } = useI18n();
@@ -21,12 +33,21 @@ export const UsersListPage = () => {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [usersResponse, applicationsResponse] = await Promise.all([
-        client.get<AdminUser[]>("/api/v1/admin/users"),
-        client.get<Application[]>("/api/v1/admin/applications")
-      ]);
+      const usersResponse = await client.get<AdminUser[]>("/api/v1/admin/users");
       setUsers(usersResponse.data);
-      setApplications(applicationsResponse.data);
+
+      try {
+        const applicationsResponse = await client.get<Application[]>("/api/v1/admin/applications");
+        setApplications(applicationsResponse.data);
+      } catch {
+        const tokenApplicationIds = authStore.getTokenPayload()?.applicationIds || [];
+        setApplications(
+          tokenApplicationIds.map((id) => ({
+            id,
+            name: id
+          }))
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +72,7 @@ export const UsersListPage = () => {
     setModalOpen(true);
     form.setFieldsValue({
       email: user?.email ?? "",
-      role: user?.role ?? "editor",
+      role: user?.role ?? "system_admin",
       status: user?.status ?? "active",
       applicationIds: user?.applicationIds ?? [],
       systemPermissions: user?.systemPermissions ?? [],
@@ -194,6 +215,7 @@ export const UsersListPage = () => {
             <Select
               options={[
                 { value: "super_admin", label: v("super_admin") },
+                { value: "system_admin", label: v("system_admin") },
                 { value: "editor", label: v("editor") },
                 { value: "publisher", label: v("publisher") }
               ]}

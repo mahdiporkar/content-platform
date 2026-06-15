@@ -43,6 +43,7 @@ export class AdminMediaController {
     @Body('kind') kind?: string,
   ): Promise<MediaUploadResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -113,6 +114,7 @@ export class AdminMediaController {
     @Query('applicationId') applicationId: string,
   ): Promise<MediaVariantResponseDto[]> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -132,6 +134,7 @@ export class AdminMediaController {
     @Body() body: Record<string, string | undefined>,
   ): Promise<MediaVariantResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -175,6 +178,7 @@ export class AdminMediaController {
     @Body() body: Record<string, string | undefined>,
   ): Promise<MediaVariantResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -221,6 +225,7 @@ export class AdminMediaController {
     @Query('applicationId') applicationId: string,
   ): Promise<{ ok: boolean }> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,

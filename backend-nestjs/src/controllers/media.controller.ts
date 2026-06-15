@@ -23,6 +23,7 @@ export class MediaController {
     @Query('size') size = '30',
   ): Promise<PageResponseDto<MediaAssetResponseDto>> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -39,6 +40,7 @@ export class MediaController {
     @Query('applicationId') applicationId: string,
   ): Promise<MediaAssetResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -56,6 +58,7 @@ export class MediaController {
     @Query('applicationId') applicationId: string,
   ): Promise<MediaAssetResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,

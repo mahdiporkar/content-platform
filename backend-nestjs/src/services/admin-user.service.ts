@@ -20,7 +20,7 @@ export class AdminUserService {
 
   private mapUser(user: AdminUserEntity): AdminUserResponseDto {
     const applicationIds = (user.applications || []).map((entry) => entry.applicationId);
-    const role = user.role ?? AdminUserRole.EDITOR;
+    const role = user.role ?? AdminUserRole.SYSTEM_ADMIN;
     const systemPermissions = normalizeSystemPermissions(role, user.systemPermissions);
     const servicePermissions = normalizeServicePermissions(role, user.servicePermissions);
     return new AdminUserResponseDto(
@@ -62,15 +62,15 @@ export class AdminUserService {
       id: uuidv4(),
       email,
       passwordHash,
-      role: request.role ?? AdminUserRole.EDITOR,
+      role: request.role ?? AdminUserRole.SYSTEM_ADMIN,
       status: request.status ?? AdminUserStatus.ACTIVE,
       tokenVersion: 1,
       systemPermissions: normalizeSystemPermissions(
-        request.role ?? AdminUserRole.EDITOR,
+        request.role ?? AdminUserRole.SYSTEM_ADMIN,
         request.systemPermissions,
       ),
       servicePermissions: normalizeServicePermissions(
-        request.role ?? AdminUserRole.EDITOR,
+        request.role ?? AdminUserRole.SYSTEM_ADMIN,
         request.servicePermissions,
       ),
       applications: [],
@@ -108,7 +108,7 @@ export class AdminUserService {
       user.passwordHash = await bcrypt.hash(request.password.trim(), 10);
       rotateSessions = true;
     }
-    user.role = request.role ?? user.role ?? AdminUserRole.EDITOR;
+    user.role = request.role ?? user.role ?? AdminUserRole.SYSTEM_ADMIN;
     const previousStatus = user.status ?? AdminUserStatus.ACTIVE;
     user.status = request.status ?? user.status ?? AdminUserStatus.ACTIVE;
     if (previousStatus !== user.status && user.status === AdminUserStatus.SUSPENDED) {

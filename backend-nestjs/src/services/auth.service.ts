@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginRequestDto } from '../dto/requests/login-request.dto';
 import { AuthResponseDto } from '../dto/responses/auth-response.dto';
-import { AdminUserEntity, AdminUserStatus } from '../entities/admin-user.entity';
+import { AdminUserEntity, AdminUserRole, AdminUserStatus } from '../entities/admin-user.entity';
 import { JwtTokenService } from '../auth/jwt-token.service';
 import { normalizeServicePermissions, normalizeSystemPermissions } from '../auth/admin-permissions';
 
@@ -35,12 +35,13 @@ export class AuthService {
     }
 
     const applicationIds = (admin.applications || []).map((entry) => entry.applicationId);
-    const systemPermissions = normalizeSystemPermissions(admin.role, admin.systemPermissions);
-    const servicePermissions = normalizeServicePermissions(admin.role, admin.servicePermissions);
+    const role = admin.role ?? AdminUserRole.SYSTEM_ADMIN;
+    const systemPermissions = normalizeSystemPermissions(role, admin.systemPermissions);
+    const servicePermissions = normalizeServicePermissions(role, admin.servicePermissions);
     const token = this.jwtTokenService.sign({
       sub: admin.id,
       email: admin.email,
-      role: admin.role,
+      role,
       applicationIds,
       tokenVersion: admin.tokenVersion ?? 1,
       systemPermissions,

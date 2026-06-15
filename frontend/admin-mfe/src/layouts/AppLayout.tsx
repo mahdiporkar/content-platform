@@ -35,12 +35,17 @@ export const AppLayout = () => {
     () => Array.from(new Set((tokenPayload?.applicationIds || []).map((entry) => entry.trim()).filter(Boolean))),
     [tokenPayload]
   );
+  const isSuperAdmin = tokenPayload?.role === "super_admin";
+  const systemPermissions = tokenPayload?.systemPermissions || [];
+  const servicePermissions = tokenPayload?.servicePermissions || [];
+  const canAccessSystem = (permission: string) => isSuperAdmin || systemPermissions.includes(permission);
+  const canAccessService = (permission: string) => isSuperAdmin || servicePermissions.includes(permission);
   const canSeeMediaManagerMenu = useMemo(() => {
-    if (tokenPayload?.role === "super_admin") {
+    if (isSuperAdmin) {
       return true;
     }
-    const servicePermissions = tokenPayload?.servicePermissions || [];
     return (
+      servicePermissions.includes("media.manage") ||
       servicePermissions.includes("images.manage") ||
       servicePermissions.includes("videos.manage") ||
       servicePermissions.includes("posts.manage") ||
@@ -49,7 +54,18 @@ export const AppLayout = () => {
       servicePermissions.includes("pages.manage") ||
       servicePermissions.includes("menus.manage")
     );
-  }, [tokenPayload?.role, tokenPayload?.servicePermissions]);
+  }, [isSuperAdmin, servicePermissions]);
+  const canSeeSitemapMenu = useMemo(() => {
+    if (isSuperAdmin) {
+      return true;
+    }
+    return (
+      servicePermissions.includes("posts.manage") ||
+      servicePermissions.includes("articles.manage") ||
+      servicePermissions.includes("videos.manage") ||
+      servicePermissions.includes("collections.manage")
+    );
+  }, [isSuperAdmin, servicePermissions]);
 
   const handleLogout = () => {
     authStore.clearToken();
@@ -60,7 +76,7 @@ export const AppLayout = () => {
     const fallbackOptions = accessibleApplicationIds.map((id) => ({ value: id, label: id }));
     setApplicationOptions(fallbackOptions);
 
-    const canLoadApplications = tokenPayload?.role === "super_admin" || (tokenPayload?.systemPermissions || []).includes("applications.manage");
+    const canLoadApplications = isSuperAdmin || systemPermissions.includes("applications.manage");
     if (!canLoadApplications) {
       return;
     }
@@ -68,7 +84,7 @@ export const AppLayout = () => {
     const loadApplications = async () => {
       try {
         const response = await client.get<Application[]>("/api/v1/admin/applications");
-        const allowedIds = tokenPayload?.role === "super_admin" ? null : new Set(accessibleApplicationIds);
+        const allowedIds = isSuperAdmin ? null : new Set(accessibleApplicationIds);
         const options = response.data
           .filter((app) => !allowedIds || allowedIds.has(app.id))
           .map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }));
@@ -79,7 +95,7 @@ export const AppLayout = () => {
     };
 
     void loadApplications();
-  }, [accessibleApplicationIds, tokenPayload?.role, tokenPayload?.systemPermissions]);
+  }, [accessibleApplicationIds, isSuperAdmin, systemPermissions]);
 
   useEffect(() => {
     if (!applicationId && applicationOptions.length > 0) {
@@ -89,19 +105,19 @@ export const AppLayout = () => {
 
   const selectedKey = location.pathname.split("/")[1] || "posts";
   const menuItems = [
-    { key: "applications", icon: <AppstoreOutlined />, label: t("menu.applications") },
-    { key: "users", icon: <TeamOutlined />, label: t("menu.users") },
-    { key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") },
-    { key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") },
-    { key: "articles", icon: <ReadOutlined />, label: t("menu.articles") },
-    { key: "pages", icon: <FileTextOutlined />, label: t("menu.pages") },
-    { key: "menus", icon: <MenuOutlined />, label: t("menu.menus") },
-    { key: "galleries", icon: <PictureOutlined />, label: t("menu.galleries") },
-    { key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") },
-    { key: "images", icon: <PictureOutlined />, label: t("menu.images") },
+    ...(canAccessSystem("applications.manage") ? [{ key: "applications", icon: <AppstoreOutlined />, label: t("menu.applications") }] : []),
+    ...(canAccessSystem("users.manage") ? [{ key: "users", icon: <TeamOutlined />, label: t("menu.users") }] : []),
+    ...(canAccessService("collections.manage") ? [{ key: "collections", icon: <UnorderedListOutlined />, label: t("menu.collections") }] : []),
+    ...(canAccessService("posts.manage") ? [{ key: "posts", icon: <FileTextOutlined />, label: t("menu.posts") }] : []),
+    ...(canAccessService("articles.manage") ? [{ key: "articles", icon: <ReadOutlined />, label: t("menu.articles") }] : []),
+    ...(canAccessService("pages.manage") ? [{ key: "pages", icon: <FileTextOutlined />, label: t("menu.pages") }] : []),
+    ...(canAccessService("menus.manage") ? [{ key: "menus", icon: <MenuOutlined />, label: t("menu.menus") }] : []),
+    ...(canAccessService("galleries.manage") ? [{ key: "galleries", icon: <PictureOutlined />, label: t("menu.galleries") }] : []),
+    ...(canAccessService("videos.manage") ? [{ key: "videos", icon: <VideoCameraOutlined />, label: t("menu.videos") }] : []),
+    ...(canAccessService("images.manage") ? [{ key: "images", icon: <PictureOutlined />, label: t("menu.images") }] : []),
     ...(canSeeMediaManagerMenu ? [{ key: "media", icon: <FolderOpenOutlined />, label: t("menu.media") }] : []),
-    { key: "sitemap", icon: <GlobalOutlined />, label: t("menu.sitemap") },
-    { key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }
+    ...(canSeeSitemapMenu ? [{ key: "sitemap", icon: <GlobalOutlined />, label: t("menu.sitemap") }] : []),
+    ...(canAccessService("analytics.view") ? [{ key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }] : [])
   ];
 
   return (

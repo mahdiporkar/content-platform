@@ -25,6 +25,7 @@ export class AdminMediaLibraryController {
     @Query('size') size = '30',
   ): Promise<PageResponseDto<MediaAssetResponseDto>> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,
@@ -53,6 +54,7 @@ export class AdminMediaLibraryController {
     @Query('objectKey') objectKey: string,
   ): Promise<MediaAssetResponseDto> {
     this.access.assertAnyServicePermission(request, [
+      ServicePermission.MEDIA_MANAGE,
       ServicePermission.POSTS_MANAGE,
       ServicePermission.ARTICLES_MANAGE,
       ServicePermission.IMAGES_MANAGE,

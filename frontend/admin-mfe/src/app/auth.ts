@@ -3,7 +3,7 @@ const TOKEN_KEY = "content-platform-token";
 export type AdminTokenPayload = {
   sub?: string;
   email?: string;
-  role?: "super_admin" | "editor" | "publisher";
+  role?: "super_admin" | "system_admin" | "editor" | "publisher";
   applicationIds?: string[];
   systemPermissions?: string[];
   servicePermissions?: string[];

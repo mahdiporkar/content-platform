@@ -411,13 +411,14 @@ export type CollectionItem = {
 export type AdminUser = {
   id: string;
   email: string;
-  role: "super_admin" | "editor" | "publisher";
+  role: "super_admin" | "system_admin" | "editor" | "publisher";
   status: "active" | "suspended";
   applicationIds: string[];
   systemPermissions: ("applications.manage" | "users.manage")[];
   servicePermissions: (
     | "posts.manage"
     | "articles.manage"
+    | "media.manage"
     | "pages.manage"
     | "menus.manage"
     | "galleries.manage"

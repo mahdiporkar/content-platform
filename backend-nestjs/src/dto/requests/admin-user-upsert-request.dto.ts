@@ -12,7 +12,12 @@ export class AdminUserUpsertRequestDto {
   password?: string;
 
   @IsOptional()
-  @IsIn([AdminUserRole.SUPER_ADMIN, AdminUserRole.EDITOR, AdminUserRole.PUBLISHER])
+  @IsIn([
+    AdminUserRole.SUPER_ADMIN,
+    AdminUserRole.SYSTEM_ADMIN,
+    AdminUserRole.EDITOR,
+    AdminUserRole.PUBLISHER,
+  ])
   role?: AdminUserRole;
 
   @IsOptional()
