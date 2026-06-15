@@ -30,10 +30,14 @@ async function corsAllows(
   const configuration = buildCorsConfiguration(env);
   const originHandler = configuration.options.origin;
   assert.equal(typeof originHandler, 'function');
+  const checkOrigin = originHandler as (
+    requestOrigin: string,
+    callback: (error: Error | null, allowed?: boolean) => void,
+  ) => void;
 
   return new Promise((resolve, reject) => {
-    (originHandler as Exclude<typeof originHandler, boolean | string | RegExp | Array<string | RegExp>>)(
-      origin,
+    checkOrigin(
+      origin as string,
       (error, allowed) => {
         if (error) {
           reject(error);
