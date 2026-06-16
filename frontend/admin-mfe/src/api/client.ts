@@ -24,44 +24,44 @@ const normalizeRequestPath = (url?: string): string => {
   }
 };
 
-const shouldSkipApplicationHeader = (path: string, superAdmin = false): boolean => {
-  return (
-    path === "/api/v1/auth/login" ||
-    path === "/api/v1/admin/applications" ||
-    path.startsWith("/api/v1/admin/applications/") ||
-    (superAdmin && (path === "/api/v1/admin/users" || path.startsWith("/api/v1/admin/users/")))
-  );
-};
+const isAdminRequest = (path: string): boolean =>
+  path.startsWith("/api/v1/admin/") || path === "/api/v1/media" || path.startsWith("/api/v1/media/");
 
-const isAdminRequest = (path: string): boolean => path.startsWith("/api/v1/admin/") || path === "/api/v1/media" || path.startsWith("/api/v1/media/");
+const shouldSkipApplicationHeader = (path: string, superAdmin = false): boolean =>
+  path === "/api/v1/auth/login" ||
+  path === "/api/v1/admin/applications" ||
+  path.startsWith("/api/v1/admin/applications/") ||
+  (superAdmin && (path === "/api/v1/admin/users" || path.startsWith("/api/v1/admin/users/")));
 
 const toApplicationId = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 
-const moveApplicationIdOutOfAdminUrl = (config: InternalAxiosRequestConfig, path: string): string => {
-  let applicationId = "";
+const getRequestBodyApplicationId = (data: unknown): string => {
+  if (data instanceof FormData) {
+    return toApplicationId(data.get("applicationId"));
+  }
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return toApplicationId((data as Record<string, unknown>).applicationId);
+  }
+  return "";
+};
+
+const moveApplicationIdFromAdminUrlToHeader = (config: InternalAxiosRequestConfig, path: string): string => {
   if (!isAdminRequest(path)) {
-    return applicationId;
+    return "";
   }
   const params = config.params as Record<string, unknown> | undefined;
-  if (params && "applicationId" in params) {
-    applicationId = toApplicationId(params.applicationId);
-    delete params.applicationId;
+  if (!params || !("applicationId" in params)) {
+    return "";
   }
-  if (config.data instanceof FormData) {
-    applicationId = applicationId || toApplicationId(config.data.get("applicationId"));
-    return applicationId;
-  }
-  if (config.data && typeof config.data === "object" && !Array.isArray(config.data)) {
-    const data = config.data as Record<string, unknown>;
-    applicationId = applicationId || toApplicationId(data.applicationId);
-  }
+  const applicationId = toApplicationId(params.applicationId);
+  delete params.applicationId;
   return applicationId;
 };
 
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
   const requestPath = normalizeRequestPath(config.url);
-  const requestApplicationId = moveApplicationIdOutOfAdminUrl(config, requestPath);
+  const requestApplicationId = moveApplicationIdFromAdminUrlToHeader(config, requestPath);
   const token = authStore.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -69,7 +69,11 @@ client.interceptors.request.use((config) => {
   const tokenPayload = authStore.getTokenPayload();
   const superAdmin = isSuperAdmin(tokenPayload);
   const fallbackApplicationId = superAdmin ? "" : tokenPayload?.applicationIds?.[0] ?? "";
-  const applicationId = requestApplicationId || tenantStore.getApplicationId() || fallbackApplicationId;
+  const applicationId =
+    requestApplicationId ||
+    getRequestBodyApplicationId(config.data) ||
+    tenantStore.getApplicationId() ||
+    fallbackApplicationId;
   if (applicationId && !shouldSkipApplicationHeader(requestPath, superAdmin)) {
     config.headers["X-Application-Id"] = applicationId;
   }

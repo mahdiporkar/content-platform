@@ -174,8 +174,8 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       setLoading(true);
       try {
         const [collectionResponse, itemResponse] = await Promise.all([
-          client.get<Collection>(`/api/v1/admin/app-collections/${id}`),
-          client.get<CollectionItem[]>(`/api/v1/admin/app-collections/${id}/items`)
+          client.get<Collection>(`/api/v1/admin/app-collections/${id}`, { params: { applicationId } }),
+          client.get<CollectionItem[]>(`/api/v1/admin/app-collections/${id}/items`, { params: { applicationId } })
         ]);
         const collection = collectionResponse.data;
         setSlug(collection.slug);
@@ -253,11 +253,17 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
         } : undefined
       };
       if (mode === "create") {
-        const response = await client.post<Collection>("/api/v1/admin/app-collections", payload);
+        const response = await client.post<Collection>("/api/v1/admin/app-collections", {
+          ...payload,
+          applicationId
+        });
         messageApi.success("Collection created.");
         navigate(`/collections/${response.data.id}`, { replace: true, state: { collection: response.data } });
       } else {
-        await client.patch(`/api/v1/admin/app-collections/${collectionId}`, payload);
+        await client.patch(`/api/v1/admin/app-collections/${collectionId}`, {
+          ...payload,
+          applicationId
+        });
         messageApi.success("Collection updated.");
         await loadCollection(collectionId);
       }
@@ -335,7 +341,8 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       try {
         await client.post(`/api/v1/admin/app-collections/${collectionId}/items`, {
           contentType: entry.type,
-          contentId: entry.id
+          contentId: entry.id,
+          applicationId
         });
       } catch {
         messageApi.error(`Cannot add ${entry.title}.`);
@@ -419,7 +426,8 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
         },
         startsAt: customStartsAt || undefined,
         endsAt: customEndsAt || undefined,
-        isActive: true
+        isActive: true,
+        applicationId
       });
       setCustomModalOpen(false);
       resetCustomItemForm();
@@ -436,6 +444,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
     }
     try {
       await client.delete(`/api/v1/admin/app-collections/${collectionId}/items`, {
+        params: { applicationId },
         data: item.contentType && item.contentId ? { contentType: item.contentType, contentId: item.contentId } : { itemId: item.id }
       });
       await loadCollection(collectionId);
@@ -450,6 +459,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       return;
     }
     const payload = {
+      applicationId,
       items: ordered.map((item, index) => ({
         itemId: item.id,
         contentType: item.contentType,

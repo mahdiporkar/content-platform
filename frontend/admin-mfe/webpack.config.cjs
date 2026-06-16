@@ -22,6 +22,8 @@ module.exports = {
   entry: path.resolve(__dirname, "src", "main.tsx"),
   output: {
     path: path.resolve(__dirname, "dist"),
+    filename: "[name].[contenthash].js",
+    chunkFilename: "[name].[contenthash].js",
     publicPath: "auto",
     clean: true
   },

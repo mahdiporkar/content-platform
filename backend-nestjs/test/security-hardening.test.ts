@@ -59,15 +59,18 @@ async function testCorsConfiguration(): Promise<void> {
   assert.equal(await corsAllows(configuredEnv, 'http://localhost:3002'), true);
   assert.equal(await corsAllows(configuredEnv, 'https://blocked.example.com'), false);
   assert.equal(await corsAllows(configuredEnv, undefined), true);
+  const allowedHeaders = configuredCors.options.allowedHeaders as string[];
   assert.ok(
-    (configuredCors.options.allowedHeaders as string[]).some(
-      (header) => header.toLowerCase() === 'x-application-id',
-    ),
-    'CORS must allow X-Application-Id for admin preflight requests',
+    allowedHeaders.some((header) => header.toLowerCase() === 'x-application-id'),
+    'CORS must allow X-Application-Id for admin preflight requests.',
   );
   assert.ok(
-    (configuredCors.options.allowedHeaders as string[]).includes('x-application-id'),
-    'CORS must allow lowercase x-application-id as sent by browser preflight checks',
+    allowedHeaders.includes('x-application-id'),
+    'CORS must allow lowercase x-application-id as sent by browser preflight checks.',
+  );
+  assert.ok(
+    allowedHeaders.some((header) => header.toLowerCase() === 'x-application-token'),
+    'CORS must allow X-Application-Token for delivery preflight requests.',
   );
 
   const developmentConfiguration = buildCorsConfiguration({ NODE_ENV: 'development' });

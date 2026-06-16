@@ -2,11 +2,17 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
 
 const CORS_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 const CORS_ALLOWED_HEADERS = [
-  'Content-Type',
+  'Accept',
   'Authorization',
+  'Content-Type',
+  'Origin',
   'X-Requested-With',
+  'X-App-Id',
   'X-Application-Id',
+  'X-Application-Token',
+  'x-app-id',
   'x-application-id',
+  'x-application-token',
 ];
 
 export type CorsConfiguration = {
@@ -34,6 +40,7 @@ export function buildCorsConfiguration(env: NodeJS.ProcessEnv): CorsConfiguratio
       credentials: true,
       methods: CORS_METHODS,
       allowedHeaders: CORS_ALLOWED_HEADERS,
+      optionsSuccessStatus: 204,
     },
   };
 }
