@@ -71,9 +71,11 @@ export class AdminAuthorizationService {
 
   getApplicationId(request: Request): string {
     const headerValue = request.headers['x-application-id'];
-    const applicationId = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    const headerApplicationId = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    const bodyApplicationId = (request.body as { applicationId?: string } | undefined)?.applicationId;
+    const applicationId = headerApplicationId || bodyApplicationId;
     if (!applicationId || typeof applicationId !== 'string' || !applicationId.trim()) {
-      throw new BadRequestException('X-Application-Id header is required.');
+      throw new BadRequestException('X-Application-Id header or applicationId body field is required.');
     }
     return applicationId.trim();
   }

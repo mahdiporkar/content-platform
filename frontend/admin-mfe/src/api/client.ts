@@ -32,34 +32,40 @@ const shouldSkipApplicationHeader = (path: string): boolean => {
 
 const isAdminRequest = (path: string): boolean => path.startsWith("/api/v1/admin/") || path === "/api/v1/media" || path.startsWith("/api/v1/media/");
 
-const stripApplicationIdFromAdminRequest = (config: InternalAxiosRequestConfig, path: string) => {
+const toApplicationId = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
+
+const moveApplicationIdOutOfAdminUrl = (config: InternalAxiosRequestConfig, path: string): string => {
+  let applicationId = "";
   if (!isAdminRequest(path)) {
-    return;
+    return applicationId;
   }
   const params = config.params as Record<string, unknown> | undefined;
   if (params && "applicationId" in params) {
+    applicationId = toApplicationId(params.applicationId);
     delete params.applicationId;
   }
   if (config.data instanceof FormData) {
-    config.data.delete("applicationId");
-    return;
+    applicationId = applicationId || toApplicationId(config.data.get("applicationId"));
+    return applicationId;
   }
   if (config.data && typeof config.data === "object" && !Array.isArray(config.data)) {
-    delete (config.data as Record<string, unknown>).applicationId;
+    const data = config.data as Record<string, unknown>;
+    applicationId = applicationId || toApplicationId(data.applicationId);
   }
+  return applicationId;
 };
 
 client.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
   const requestPath = normalizeRequestPath(config.url);
-  stripApplicationIdFromAdminRequest(config, requestPath);
+  const requestApplicationId = moveApplicationIdOutOfAdminUrl(config, requestPath);
   const token = authStore.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   const tokenPayload = authStore.getTokenPayload();
   const fallbackApplicationId = tokenPayload?.role === "super_admin" ? "" : tokenPayload?.applicationIds?.[0] ?? "";
-  const applicationId = tenantStore.getApplicationId() || fallbackApplicationId;
+  const applicationId = requestApplicationId || tenantStore.getApplicationId() || fallbackApplicationId;
   if (applicationId && !shouldSkipApplicationHeader(requestPath)) {
     config.headers["X-Application-Id"] = applicationId;
   }
