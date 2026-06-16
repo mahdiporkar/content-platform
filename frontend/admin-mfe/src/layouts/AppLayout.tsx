@@ -84,6 +84,7 @@ export const AppLayout = () => {
   }, [applicationId, applicationOptions, setApplicationId]);
 
   const selectedKey = location.pathname.split("/")[1] || "posts";
+  const selectedApplicationLabel = applicationOptions.find((option) => option.value === applicationId)?.label;
   const menuItems = [
     ...(canAccessRoute(tokenPayload, "applications") ? [{ key: "applications", icon: <AppstoreOutlined />, label: t("menu.applications") }] : []),
     ...(canAccessRoute(tokenPayload, "users") ? [{ key: "users", icon: <TeamOutlined />, label: t("menu.users") }] : []),
@@ -159,7 +160,7 @@ export const AppLayout = () => {
           <Typography.Text className="header-tenant">
             {t("app.tenant")}:{" "}
             {applicationId ? (
-              <span className="header-tenant__value">{applicationId}</span>
+              <span className="header-tenant__value">{selectedApplicationLabel || applicationId}</span>
             ) : (
               <Typography.Text type="secondary">{t("app.notSet")}</Typography.Text>
             )}
