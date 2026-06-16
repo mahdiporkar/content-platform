@@ -54,10 +54,17 @@ async function testCorsConfiguration(): Promise<void> {
     NODE_ENV: 'production',
     CORS_ALLOWED_ORIGINS: 'https://cms.example.com, http://localhost:3002,https://cms.example.com',
   };
+  const configuredCors = buildCorsConfiguration(configuredEnv);
   assert.equal(await corsAllows(configuredEnv, 'https://cms.example.com'), true);
   assert.equal(await corsAllows(configuredEnv, 'http://localhost:3002'), true);
   assert.equal(await corsAllows(configuredEnv, 'https://blocked.example.com'), false);
   assert.equal(await corsAllows(configuredEnv, undefined), true);
+  assert.ok(
+    (configuredCors.options.allowedHeaders as string[]).some(
+      (header) => header.toLowerCase() === 'x-application-id',
+    ),
+    'CORS must allow X-Application-Id for admin preflight requests',
+  );
 
   const developmentConfiguration = buildCorsConfiguration({ NODE_ENV: 'development' });
   assert.equal(developmentConfiguration.missingInProduction, false);
