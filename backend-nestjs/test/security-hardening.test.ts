@@ -65,6 +65,10 @@ async function testCorsConfiguration(): Promise<void> {
     ),
     'CORS must allow X-Application-Id for admin preflight requests',
   );
+  assert.ok(
+    (configuredCors.options.allowedHeaders as string[]).includes('x-application-id'),
+    'CORS must allow lowercase x-application-id as sent by browser preflight checks',
+  );
 
   const developmentConfiguration = buildCorsConfiguration({ NODE_ENV: 'development' });
   assert.equal(developmentConfiguration.missingInProduction, false);
