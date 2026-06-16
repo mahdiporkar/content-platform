@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
-import { authStore } from "../../app/auth";
+import { authStore, isSuperAdmin as isSuperAdminPayload } from "../../app/auth";
 import { useTenant } from "../../app/tenant";
 import { AdminUser, Application } from "../../types";
 import { useI18n } from "../../i18n";
@@ -32,7 +32,7 @@ export const UsersListPage = () => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const tokenPayload = useMemo(() => authStore.getTokenPayload(), []);
-  const isSuperAdmin = tokenPayload?.role === "super_admin";
+  const isSuperAdmin = isSuperAdminPayload(tokenPayload);
   const currentApplicationId = applicationId || tokenPayload?.applicationIds?.[0] || "";
   const availableSystemPermissions = useMemo(
     () => (isSuperAdmin ? systemPermissions : systemPermissions.filter((permission) => (tokenPayload?.systemPermissions || []).includes(permission))),

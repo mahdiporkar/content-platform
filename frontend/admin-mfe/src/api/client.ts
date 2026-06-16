@@ -1,5 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
-import { authStore } from "../app/auth";
+import { authStore, isSuperAdmin } from "../app/auth";
 import { tenantStore } from "../app/tenantStore";
 import { apiBaseUrl } from "../config/env";
 
@@ -64,7 +64,7 @@ client.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   const tokenPayload = authStore.getTokenPayload();
-  const fallbackApplicationId = tokenPayload?.role === "super_admin" ? "" : tokenPayload?.applicationIds?.[0] ?? "";
+  const fallbackApplicationId = isSuperAdmin(tokenPayload) ? "" : tokenPayload?.applicationIds?.[0] ?? "";
   const applicationId = requestApplicationId || tenantStore.getApplicationId() || fallbackApplicationId;
   if (applicationId && !shouldSkipApplicationHeader(requestPath)) {
     config.headers["X-Application-Id"] = applicationId;

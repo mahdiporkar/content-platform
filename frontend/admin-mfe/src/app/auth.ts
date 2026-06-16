@@ -3,7 +3,7 @@ const TOKEN_KEY = "content-platform-token";
 export type AdminTokenPayload = {
   sub?: string;
   email?: string;
-  role?: "super_admin" | "system_admin" | "editor" | "publisher";
+  role?: "super_admin" | "system_admin" | "editor" | "publisher" | string;
   applicationIds?: string[];
   systemPermissions?: string[];
   servicePermissions?: string[];
@@ -11,7 +11,11 @@ export type AdminTokenPayload = {
   iat?: number;
 };
 
-export const isSuperAdmin = (payload: AdminTokenPayload | null): boolean => payload?.role === "super_admin";
+export const normalizeAdminRole = (role?: string): string =>
+  (role || "").trim().toLowerCase().replace(/-/g, "_");
+
+export const isSuperAdmin = (payload: AdminTokenPayload | null): boolean =>
+  normalizeAdminRole(payload?.role) === "super_admin";
 
 export const canAccessSystemPermission = (payload: AdminTokenPayload | null, permission: string): boolean =>
   isSuperAdmin(payload) || (payload?.systemPermissions || []).includes(permission);
