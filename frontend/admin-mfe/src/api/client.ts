@@ -24,9 +24,12 @@ const normalizeRequestPath = (url?: string): string => {
   }
 };
 
-const shouldSkipApplicationHeader = (path: string): boolean => {
+const shouldSkipApplicationHeader = (path: string, superAdmin = false): boolean => {
   return (
-    path === "/api/v1/auth/login"
+    path === "/api/v1/auth/login" ||
+    path === "/api/v1/admin/applications" ||
+    path.startsWith("/api/v1/admin/applications/") ||
+    (superAdmin && (path === "/api/v1/admin/users" || path.startsWith("/api/v1/admin/users/")))
   );
 };
 
@@ -64,9 +67,10 @@ client.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   const tokenPayload = authStore.getTokenPayload();
-  const fallbackApplicationId = isSuperAdmin(tokenPayload) ? "" : tokenPayload?.applicationIds?.[0] ?? "";
+  const superAdmin = isSuperAdmin(tokenPayload);
+  const fallbackApplicationId = superAdmin ? "" : tokenPayload?.applicationIds?.[0] ?? "";
   const applicationId = requestApplicationId || tenantStore.getApplicationId() || fallbackApplicationId;
-  if (applicationId && !shouldSkipApplicationHeader(requestPath)) {
+  if (applicationId && !shouldSkipApplicationHeader(requestPath, superAdmin)) {
     config.headers["X-Application-Id"] = applicationId;
   }
   return config;
