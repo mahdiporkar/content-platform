@@ -93,7 +93,7 @@ const messages: Record<SupportedLocale, Dictionary> = {
     "app.brand": "پلتفرم محتوا",
     "app.console": "پنل مدیریت",
     "app.language": "زبان",
-    "app.tenant": "تِنت",
+    "app.tenant": "شناسه اپلیکیشن",
     "app.notSet": "تنظیم نشده",
     "app.applicationId": "شناسه اپلیکیشن",
     "app.applicationPlaceholder": "UUID اپ را وارد کنید",

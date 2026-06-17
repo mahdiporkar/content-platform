@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Button, Layout, Menu, Select, Typography } from "antd";
+import { Button, Drawer, Layout, Menu, Select, Typography } from "antd";
 import {
   AppstoreOutlined,
   BarChartOutlined,
@@ -37,6 +37,7 @@ export const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [applicationOptions, setApplicationOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const tokenPayload = useMemo(() => authStore.getTokenPayload(), []);
   const accessibleApplicationIds = useMemo(
@@ -101,62 +102,84 @@ export const AppLayout = () => {
     ...(canAccessServicePermission(tokenPayload, "analytics.view") ? [{ key: "analytics", icon: <BarChartOutlined />, label: t("menu.analytics") }] : [])
   ];
 
+  const handleMenuClick = (key: string) => {
+    navigate(`/${key}`);
+    setMobileNavOpen(false);
+  };
+
+  const sidebarContent = (
+    <>
+      <div className="sidebar-title">
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          {t("app.brand")}
+        </Typography.Title>
+        <Typography.Text type="secondary">{t("app.console")}</Typography.Text>
+      </div>
+      <Menu
+        theme="light"
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        onClick={({ key }) => handleMenuClick(String(key))}
+        items={menuItems}
+        className="sidebar-menu"
+      />
+      <div className="sidebar-footer">
+        <Typography.Text strong className="sidebar-label">
+          {t("app.language")}
+        </Typography.Text>
+        <Select
+          size="small"
+          value={locale}
+          onChange={(value) => setLocale(value as SupportedLocale)}
+          options={[
+            { value: "fa", label: "فارسی" },
+            { value: "en", label: "English" },
+            { value: "ar", label: "العربية" },
+            { value: "zh", label: "中文" },
+            { value: "ru", label: "Русский" }
+          ]}
+        />
+        <Typography.Text strong className="sidebar-label">
+          {t("app.applicationId")}
+        </Typography.Text>
+        <Select
+          className="sidebar-app-select"
+          size="small"
+          value={applicationId || undefined}
+          options={applicationOptions}
+          onChange={(value) => setApplicationId(value || "")}
+          placeholder={
+            applicationOptions.length > 0 ? t("app.applicationPlaceholder") : t("app.noAccessibleApplications")
+          }
+          disabled={applicationOptions.length === 0}
+          showSearch
+          optionFilterProp="label"
+        />
+        <Button danger icon={<LogoutOutlined />} size="small" block onClick={handleLogout}>
+          {t("app.logout")}
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <Layout className="app-shell">
       <Sider width={260} className="sidebar">
-        <div className="sidebar-title">
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            {t("app.brand")}
-          </Typography.Title>
-          <Typography.Text type="secondary">{t("app.console")}</Typography.Text>
-        </div>
-        <Menu
-          theme="light"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          onClick={({ key }) => navigate(`/${key}`)}
-          items={menuItems}
-          className="sidebar-menu"
-        />
-        <div className="sidebar-footer">
-          <Typography.Text strong className="sidebar-label">
-            {t("app.language")}
-          </Typography.Text>
-          <Select
-            size="small"
-            value={locale}
-            onChange={(value) => setLocale(value as SupportedLocale)}
-            options={[
-              { value: "fa", label: "فارسی" },
-              { value: "en", label: "English" },
-              { value: "ar", label: "العربية" },
-              { value: "zh", label: "中文" },
-              { value: "ru", label: "Русский" }
-            ]}
-          />
-          <Typography.Text strong className="sidebar-label">
-            {t("app.applicationId")}
-          </Typography.Text>
-          <Select
-            className="sidebar-app-select"
-            size="small"
-            value={applicationId || undefined}
-            options={applicationOptions}
-            onChange={(value) => setApplicationId(value || "")}
-            placeholder={
-              applicationOptions.length > 0 ? t("app.applicationPlaceholder") : t("app.noAccessibleApplications")
-            }
-            disabled={applicationOptions.length === 0}
-            showSearch
-            optionFilterProp="label"
-          />
-          <Button danger icon={<LogoutOutlined />} size="small" block onClick={handleLogout}>
-            {t("app.logout")}
-          </Button>
-        </div>
+        {sidebarContent}
       </Sider>
       <Layout>
         <Header className="app-header">
+          <Button
+            className="mobile-nav-trigger"
+            icon={<MenuOutlined />}
+            type="text"
+            aria-label={t("menu.menus")}
+            onClick={() => setMobileNavOpen(true)}
+          />
+          <div className="mobile-header-title">
+            <Typography.Text strong>{t("app.brand")}</Typography.Text>
+            <Typography.Text type="secondary">{t("app.console")}</Typography.Text>
+          </div>
           <Typography.Text className="header-tenant">
             {t("app.tenant")}:{" "}
             {applicationId ? (
@@ -170,6 +193,16 @@ export const AppLayout = () => {
           <Outlet />
         </Content>
       </Layout>
+      <Drawer
+        className="mobile-nav-drawer"
+        placement="left"
+        width={300}
+        open={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        closable={false}
+      >
+        {sidebarContent}
+      </Drawer>
     </Layout>
   );
 };

@@ -124,7 +124,17 @@ a {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
+  gap: 16px;
   padding: 0 24px;
+}
+
+.mobile-nav-trigger,
+.mobile-header-title {
+  display: none;
+}
+
+.header-tenant {
+  min-width: 0;
 }
 
 .header-tenant__value {
@@ -154,6 +164,25 @@ a {
   gap: 16px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.mobile-nav-drawer .ant-drawer-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.mobile-nav-drawer .sidebar-title {
+  padding: 24px 24px 0;
+}
+
+.mobile-nav-drawer .sidebar-menu {
+  padding: 0 12px;
+}
+
+.mobile-nav-drawer .sidebar-footer {
+  margin-top: auto;
+  padding: 16px 24px 24px;
 }
 
 .table-empty {
@@ -1320,5 +1349,320 @@ a {
     margin: 12px auto;
     max-width: 100%;
     width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background: #f4f6f9;
+  }
+
+  .app-shell {
+    min-height: 100dvh;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: 58px;
+    height: auto;
+    padding: 8px 12px;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .mobile-nav-trigger {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-header-title {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    line-height: 1.2;
+  }
+
+  .mobile-header-title .ant-typography {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-header-title .ant-typography-secondary {
+    font-size: 11px;
+  }
+
+  .header-tenant {
+    flex: 0 1 42%;
+    overflow: hidden;
+    text-align: end;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 12px;
+  }
+
+  .content {
+    min-height: calc(100dvh - 58px);
+    padding: 12px;
+  }
+
+  .page-card {
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  .page-card > .ant-card-body,
+  .page-card > .ant-card-head {
+    padding-inline: 12px;
+  }
+
+  .page-card > .ant-card-body {
+    padding-block: 14px;
+  }
+
+  .page-header {
+    display: grid;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .page-header .ant-typography {
+    margin-bottom: 0;
+  }
+
+  .page-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .page-actions > *,
+  .page-actions .ant-space,
+  .page-actions .ant-select,
+  .page-actions .ant-input,
+  .page-actions .ant-picker,
+  .page-actions .ant-btn {
+    width: 100%;
+  }
+
+  .ant-card-small > .ant-card-head,
+  .ant-card-small > .ant-card-body {
+    padding-inline: 12px;
+  }
+
+  .ant-row {
+    margin-inline: 0 !important;
+    row-gap: 0 !important;
+  }
+
+  .ant-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding-inline: 0 !important;
+  }
+
+  .ant-form {
+    max-width: none !important;
+  }
+
+  .ant-form-item {
+    margin-bottom: 14px;
+  }
+
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-selector,
+  .ant-picker,
+  .ant-input-number,
+  .ant-input-number-affix-wrapper,
+  .ant-btn {
+    min-height: 40px;
+  }
+
+  .ant-input-number,
+  .ant-picker,
+  .ant-select,
+  .ant-upload,
+  .ant-upload-wrapper,
+  .ant-upload-list {
+    width: 100%;
+  }
+
+  .ant-space {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .ant-space-item {
+    max-width: 100%;
+  }
+
+  .ant-space-vertical,
+  .ant-space-vertical > .ant-space-item {
+    width: 100%;
+  }
+
+  .ant-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ant-table-wrapper .ant-table {
+    min-width: 760px;
+  }
+
+  .ant-table-wrapper .ant-table-thead > tr > th,
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .ant-pagination {
+    justify-content: center;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 24px);
+    margin: 12px auto;
+    top: 0;
+  }
+
+  .ant-modal-content {
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    border-radius: 10px;
+  }
+
+  .ant-modal-body {
+    padding: 16px;
+  }
+
+  .ant-drawer-content-wrapper {
+    max-width: 88vw;
+  }
+
+  .mobile-nav-drawer .ant-drawer-content {
+    background: var(--bg-accent);
+  }
+
+  .mobile-nav-drawer .ant-menu-item {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+
+  .editor-shell {
+    border-radius: 10px;
+  }
+
+  .editor-toolbar {
+    position: sticky;
+    top: 58px;
+    z-index: 12;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 10px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .editor-group {
+    width: auto;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .editor-button.icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .editor-button {
+    min-height: 40px;
+    padding-inline: 12px;
+  }
+
+  .editor-asset-bar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .asset-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .asset-button {
+    min-height: 40px;
+  }
+
+  .editor-content .ProseMirror {
+    min-height: 360px;
+    padding: 16px 14px 32px;
+    font-size: 15px;
+  }
+
+  .editor-bubble {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+  }
+
+  .media-node,
+  .media-node[data-float="left"],
+  .media-node[data-float="right"] {
+    width: 100% !important;
+    float: none !important;
+    margin-inline: auto !important;
+  }
+
+  .upload-preview {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .header-tenant {
+    grid-column: 1 / -1;
+    width: 100%;
+    text-align: start;
+  }
+
+  .content {
+    padding: 10px;
+  }
+
+  .ant-table-wrapper .ant-table {
+    min-width: 680px;
+  }
+
+  .editor-toolbar {
+    top: 84px;
   }
 }
