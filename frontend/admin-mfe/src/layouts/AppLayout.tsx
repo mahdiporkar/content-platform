@@ -68,7 +68,7 @@ export const AppLayout = () => {
         const allowedIds = isSuperAdmin ? null : new Set(accessibleApplicationIds);
         const options = response.data
           .filter((app) => !allowedIds || allowedIds.has(app.id))
-          .map((app) => ({ value: app.id, label: `${app.name} (${app.id})` }));
+          .map((app) => ({ value: app.id, label: app.name }));
         setApplicationOptions(options.length > 0 ? options : fallbackOptions);
       } catch {
         setApplicationOptions(fallbackOptions);
@@ -140,7 +140,7 @@ export const AppLayout = () => {
           ]}
         />
         <Typography.Text strong className="sidebar-label">
-          {t("app.applicationId")}
+          {t("app.name")}
         </Typography.Text>
         <Select
           className="sidebar-app-select"
