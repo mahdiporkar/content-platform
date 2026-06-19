@@ -181,7 +181,7 @@ export const AppLayout = () => {
             <Typography.Text type="secondary">{t("app.console")}</Typography.Text>
           </div>
           <Typography.Text className="header-tenant">
-            {t("app.tenant")}:{" "}
+            {t("app.name")}:{" "}
             {applicationId ? (
               <span className="header-tenant__value">{selectedApplicationLabel || applicationId}</span>
             ) : (
