@@ -9,13 +9,26 @@ import { MenuStatusRequestDto } from '../dto/requests/menu-status-request.dto';
 import { MenuUpsertRequestDto } from '../dto/requests/menu-upsert-request.dto';
 import { MenuResponseDto } from '../dto/responses/menu-response.dto';
 import { AdminMenuService, MenuContentCandidateDto } from '../services/admin-menu.service';
+import { TenantRouteSyncRequestDto } from '../dto/requests/tenant-route-sync-request.dto';
+import { TenantRouteService } from '../services/tenant-route.service';
 
 @Controller('/api/v1/admin/menus')
 export class AdminMenuController {
   constructor(
     private readonly menuService: AdminMenuService,
     private readonly access: AdminAuthorizationService,
+    private readonly tenantRouteService: TenantRouteService,
   ) {}
+
+  @Put('routes/sync')
+  async syncTenantRoutes(
+    @Req() request: Request,
+    @Body() body: TenantRouteSyncRequestDto,
+  ) {
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
+    return this.tenantRouteService.syncByApplicationId(applicationId, body);
+  }
 
   @Post()
   async create(@Req() request: Request, @Body() body: MenuUpsertRequestDto): Promise<MenuResponseDto> {

@@ -7,7 +7,7 @@ import { AdminUserEntity, AdminUserStatus } from '../entities/admin-user.entity'
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  private readonly publicPrefixes = ['/api/v1/content', '/api/public/media', '/media', '/public'];
+  private readonly publicPrefixes = ['/api/v1/content', '/api/v1/management', '/api/public/media', '/media', '/public'];
 
   constructor(
     private readonly jwtTokenService: JwtTokenService,

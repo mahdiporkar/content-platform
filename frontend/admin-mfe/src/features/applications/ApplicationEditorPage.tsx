@@ -40,6 +40,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
     state?.application?.mediaBaseUrlOverride ?? ""
   );
   const [apiToken, setApiToken] = useState(state?.application?.apiToken ?? "");
+  const [managementToken, setManagementToken] = useState(state?.application?.managementToken ?? "");
   const [tags, setTags] = useState<string[]>(state?.application?.tags ?? []);
   const [seo, setSeo] = useState<SeoMeta>(state?.application?.seo ?? {});
   const [loading, setLoading] = useState(false);
@@ -82,6 +83,7 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       setPublicBaseUrlOverride(response.data.publicBaseUrlOverride ?? "");
       setMediaBaseUrlOverride(response.data.mediaBaseUrlOverride ?? "");
       setApiToken(response.data.apiToken ?? "");
+      setManagementToken(response.data.managementToken ?? "");
       setTags(response.data.tags ?? []);
       setSeo(response.data.seo ?? {});
     } catch (error) {
@@ -182,6 +184,34 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
       setApiToken(response.data.apiToken ?? "");
     } catch (error) {
       showRequestError(error, "Failed to revoke token.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRotateManagementToken = async () => {
+    if (!params.id) return;
+    setLoading(true);
+    try {
+      const response = await client.post<Application>(
+        `/api/v1/admin/applications/${params.id}/management-token/rotate`
+      );
+      setManagementToken(response.data.managementToken ?? "");
+    } catch (error) {
+      showRequestError(error, "Failed to rotate management token.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeManagementToken = async () => {
+    if (!params.id) return;
+    setLoading(true);
+    try {
+      await client.post<Application>(`/api/v1/admin/applications/${params.id}/management-token/revoke`);
+      setManagementToken("");
+    } catch (error) {
+      showRequestError(error, "Failed to revoke management token.");
     } finally {
       setLoading(false);
     }
@@ -314,6 +344,28 @@ export const ApplicationEditorPage = ({ mode }: { mode: Mode }) => {
               <Button danger onClick={handleRevokeToken} loading={loading}>
                 Revoke Token
               </Button>
+            </Space>
+          </Card>
+        )}
+        {mode === "edit" && (
+          <Card size="small" title="Route Registry Management Token" style={{ marginBottom: 16 }}>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Input.Password
+                value={managementToken}
+                readOnly
+                placeholder="Rotate to issue a management token"
+              />
+              <Typography.Text type="secondary">
+                This secret is shown only after rotation. Store it in the tenant backend or CI, never in browser code.
+              </Typography.Text>
+              <Space>
+                <Button onClick={handleRotateManagementToken} loading={loading}>
+                  Rotate Management Token
+                </Button>
+                <Button danger onClick={handleRevokeManagementToken} loading={loading}>
+                  Revoke Management Token
+                </Button>
+              </Space>
             </Space>
           </Card>
         )}

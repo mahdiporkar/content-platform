@@ -167,6 +167,87 @@ CORS_ALLOWED_ORIGINS=https://cms.magigateac.com
 
 ## راه‌اندازی سریع
 
+## رجیستری Route مستاجر و همگام‌سازی منو
+
+Content Platform نباید route، نام یا شناسه یک مستاجر واقعی را در seed یا کد خود نگهداری کند. مستاجر فقط routeهای پیاده‌سازی‌شده در کد را اعلام می‌کند و مدیر محتوا تصمیم می‌گیرد کدام route در کدام منو، با چه ترتیب و ساختاری قرار بگیرد.
+
+### Manifest منوی نهایی نیست
+
+فایل manifest فقط قابلیت‌های مسیریابی سایت مستاجر را تعریف می‌کند و ترتیب، والد و فرزند، محل نمایش، وضعیت و ساختار نهایی منو را تعیین نمی‌کند.
+
+```json
+{
+  "source": "tenant-web",
+  "replaceMissing": true,
+  "routes": [
+    {
+      "key": "about",
+      "path": "/{locale}/about",
+      "titles": {
+        "fa": "درباره ما",
+        "en": "About"
+      }
+    }
+  ]
+}
+```
+
+ترکیب `applicationId + source + key` یکتا است؛ بنابراین ارسال چندباره manifest رکورد تکراری تولید نمی‌کند.
+
+### همگام‌سازی خودکار توسط مستاجر
+
+ابتدا management token را از پنل اپلیکیشن یا endpoint زیر ایجاد کنید:
+
+```http
+POST /api/v1/admin/applications/{id}/management-token/rotate
+```
+
+سپس manifest از backend، CI یا محیط deploy مستاجر ارسال می‌شود:
+
+```http
+PUT /api/v1/management/navigation/routes
+X-Application-Id: <application-id>
+Authorization: Bearer <management-token>
+Content-Type: application/json
+```
+
+این عملیات می‌تواند هنگام deploy، startup یا پس از تغییر routeها اجرا شود. management token نباید داخل کد مرورگر یا متغیرهای عمومی frontend قرار بگیرد.
+
+### همگام‌سازی دستی از پنل ادمین
+
+کاربری که دسترسی `menus.manage` دارد می‌تواند وارد ویرایش منو شود و دکمه **به‌روزرسانی دستی منو** را انتخاب کند. مرورگر فایل JSON محلی را می‌خواند و محتوای آن را به endpoint زیر می‌فرستد:
+
+```http
+PUT /api/v1/admin/menus/routes/sync
+Authorization: Bearer <admin-jwt>
+X-Application-Id: <application-id>
+```
+
+Backend هیچ URL خارجی را برای دریافت manifest فراخوانی نمی‌کند؛ بنابراین این جریان سطح حمله SSRF ایجاد نمی‌کند.
+
+بعد از sync، جدول routeها و محتوای قابل افزودن به منو refresh می‌شود. routeها به‌صورت خودکار وارد ساختار نهایی منو نمی‌شوند.
+
+### قواعد همگام‌سازی
+
+- route جدید به رجیستری اضافه می‌شود.
+- عنوان، path و metadata مربوط به route موجود به‌روزرسانی می‌شود.
+- با فعال بودن `replaceMissing`، route حذف‌شده از همان source با وضعیت `UNAVAILABLE` نگهداری می‌شود.
+- آیتم‌های دستی مدیر محتوا حذف یا بازنویسی نمی‌شوند.
+- ترتیب، ساختار والد و فرزند، visibility و وضعیت منو تغییر نمی‌کند.
+- صفحه‌ها و محتواهای dynamic منتشرشده توسط خود Content Platform شناسایی می‌شوند و نباید داخل manifest مستاجر قرار بگیرند.
+- مدیر محتوا می‌تواند `TENANT_ROUTE`، محتوای CMS، URL دستی و GROUP را در یک منو ترکیب کند.
+- Delivery API، routeهای unavailable و محتوای منتشرنشده را برنمی‌گرداند.
+
+### دریافت منوی نهایی
+
+سایت مصرف‌کننده منوی فعال را با delivery token دریافت می‌کند:
+
+```http
+GET /api/v1/content/menus/{languageCode}/{code}
+X-Application-Id: <application-id>
+X-Application-Token: <delivery-token>
+```
+
 ```bash
 npm run dev:all
 ```

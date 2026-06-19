@@ -25,7 +25,11 @@ export class AdminApplicationService {
     private readonly applicationTokenService: ApplicationTokenService,
   ) {}
 
-  private mapApplication(application: ApplicationEntity, rawToken?: string | null): ApplicationResponseDto {
+  private mapApplication(
+    application: ApplicationEntity,
+    rawToken?: string | null,
+    rawManagementToken?: string | null,
+  ): ApplicationResponseDto {
     return new ApplicationResponseDto(
       application.id,
       application.name,
@@ -39,6 +43,11 @@ export class AdminApplicationService {
       application.tokenCreatedAt ? application.tokenCreatedAt.toISOString() : null,
       application.lastRotatedAt ? application.lastRotatedAt.toISOString() : null,
       application.lastUsedAt ? application.lastUsedAt.toISOString() : null,
+      rawManagementToken ?? null,
+      application.managementTokenHash ? 'configured' : null,
+      application.managementTokenCreatedAt ? application.managementTokenCreatedAt.toISOString() : null,
+      application.managementTokenLastRotatedAt ? application.managementTokenLastRotatedAt.toISOString() : null,
+      application.managementTokenLastUsedAt ? application.managementTokenLastUsedAt.toISOString() : null,
       application.websiteUrl ?? null,
       application.publicBaseUrlOverride ?? null,
       application.mediaBaseUrlOverride ?? null,
@@ -199,6 +208,45 @@ export class AdminApplicationService {
     const saved = await this.applicationRepo.save(application);
     await this.auditLog.record({
       action: 'application.token.revoke',
+      entityType: 'application',
+      entityId: saved.id,
+    });
+    return this.mapApplication(saved);
+  }
+
+  async rotateManagementToken(id: string, scope: ApplicationScope): Promise<ApplicationResponseDto> {
+    const application = await this.applicationRepo.findOne({ where: { id } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    this.assertCanManageApplication(scope, application.id);
+    const issuedToken = this.applicationTokenService.generate();
+    application.managementTokenHash = issuedToken.tokenHash;
+    application.managementTokenSalt = issuedToken.tokenSalt;
+    application.managementTokenCreatedAt = new Date();
+    application.managementTokenLastRotatedAt = new Date();
+    const saved = await this.applicationRepo.save(application);
+    await this.auditLog.record({
+      action: 'application.management-token.rotate',
+      entityType: 'application',
+      entityId: saved.id,
+    });
+    return this.mapApplication(saved, null, issuedToken.rawToken);
+  }
+
+  async revokeManagementToken(id: string, scope: ApplicationScope): Promise<ApplicationResponseDto> {
+    const application = await this.applicationRepo.findOne({ where: { id } });
+    if (!application) {
+      throw new NotFoundException('Application not found.');
+    }
+    this.assertCanManageApplication(scope, application.id);
+    application.managementTokenHash = null;
+    application.managementTokenSalt = null;
+    application.managementTokenCreatedAt = null;
+    application.managementTokenLastRotatedAt = new Date();
+    const saved = await this.applicationRepo.save(application);
+    await this.auditLog.record({
+      action: 'application.management-token.revoke',
       entityType: 'application',
       entityId: saved.id,
     });

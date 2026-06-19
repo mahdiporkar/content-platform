@@ -122,6 +122,7 @@ async function testMenuTreeAndPublicFiltering(): Promise<void> {
     new MemoryRepo<any>() as never,
     new MemoryRepo<any>() as never,
     new MemoryRepo<any>() as never,
+    new MemoryRepo<any>() as never,
   );
 
   const menu = await service.create({

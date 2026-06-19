@@ -48,7 +48,7 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Content Platform API')
     .setDescription(
-      'Admin plane uses Bearer JWT on /api/v1/admin/** and /api/v1/media/**. Delivery plane uses X-Application-Id + X-Application-Token, with domain-locked acting as an extra browser-domain check.'
+      'Admin plane uses Bearer JWT on /api/v1/admin/** and /api/v1/media/**. Delivery plane uses X-Application-Id + X-Application-Token. Tenant route management uses X-Application-Id + Bearer management token.'
     )
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')

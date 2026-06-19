@@ -22,6 +22,9 @@ import com.contentplatform.backend.infrastructure.jpa.repository.MenuItemJpaRepo
 import com.contentplatform.backend.infrastructure.jpa.repository.MenuJpaRepository;
 import com.contentplatform.backend.infrastructure.jpa.repository.PageJpaRepository;
 import com.contentplatform.backend.infrastructure.jpa.repository.PostJpaRepository;
+import com.contentplatform.backend.infrastructure.jpa.repository.TenantRouteJpaRepository;
+import com.contentplatform.backend.infrastructure.jpa.entity.TenantRouteEntity;
+import com.contentplatform.backend.domain.value.TenantRouteStatus;
 import com.contentplatform.backend.interfaces.web.request.MenuItemLayoutRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuItemUpsertRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuUpsertRequest;
@@ -56,7 +59,8 @@ public class PageMenuService {
         MenuItemType.PAGE,
         MenuItemType.ARTICLE,
         MenuItemType.POST,
-        MenuItemType.GALLERY
+        MenuItemType.GALLERY,
+        MenuItemType.TENANT_ROUTE
     );
 
     private final PageJpaRepository pageRepo;
@@ -66,6 +70,7 @@ public class PageMenuService {
     private final PostJpaRepository postRepo;
     private final ApplicationJpaRepository applicationRepo;
     private final PublicMediaUrlService publicMediaUrlService;
+    private final TenantRouteJpaRepository tenantRouteRepo;
 
     public PageMenuService(PageJpaRepository pageRepo,
                            MenuJpaRepository menuRepo,
@@ -73,7 +78,8 @@ public class PageMenuService {
                            ArticleJpaRepository articleRepo,
                            PostJpaRepository postRepo,
                            ApplicationJpaRepository applicationRepo,
-                           PublicMediaUrlService publicMediaUrlService) {
+                           PublicMediaUrlService publicMediaUrlService,
+                           TenantRouteJpaRepository tenantRouteRepo) {
         this.pageRepo = pageRepo;
         this.menuRepo = menuRepo;
         this.itemRepo = itemRepo;
@@ -81,6 +87,7 @@ public class PageMenuService {
         this.postRepo = postRepo;
         this.applicationRepo = applicationRepo;
         this.publicMediaUrlService = publicMediaUrlService;
+        this.tenantRouteRepo = tenantRouteRepo;
     }
 
     @Transactional
@@ -288,7 +295,7 @@ public class PageMenuService {
         validateMenuItem(request);
         MenuEntity menu = menuRepo.findById(menuId).orElseThrow(() -> new NotFoundException("Menu not found."));
         Instant now = Instant.now();
-        itemRepo.save(new MenuItemEntity(
+        MenuItemEntity item = new MenuItemEntity(
             UUID.randomUUID().toString(),
             menuId,
             ensureSameMenuParent(menuId, request.getParentId()),
@@ -303,7 +310,9 @@ public class PageMenuService {
             request.getIsVisible() == null || request.getIsVisible(),
             now,
             now
-        ));
+        );
+        applyOwnership(item, request.getItemType(), trimToNull(request.getReferenceId()));
+        itemRepo.save(item);
         return toMenuResponse(menu, true);
     }
 
@@ -327,6 +336,7 @@ public class PageMenuService {
             request.getIsVisible() == null || request.getIsVisible(),
             Instant.now()
         );
+        applyOwnership(item, request.getItemType(), trimToNull(request.getReferenceId()));
         itemRepo.save(item);
         return toMenuResponse(menu, true);
     }
@@ -413,6 +423,14 @@ public class PageMenuService {
                 refs.contains(MenuItemType.ARTICLE + ":" + article.getId()),
                 article.getPublishedAt(), article.getUpdatedAt()
             )));
+        tenantRouteRepo.findByApplicationIdAndStatusOrderBySourceAscRouteKeyAsc(
+            menu.getApplicationId(), TenantRouteStatus.AVAILABLE
+        ).forEach(route -> candidates.add(new MenuContentCandidateResponse(
+            route.getId(), MenuItemType.TENANT_ROUTE,
+            route.getTitles().getOrDefault(menu.getLanguageCode(), route.getTitles().getOrDefault("en", route.getRouteKey())),
+            route.getRouteKey(), resolveTenantPath(route.getPathTemplate(), menu.getLanguageCode()),
+            refs.contains(MenuItemType.TENANT_ROUTE + ":" + route.getId()), null, route.getUpdatedAt()
+        )));
         return candidates;
     }
 
@@ -426,7 +444,7 @@ public class PageMenuService {
             if (candidate.isAlreadyInMenu()) {
                 continue;
             }
-            itemRepo.save(new MenuItemEntity(
+            MenuItemEntity item = new MenuItemEntity(
                 UUID.randomUUID().toString(),
                 menuId,
                 null,
@@ -441,7 +459,9 @@ public class PageMenuService {
                 true,
                 now,
                 now
-            ));
+            );
+            applyOwnership(item, candidate.getType(), candidate.getId());
+            itemRepo.save(item);
         }
         return toMenuResponse(menu, true);
     }
@@ -486,6 +506,9 @@ public class PageMenuService {
         articleRepo.findByApplicationIdAndStatus(applicationId, ContentStatus.PUBLISHED).stream()
             .filter(article -> Objects.equals(article.getLocale(), menu.getLanguageCode()))
             .forEach(article -> articles.put(article.getId(), article));
+        Map<String, TenantRouteEntity> tenantRoutes = new HashMap<>();
+        tenantRouteRepo.findByApplicationIdAndStatusOrderBySourceAscRouteKeyAsc(applicationId, TenantRouteStatus.AVAILABLE)
+            .forEach(route -> tenantRoutes.put(route.getId(), route));
 
         List<MenuItemEntity> filtered = new ArrayList<>();
         for (MenuItemEntity item : visible) {
@@ -504,6 +527,19 @@ public class PageMenuService {
                 if (article != null) {
                     filtered.add(copyWithUrl(item, item.getUrl() == null ? "/" + menu.getLanguageCode() + "/articles/" + article.getSlug() : item.getUrl()));
                 }
+            } else if (item.getItemType() == MenuItemType.TENANT_ROUTE) {
+                TenantRouteEntity route = tenantRoutes.get(item.getReferenceId());
+                if (route != null) {
+                    MenuItemEntity resolved = copyWithUrl(item, resolveTenantPath(route.getPathTemplate(), menu.getLanguageCode()));
+                    resolved.update(resolved.getParentId(),
+                        route.getTitles().getOrDefault(menu.getLanguageCode(), route.getTitles().getOrDefault("en", resolved.getTitle())),
+                        resolved.getItemType(), resolved.getReferenceId(), resolved.getUrl(), resolved.getTarget(),
+                        route.getIcon() == null ? resolved.getIcon() : route.getIcon(),
+                        route.getCssClass() == null ? resolved.getCssClass() : route.getCssClass(),
+                        resolved.getSortOrder(), resolved.isVisible(), resolved.getUpdatedAt());
+                    resolved.setOwnership(route.getSource(), route.getRouteKey(), "TENANT");
+                    filtered.add(resolved);
+                }
             } else if (item.getItemType() != MenuItemType.GALLERY) {
                 filtered.add(item);
             }
@@ -512,11 +548,13 @@ public class PageMenuService {
     }
 
     private MenuItemEntity copyWithUrl(MenuItemEntity item, String url) {
-        return new MenuItemEntity(
+        MenuItemEntity copy = new MenuItemEntity(
             item.getId(), item.getMenuId(), item.getParentId(), item.getTitle(), item.getItemType(),
             item.getReferenceId(), url, item.getTarget(), item.getIcon(), item.getCssClass(),
             item.getSortOrder(), item.isVisible(), item.getCreatedAt(), item.getUpdatedAt()
         );
+        copy.setOwnership(item.getSource(), item.getSourceKey(), item.getManagedBy());
+        return copy;
     }
 
     private MenuResponse toMenuResponse(MenuEntity menu, boolean includeItems) {
@@ -551,7 +589,8 @@ public class PageMenuService {
         return new MenuItemResponse(
             item.getId(), item.getMenuId(), item.getParentId(), item.getTitle(), item.getItemType(),
             item.getReferenceId(), item.getUrl(), item.getTarget(), item.getIcon(), item.getCssClass(),
-            item.getSortOrder(), item.isVisible(), CONTENT_ITEM_TYPES.contains(item.getItemType()), children,
+            item.getSortOrder(), item.isVisible(), CONTENT_ITEM_TYPES.contains(item.getItemType()),
+            item.getSource(), item.getSourceKey(), item.getManagedBy(), children,
             item.getCreatedAt(), item.getUpdatedAt()
         );
     }
@@ -578,6 +617,22 @@ public class PageMenuService {
         if (request.getItemType() == MenuItemType.GROUP && (trimToNull(request.getReferenceId()) != null || trimToNull(request.getUrl()) != null)) {
             throw new BadRequestException("Group menu items cannot have referenceId or URL.");
         }
+    }
+
+    private void applyOwnership(MenuItemEntity item, MenuItemType type, String referenceId) {
+        if (type == MenuItemType.TENANT_ROUTE) {
+            TenantRouteEntity route = tenantRouteRepo.findById(referenceId)
+                .orElseThrow(() -> new NotFoundException("Tenant route not found."));
+            item.setOwnership(route.getSource(), route.getRouteKey(), "TENANT");
+        } else if (CONTENT_ITEM_TYPES.contains(type)) {
+            item.setOwnership("content-platform", referenceId, "CMS");
+        } else {
+            item.setOwnership(null, null, "ADMIN");
+        }
+    }
+
+    private String resolveTenantPath(String template, String languageCode) {
+        return template.replace("{locale}", languageCode).replace("{languageCode}", languageCode);
     }
 
     private String ensureSameMenuParent(String menuId, String parentId) {

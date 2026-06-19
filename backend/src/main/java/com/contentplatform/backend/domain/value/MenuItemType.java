@@ -5,6 +5,7 @@ public enum MenuItemType {
     ARTICLE,
     POST,
     GALLERY,
+    TENANT_ROUTE,
     CUSTOM_URL,
     EXTERNAL_URL,
     GROUP

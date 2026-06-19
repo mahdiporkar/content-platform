@@ -38,6 +38,11 @@ export type Application = {
   apiToken?: string | null;
   tokenCreatedAt?: string | null;
   lastUsedAt?: string | null;
+  managementToken?: string | null;
+  managementTokenPreview?: string | null;
+  managementTokenCreatedAt?: string | null;
+  managementTokenLastRotatedAt?: string | null;
+  managementTokenLastUsedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -119,7 +124,7 @@ export type DynamicPage = {
 
 export type MenuLocation = "HEADER" | "FOOTER" | "SIDEBAR" | "MOBILE";
 export type MenuStatus = "ACTIVE" | "INACTIVE";
-export type MenuItemType = "PAGE" | "ARTICLE" | "POST" | "GALLERY" | "CUSTOM_URL" | "EXTERNAL_URL" | "GROUP";
+export type MenuItemType = "PAGE" | "ARTICLE" | "POST" | "GALLERY" | "TENANT_ROUTE" | "CUSTOM_URL" | "EXTERNAL_URL" | "GROUP";
 export type MenuItemTarget = "SELF" | "BLANK";
 
 export type MenuItem = {
@@ -135,6 +140,9 @@ export type MenuItem = {
   cssClass?: string | null;
   sortOrder: number;
   isVisible: boolean;
+  source?: string | null;
+  sourceKey?: string | null;
+  managedBy?: "TENANT" | "CMS" | "ADMIN";
   children: MenuItem[];
   createdAt: string;
   updatedAt: string;
@@ -155,7 +163,7 @@ export type SiteMenu = {
 
 export type MenuContentCandidate = {
   id: string;
-  type: "PAGE" | "POST" | "GALLERY";
+  type: "PAGE" | "ARTICLE" | "POST" | "GALLERY" | "TENANT_ROUTE";
   title: string;
   slug: string;
   url: string;

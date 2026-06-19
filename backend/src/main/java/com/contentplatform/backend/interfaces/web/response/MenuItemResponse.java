@@ -20,13 +20,16 @@ public class MenuItemResponse {
     private final int sortOrder;
     private final boolean visible;
     private final boolean dynamic;
+    private final String source;
+    private final String sourceKey;
+    private final String managedBy;
     private final List<MenuItemResponse> children;
     private final Instant createdAt;
     private final Instant updatedAt;
 
     public MenuItemResponse(String id, String menuId, String parentId, String title, MenuItemType itemType,
                             String referenceId, String url, MenuItemTarget target, String icon, String cssClass,
-                            int sortOrder, boolean visible, boolean dynamic, List<MenuItemResponse> children,
+                            int sortOrder, boolean visible, boolean dynamic, String source, String sourceKey, String managedBy, List<MenuItemResponse> children,
                             Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.menuId = menuId;
@@ -41,6 +44,9 @@ public class MenuItemResponse {
         this.sortOrder = sortOrder;
         this.visible = visible;
         this.dynamic = dynamic;
+        this.source = source;
+        this.sourceKey = sourceKey;
+        this.managedBy = managedBy;
         this.children = children;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -59,6 +65,9 @@ public class MenuItemResponse {
     public int getSortOrder() { return sortOrder; }
     public boolean isVisible() { return visible; }
     public boolean isDynamic() { return dynamic; }
+    public String getSource() { return source; }
+    public String getSourceKey() { return sourceKey; }
+    public String getManagedBy() { return managedBy; }
     public List<MenuItemResponse> getChildren() { return children; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

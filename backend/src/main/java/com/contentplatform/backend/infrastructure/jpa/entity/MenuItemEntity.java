@@ -53,6 +53,12 @@ public class MenuItemEntity {
     @Column(name = "is_visible", nullable = false)
     private boolean visible;
 
+    private String source;
+    @Column(name = "source_key")
+    private String sourceKey;
+    @Column(name = "managed_by", nullable = false)
+    private String managedBy = "ADMIN";
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -81,6 +87,10 @@ public class MenuItemEntity {
         this.updatedAt = updatedAt;
     }
 
+    public void setOwnership(String source, String sourceKey, String managedBy) {
+        this.source = source; this.sourceKey = sourceKey; this.managedBy = managedBy;
+    }
+
     public String getId() { return id; }
     public String getMenuId() { return menuId; }
     public String getParentId() { return parentId; }
@@ -95,6 +105,9 @@ public class MenuItemEntity {
     public boolean isVisible() { return visible; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public String getSource() { return source; }
+    public String getSourceKey() { return sourceKey; }
+    public String getManagedBy() { return managedBy; }
 
     public void update(String parentId, String title, MenuItemType itemType, String referenceId, String url,
                        MenuItemTarget target, String icon, String cssClass, int sortOrder, boolean visible,

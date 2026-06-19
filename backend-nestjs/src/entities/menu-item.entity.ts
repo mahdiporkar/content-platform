@@ -40,6 +40,15 @@ export class MenuItemEntity {
   @Column({ name: 'is_visible', type: 'boolean', default: true })
   isVisible!: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  source!: string | null;
+
+  @Column({ name: 'source_key', type: 'varchar', nullable: true })
+  sourceKey!: string | null;
+
+  @Column({ name: 'managed_by', type: 'varchar', default: 'ADMIN' })
+  managedBy!: 'TENANT' | 'CMS' | 'ADMIN';
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

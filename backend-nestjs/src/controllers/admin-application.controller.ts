@@ -74,6 +74,24 @@ export class AdminApplicationController {
     });
   }
 
+  @Post(':id/management-token/rotate')
+  async rotateManagementToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    return await this.applicationService.rotateManagementToken(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
+  }
+
+  @Post(':id/management-token/revoke')
+  async revokeManagementToken(@Req() request: Request, @Param('id') id: string): Promise<ApplicationResponseDto> {
+    this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);
+    return await this.applicationService.revokeManagementToken(id, {
+      actor: this.access.getUser(request),
+      superAdmin: this.access.isSuperAdmin(request),
+    });
+  }
+
   @Delete(':id')
   async remove(@Req() request: Request, @Param('id') id: string): Promise<{ id: string }> {
     this.access.assertSystemPermission(request, SystemPermission.APPLICATIONS_MANAGE);

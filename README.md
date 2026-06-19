@@ -287,3 +287,84 @@ Or with Docker:
 ```bash
 docker compose up --build
 ```
+## Tenant Route Registry and Menu Synchronization
+
+Content Platform never seeds or hardcodes routes belonging to a real tenant. A tenant declares its code-defined routes, while the content administrator remains responsible for selecting routes and arranging the final menu.
+
+### Route manifest is not the final menu
+
+The manifest only describes routes implemented by tenant code. It does not define menu hierarchy, ordering, visibility, location, or status. Final menus remain database records managed through the CMS.
+
+```json
+{
+  "source": "tenant-web",
+  "replaceMissing": true,
+  "routes": [
+    {
+      "key": "about",
+      "path": "/{locale}/about",
+      "titles": {
+        "fa": "درباره ما",
+        "en": "About"
+      },
+      "icon": "user",
+      "cssClass": "nav-about"
+    }
+  ]
+}
+```
+
+`applicationId + source + key` is unique. Repeating the same request updates the existing route and never creates duplicates.
+
+### Automated tenant synchronization
+
+1. Rotate a management token from the application editor or call:
+   `POST /api/v1/admin/applications/:id/management-token/rotate`
+2. Store the returned token only in a tenant backend, deployment environment, or CI secret.
+3. Send the manifest to:
+
+```http
+PUT /api/v1/management/navigation/routes
+X-Application-Id: <application-id>
+Authorization: Bearer <management-token>
+Content-Type: application/json
+```
+
+The tenant may run this operation during deployment, startup, or immediately after route changes.
+
+### Manual synchronization from Admin
+
+An administrator with `menus.manage` permission can open a menu and select **Manual route update**. The browser reads the selected local JSON file and sends its JSON body to:
+
+```http
+PUT /api/v1/admin/menus/routes/sync
+Authorization: Bearer <admin-jwt>
+X-Application-Id: <application-id>
+```
+
+The backend does not download a manifest URL. Therefore the synchronization flow does not introduce an SSRF fetch surface.
+
+After synchronization, the menu candidate table is refreshed. Registered routes are not automatically inserted into a menu.
+
+### Synchronization rules
+
+- New routes are added to the route registry.
+- Existing route titles, paths and metadata are updated.
+- Routes missing from the same source are marked `UNAVAILABLE` when `replaceMissing` is enabled.
+- Manual menu items are never deleted or overwritten.
+- Menu hierarchy, ordering, visibility and activation are never changed by route synchronization.
+- Published CMS pages and content are discovered directly by Content Platform and do not belong in the tenant manifest.
+- `TENANT_ROUTE`, CMS content, custom URLs and groups can be combined by an administrator in the same menu.
+- Delivery excludes unavailable tenant routes and unpublished CMS content.
+
+### Menu delivery
+
+The consumer receives the final active menu through:
+
+```http
+GET /api/v1/content/menus/{languageCode}/{code}
+X-Application-Id: <application-id>
+X-Application-Token: <delivery-token>
+```
+
+Management tokens and admin JWTs must never be exposed to browser visitors.

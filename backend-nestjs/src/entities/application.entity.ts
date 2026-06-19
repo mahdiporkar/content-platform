@@ -52,6 +52,21 @@ export class ApplicationEntity {
   @Column({ name: 'last_used_at', type: 'timestamptz', nullable: true })
   lastUsedAt!: Date | null;
 
+  @Column({ name: 'management_token_hash', type: 'varchar', nullable: true })
+  managementTokenHash!: string | null;
+
+  @Column({ name: 'management_token_salt', type: 'varchar', nullable: true })
+  managementTokenSalt!: string | null;
+
+  @Column({ name: 'management_token_created_at', type: 'timestamptz', nullable: true })
+  managementTokenCreatedAt!: Date | null;
+
+  @Column({ name: 'management_token_last_rotated_at', type: 'timestamptz', nullable: true })
+  managementTokenLastRotatedAt!: Date | null;
+
+  @Column({ name: 'management_token_last_used_at', type: 'timestamptz', nullable: true })
+  managementTokenLastUsedAt!: Date | null;
+
   @Column({ name: 'website_url', type: 'varchar', nullable: true })
   websiteUrl?: string | null;
 

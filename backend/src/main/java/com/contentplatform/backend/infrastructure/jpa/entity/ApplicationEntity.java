@@ -24,6 +24,9 @@ public class ApplicationEntity {
     @Column(name = "api_token", unique = true)
     private String apiToken;
 
+    @Column(name = "management_token_hash")
+    private String managementTokenHash;
+
     @Column(name = "website_url")
     private String websiteUrl;
 
@@ -57,6 +60,9 @@ public class ApplicationEntity {
     public String getApiToken() {
         return apiToken;
     }
+
+    public String getManagementTokenHash() { return managementTokenHash; }
+    public void setManagementTokenHash(String managementTokenHash) { this.managementTokenHash = managementTokenHash; }
 
     public List<GalleryImage> getGallery() {
         return gallery;

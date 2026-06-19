@@ -87,6 +87,10 @@ import { ApplicationTokenService } from './services/application-token.service';
 import { ApplicationHeaderService } from './services/application-header.service';
 import { AccessControlService } from './services/access-control.service';
 import { PublicMediaUrlService } from './services/public-media-url.service';
+import { TenantRouteEntity } from './entities/tenant-route.entity';
+import { ManagementNavigationController } from './controllers/management-navigation.controller';
+import { ManagementTokenGuard } from './auth/management-token.guard';
+import { TenantRouteService } from './services/tenant-route.service';
 
 @Module({
   imports: [
@@ -134,6 +138,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
             SitemapUrlCheckEntity,
             ConsumerUserEntity,
             ConsumerEntitlementEntity,
+            TenantRouteEntity,
           ],
           synchronize: true,
         };
@@ -165,6 +170,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
       SitemapUrlCheckEntity,
       ConsumerUserEntity,
       ConsumerEntitlementEntity,
+      TenantRouteEntity,
     ]),
   ],
   controllers: [
@@ -191,6 +197,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
     AdminSitemapController,
     MediaGatewayController,
     MediaController,
+    ManagementNavigationController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -198,6 +205,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
     ApplicationTokenService,
     PublicMediaUrlService,
     ApplicationTokenGuard,
+    ManagementTokenGuard,
     ApplicationHeaderService,
     AdminAuthorizationService,
     AuthService,
@@ -230,6 +238,7 @@ import { PublicMediaUrlService } from './services/public-media-url.service';
     MediaLifecycleService,
     { provide: 'STORAGE_PROVIDER', useExisting: MinioStorageProvider },
     ScheduledPublisherService,
+    TenantRouteService,
   ],
 })
 export class AppModule {}

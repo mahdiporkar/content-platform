@@ -22,16 +22,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import com.contentplatform.backend.infrastructure.jpa.repository.ApplicationJpaRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @RequestMapping("/api/v1/admin/applications")
 public class AdminApplicationController {
     private final ApplicationUseCase applicationUseCase;
     private final WebMapper mapper;
+    private final ApplicationJpaRepository applicationRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminApplicationController(ApplicationUseCase applicationUseCase, WebMapper mapper) {
+    public AdminApplicationController(ApplicationUseCase applicationUseCase, WebMapper mapper,
+                                      ApplicationJpaRepository applicationRepo, PasswordEncoder passwordEncoder) {
         this.applicationUseCase = applicationUseCase;
         this.mapper = mapper;
+        this.applicationRepo = applicationRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -92,6 +101,25 @@ public class AdminApplicationController {
         SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
         ApplicationDto dto = applicationUseCase.revokeToken(id);
         return ResponseEntity.ok(mapper.toApplicationResponse(dto));
+    }
+
+    @PostMapping("/{id}/management-token/rotate")
+    public ResponseEntity<Map<String, String>> rotateManagementToken(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
+        var application = applicationRepo.findById(id).orElseThrow(() -> new com.contentplatform.backend.application.exception.NotFoundException("Application not found"));
+        String token = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
+        application.setManagementTokenHash(passwordEncoder.encode(token));
+        applicationRepo.save(application);
+        return ResponseEntity.ok(Map.of("id", id, "managementToken", token));
+    }
+
+    @PostMapping("/{id}/management-token/revoke")
+    public ResponseEntity<Map<String, String>> revokeManagementToken(@PathVariable String id) {
+        SecurityUtils.requireSystemPermission(SystemPermission.APPLICATIONS_MANAGE);
+        var application = applicationRepo.findById(id).orElseThrow(() -> new com.contentplatform.backend.application.exception.NotFoundException("Application not found"));
+        application.setManagementTokenHash(null);
+        applicationRepo.save(application);
+        return ResponseEntity.ok(Map.of("id", id));
     }
 
     @DeleteMapping("/{id}")

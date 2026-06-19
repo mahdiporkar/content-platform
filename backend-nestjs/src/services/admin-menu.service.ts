@@ -15,10 +15,11 @@ import { MenuItemEntity } from '../entities/menu-item.entity';
 import { MenuEntity } from '../entities/menu.entity';
 import { PageEntity } from '../entities/page.entity';
 import { PostEntity } from '../entities/post.entity';
+import { TenantRouteEntity, TenantRouteStatus } from '../entities/tenant-route.entity';
 
 export type MenuContentCandidateDto = {
   id: string;
-  type: MenuItemType.PAGE | MenuItemType.POST | MenuItemType.GALLERY;
+  type: MenuItemType.PAGE | MenuItemType.ARTICLE | MenuItemType.POST | MenuItemType.GALLERY | MenuItemType.TENANT_ROUTE;
   title: string;
   slug: string;
   url: string;
@@ -42,6 +43,8 @@ export class AdminMenuService {
     private readonly postRepo: Repository<PostEntity>,
     @InjectRepository(GalleryEntity)
     private readonly galleryRepo: Repository<GalleryEntity>,
+    @InjectRepository(TenantRouteEntity)
+    private readonly tenantRouteRepo: Repository<TenantRouteEntity>,
   ) {}
 
   private mapItem(item: MenuItemEntity, children: MenuItemResponseDto[] = []): MenuItemResponseDto {
@@ -50,6 +53,7 @@ export class AdminMenuService {
       MenuItemType.ARTICLE,
       MenuItemType.POST,
       MenuItemType.GALLERY,
+      MenuItemType.TENANT_ROUTE,
     ].includes(item.itemType);
     return new MenuItemResponseDto(
       item.id,
@@ -65,6 +69,9 @@ export class AdminMenuService {
       item.sortOrder,
       item.isVisible,
       dynamic,
+      item.source ?? null,
+      item.sourceKey ?? null,
+      item.managedBy ?? 'ADMIN',
       children,
       item.createdAt.toISOString(),
       item.updatedAt.toISOString(),
@@ -103,7 +110,7 @@ export class AdminMenuService {
     if ([MenuItemType.CUSTOM_URL, MenuItemType.EXTERNAL_URL].includes(request.itemType) && !request.url?.trim()) {
       throw new BadRequestException('URL is required for URL menu items.');
     }
-    if ([MenuItemType.PAGE, MenuItemType.ARTICLE, MenuItemType.POST, MenuItemType.GALLERY].includes(request.itemType) && !request.referenceId?.trim()) {
+    if ([MenuItemType.PAGE, MenuItemType.ARTICLE, MenuItemType.POST, MenuItemType.GALLERY, MenuItemType.TENANT_ROUTE].includes(request.itemType) && !request.referenceId?.trim()) {
       throw new BadRequestException('Reference id is required for content menu items.');
     }
     if (request.itemType === MenuItemType.GROUP && (request.referenceId || request.url)) {
@@ -138,6 +145,18 @@ export class AdminMenuService {
       }
       cursor = cursor.parentId ? byId.get(cursor.parentId) ?? null : null;
     }
+  }
+
+  private async resolveOwnership(itemType: MenuItemType, referenceId?: string | null) {
+    if (itemType === MenuItemType.TENANT_ROUTE && referenceId) {
+      const route = await this.tenantRouteRepo.findOne({ where: { id: referenceId } });
+      if (!route) throw new NotFoundException('Tenant route not found.');
+      return { source: route.source, sourceKey: route.routeKey, managedBy: 'TENANT' as const };
+    }
+    if ([MenuItemType.PAGE, MenuItemType.ARTICLE, MenuItemType.POST, MenuItemType.GALLERY].includes(itemType)) {
+      return { source: 'content-platform', sourceKey: referenceId ?? null, managedBy: 'CMS' as const };
+    }
+    return { source: null, sourceKey: null, managedBy: 'ADMIN' as const };
   }
 
   async create(request: MenuUpsertRequestDto): Promise<MenuResponseDto> {
@@ -211,6 +230,7 @@ export class AdminMenuService {
     if (!menu) {
       throw new NotFoundException('Menu not found.');
     }
+    const ownership = await this.resolveOwnership(request.itemType, request.referenceId);
     const item = this.itemRepo.create({
       id: uuidv4(),
       menuId,
@@ -224,6 +244,7 @@ export class AdminMenuService {
       cssClass: request.cssClass?.trim() || null,
       sortOrder: request.sortOrder,
       isVisible: request.isVisible ?? true,
+      ...ownership,
     });
     await this.itemRepo.save(item);
     return this.mapMenu(menu, true);
@@ -239,6 +260,7 @@ export class AdminMenuService {
       throw new NotFoundException('Menu item not found.');
     }
     const parentId = await this.ensureSameMenuParent(menuId, request.parentId);
+    const ownership = await this.resolveOwnership(request.itemType, request.referenceId);
     await this.ensureNoCircularParent(itemId, menuId, parentId);
     item.parentId = parentId;
     item.title = request.title.trim();
@@ -250,6 +272,9 @@ export class AdminMenuService {
     item.cssClass = request.cssClass?.trim() || null;
     item.sortOrder = request.sortOrder;
     item.isVisible = request.isVisible ?? true;
+    item.source = ownership.source;
+    item.sourceKey = ownership.sourceKey;
+    item.managedBy = ownership.managedBy;
     await this.itemRepo.save(item);
     return this.mapMenu(menu, true);
   }
@@ -288,14 +313,27 @@ export class AdminMenuService {
     return this.mapMenu(menu, true);
   }
 
-  private buildContentUrl(languageCode: string, type: MenuItemType.PAGE | MenuItemType.POST | MenuItemType.GALLERY, slug: string): string {
+  private buildContentUrl(
+    languageCode: string,
+    type: MenuItemType.PAGE | MenuItemType.ARTICLE | MenuItemType.POST | MenuItemType.GALLERY,
+    slug: string,
+  ): string {
     if (type === MenuItemType.PAGE) {
       return `/${languageCode}/${slug}`;
     }
     if (type === MenuItemType.POST) {
       return `/${languageCode}/posts/${slug}`;
     }
+    if (type === MenuItemType.ARTICLE) {
+      return `/${languageCode}/articles/${slug}`;
+    }
     return `/${languageCode}/gallery/${slug}`;
+  }
+
+  private resolveTenantRoutePath(pathTemplate: string, languageCode: string): string {
+    return pathTemplate
+      .split('{locale}').join(languageCode)
+      .split('{languageCode}').join(languageCode);
   }
 
   async listPublishedContentCandidates(menuId: string): Promise<MenuContentCandidateDto[]> {
@@ -303,11 +341,15 @@ export class AdminMenuService {
     if (!menu) {
       throw new NotFoundException('Menu not found.');
     }
-    const [items, pages, posts, galleries] = await Promise.all([
+    const [items, pages, articles, posts, galleries, tenantRoutes] = await Promise.all([
       this.itemRepo.find({ where: { menuId } }),
       this.pageRepo.find({
         where: { applicationId: menu.applicationId, languageCode: menu.languageCode, status: ContentStatus.PUBLISHED },
         order: { sortOrder: 'ASC', publishedAt: 'DESC', createdAt: 'DESC' },
+      }),
+      this.articleRepo.find({
+        where: { applicationId: menu.applicationId, locale: menu.languageCode, status: ContentStatus.PUBLISHED },
+        order: { publishedAt: 'DESC', createdAt: 'DESC' },
       }),
       this.postRepo.find({
         where: { applicationId: menu.applicationId, locale: menu.languageCode, status: ContentStatus.PUBLISHED },
@@ -317,10 +359,14 @@ export class AdminMenuService {
         where: { applicationId: menu.applicationId, locale: menu.languageCode, status: ContentStatus.PUBLISHED },
         order: { publishedAt: 'DESC', createdAt: 'DESC' },
       }),
+      this.tenantRouteRepo.find({
+        where: { applicationId: menu.applicationId, status: TenantRouteStatus.AVAILABLE },
+        order: { source: 'ASC', routeKey: 'ASC' },
+      }),
     ]);
     const refs = new Set(items.filter((item) => item.referenceId).map((item) => `${item.itemType}:${item.referenceId}`));
     const mapCandidate = (
-      type: MenuItemType.PAGE | MenuItemType.POST | MenuItemType.GALLERY,
+      type: MenuItemType.PAGE | MenuItemType.ARTICLE | MenuItemType.POST | MenuItemType.GALLERY,
       content: { id: string; title: string; slug: string; publishedAt?: Date | null; updatedAt: Date },
     ): MenuContentCandidateDto => ({
       id: content.id,
@@ -334,8 +380,19 @@ export class AdminMenuService {
     });
     return [
       ...pages.map((page) => mapCandidate(MenuItemType.PAGE, page)),
+      ...articles.map((article) => mapCandidate(MenuItemType.ARTICLE, article)),
       ...posts.map((post) => mapCandidate(MenuItemType.POST, post)),
       ...galleries.map((gallery) => mapCandidate(MenuItemType.GALLERY, gallery)),
+      ...tenantRoutes.map((route): MenuContentCandidateDto => ({
+        id: route.id,
+        type: MenuItemType.TENANT_ROUTE,
+        title: route.titles[menu.languageCode] ?? route.titles.en ?? route.routeKey,
+        slug: route.routeKey,
+        url: this.resolveTenantRoutePath(route.pathTemplate, menu.languageCode),
+        alreadyInMenu: refs.has(`${MenuItemType.TENANT_ROUTE}:${route.id}`),
+        publishedAt: null,
+        updatedAt: route.updatedAt.toISOString(),
+      })),
     ];
   }
 
@@ -362,6 +419,7 @@ export class AdminMenuService {
         cssClass: null,
         sortOrder: nextSortOrder++,
         isVisible: true,
+        ...(await this.resolveOwnership(candidate.type, candidate.id)),
       }));
     }
     return this.mapMenu(menu, true);
@@ -373,7 +431,8 @@ export class AdminMenuService {
     const articleIds = visible.filter((item) => item.itemType === MenuItemType.ARTICLE && item.referenceId).map((item) => item.referenceId as string);
     const postIds = visible.filter((item) => item.itemType === MenuItemType.POST && item.referenceId).map((item) => item.referenceId as string);
     const galleryIds = visible.filter((item) => item.itemType === MenuItemType.GALLERY && item.referenceId).map((item) => item.referenceId as string);
-    const [pages, articles, posts, galleries] = await Promise.all([
+    const tenantRouteIds = visible.filter((item) => item.itemType === MenuItemType.TENANT_ROUTE && item.referenceId).map((item) => item.referenceId as string);
+    const [pages, articles, posts, galleries, tenantRoutes] = await Promise.all([
       pageIds.length
         ? this.pageRepo.find({ where: { id: In(pageIds), applicationId: application.id, languageCode: menu.languageCode, status: ContentStatus.PUBLISHED } })
         : [],
@@ -386,11 +445,15 @@ export class AdminMenuService {
       galleryIds.length
         ? this.galleryRepo.find({ where: { id: In(galleryIds), applicationId: application.id, locale: menu.languageCode, status: ContentStatus.PUBLISHED } })
         : [],
+      tenantRouteIds.length
+        ? this.tenantRouteRepo.find({ where: { id: In(tenantRouteIds), applicationId: application.id, status: TenantRouteStatus.AVAILABLE } })
+        : [],
     ]);
     const pageById = new Map(pages.map((page) => [page.id, page]));
     const articleById = new Map(articles.map((article) => [article.id, article]));
     const postById = new Map(posts.map((post) => [post.id, post]));
     const galleryById = new Map(galleries.map((gallery) => [gallery.id, gallery]));
+    const tenantRouteById = new Map(tenantRoutes.map((route) => [route.id, route]));
     return visible
       .map((item) => {
         if (item.itemType === MenuItemType.PAGE) {
@@ -408,6 +471,16 @@ export class AdminMenuService {
         if (item.itemType === MenuItemType.GALLERY) {
           const gallery = item.referenceId ? galleryById.get(item.referenceId) : null;
           return gallery ? { ...item, url: item.url ?? `/${menu.languageCode}/gallery/${gallery.slug}` } as MenuItemEntity : null;
+        }
+        if (item.itemType === MenuItemType.TENANT_ROUTE) {
+          const route = item.referenceId ? tenantRouteById.get(item.referenceId) : null;
+          return route ? {
+            ...item,
+            title: route.titles[menu.languageCode] ?? route.titles.en ?? item.title,
+            url: this.resolveTenantRoutePath(route.pathTemplate, menu.languageCode),
+            icon: route.icon ?? item.icon,
+            cssClass: route.cssClass ?? item.cssClass,
+          } as MenuItemEntity : null;
         }
         return item;
       })

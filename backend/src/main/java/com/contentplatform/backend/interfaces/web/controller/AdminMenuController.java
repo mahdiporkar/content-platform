@@ -25,14 +25,29 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import com.contentplatform.backend.application.service.TenantRouteService;
+import com.contentplatform.backend.interfaces.web.request.TenantRouteSyncRequest;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController
 @RequestMapping("/api/v1/admin/menus")
 public class AdminMenuController {
     private final PageMenuService pageMenuService;
+    private final TenantRouteService tenantRouteService;
 
-    public AdminMenuController(PageMenuService pageMenuService) {
+    public AdminMenuController(PageMenuService pageMenuService, TenantRouteService tenantRouteService) {
         this.pageMenuService = pageMenuService;
+        this.tenantRouteService = tenantRouteService;
+    }
+
+    @PutMapping("/routes/sync")
+    public ResponseEntity<Map<String, Object>> syncRoutes(
+        @RequestHeader("X-Application-Id") String applicationId,
+        @Valid @RequestBody TenantRouteSyncRequest request
+    ) {
+        SecurityUtils.requireServicePermission(ServicePermission.MENUS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        return ResponseEntity.ok(tenantRouteService.sync(applicationId, request));
     }
 
     @PostMapping

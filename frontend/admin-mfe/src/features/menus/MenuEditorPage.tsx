@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Alert, Button, Card, Col, Form, Input, InputNumber, Popconfirm, Row, Select, Space, Switch, Table, Tag, Typography } from "antd";
-import { DeleteOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SyncOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, Form, Input, InputNumber, Popconfirm, Row, Select, Space, Switch, Table, Tag, Typography, Upload } from "antd";
+import { DeleteOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SyncOutlined, UploadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import client from "../../api/client";
 import { useTenant } from "../../app/tenant";
@@ -28,7 +28,7 @@ type LayoutDraft = Record<string, { parentId: string; sortOrder: number; isVisib
 
 const locationOptions: MenuLocation[] = ["HEADER", "FOOTER", "SIDEBAR", "MOBILE"];
 const statusOptions: MenuStatus[] = ["ACTIVE", "INACTIVE"];
-const itemTypes: MenuItemType[] = ["PAGE", "ARTICLE", "POST", "GALLERY", "CUSTOM_URL", "EXTERNAL_URL", "GROUP"];
+const itemTypes: MenuItemType[] = ["PAGE", "ARTICLE", "POST", "GALLERY", "TENANT_ROUTE", "CUSTOM_URL", "EXTERNAL_URL", "GROUP"];
 const targets: MenuItemTarget[] = ["SELF", "BLANK"];
 
 const flattenItems = (items: MenuItem[], depth = 0): Array<MenuItem & { depth: number }> =>
@@ -230,6 +230,28 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
       void fetchCandidates();
     } catch {
       setError("Failed to sync published content.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const syncManifest = async (file: File) => {
+    if (!applicationId) {
+      setError("Application ID is required.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const manifest = JSON.parse(await file.text());
+      await client.put("/api/v1/admin/menus/routes/sync", manifest);
+      await fetchCandidates();
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof SyntaxError
+          ? "Manifest file is not valid JSON."
+          : "Failed to synchronize tenant routes from manifest."
+      );
     } finally {
       setSaving(false);
     }
@@ -537,6 +559,19 @@ export const MenuEditorPage = ({ mode }: { mode: EditorMode }) => {
               <Typography.Text type="secondary">{t("page.menusDescription")}</Typography.Text>
             </div>
             <Space>
+              <Upload
+                accept=".json,application/json"
+                maxCount={1}
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  void syncManifest(file as File);
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />} loading={saving}>
+                  {t("menu.syncManifest")}
+                </Button>
+              </Upload>
               <Button icon={<ReloadOutlined />} onClick={fetchCandidates} loading={loadingCandidates}>
                 Refresh
               </Button>
