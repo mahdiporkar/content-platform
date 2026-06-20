@@ -7,6 +7,7 @@ import { MenuItemUpsertRequestDto } from '../dto/requests/menu-item-upsert-reque
 import { MenuItemsLayoutRequestDto } from '../dto/requests/menu-items-layout-request.dto';
 import { MenuStatusRequestDto } from '../dto/requests/menu-status-request.dto';
 import { MenuUpsertRequestDto } from '../dto/requests/menu-upsert-request.dto';
+import { MenuFromRoutesRequestDto } from '../dto/requests/menu-from-routes-request.dto';
 import { MenuResponseDto } from '../dto/responses/menu-response.dto';
 import { AdminMenuService, MenuContentCandidateDto } from '../services/admin-menu.service';
 import { TenantRouteSyncRequestDto } from '../dto/requests/tenant-route-sync-request.dto';
@@ -28,6 +29,23 @@ export class AdminMenuController {
     const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
     return this.tenantRouteService.syncByApplicationId(applicationId, body);
+  }
+
+  @Get('routes')
+  async listTenantRoutes(@Req() request: Request) {
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
+    return this.tenantRouteService.listByApplicationId(applicationId);
+  }
+
+  @Post('from-routes')
+  async createFromRoutes(
+    @Req() request: Request,
+    @Body() body: MenuFromRoutesRequestDto,
+  ): Promise<MenuResponseDto> {
+    const applicationId = this.access.getApplicationId(request);
+    this.access.assertServiceAccess(request, ServicePermission.MENUS_MANAGE, applicationId);
+    return this.menuService.createFromTenantRoutes(applicationId, body);
   }
 
   @Post()

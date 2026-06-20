@@ -172,6 +172,22 @@ export type MenuContentCandidate = {
   updatedAt: string;
 };
 
+export type TenantRoute = {
+  id: string;
+  applicationId: string;
+  source: string;
+  routeKey: string;
+  pathTemplate: string;
+  titles: Record<string, string>;
+  status: "AVAILABLE" | "UNAVAILABLE";
+  icon?: string | null;
+  cssClass?: string | null;
+  metadata?: Record<string, unknown> | null;
+  lastSyncedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type GalleryContent = {
   id: string;
   applicationId: string;

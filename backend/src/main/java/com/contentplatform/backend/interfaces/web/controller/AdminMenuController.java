@@ -8,6 +8,7 @@ import com.contentplatform.backend.interfaces.web.request.MenuItemUpsertRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuItemsLayoutRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuStatusRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuUpsertRequest;
+import com.contentplatform.backend.interfaces.web.request.MenuFromRoutesRequest;
 import com.contentplatform.backend.interfaces.web.response.MenuContentCandidateResponse;
 import com.contentplatform.backend.interfaces.web.response.MenuResponse;
 import jakarta.validation.Valid;
@@ -48,6 +49,23 @@ public class AdminMenuController {
         SecurityUtils.requireServicePermission(ServicePermission.MENUS_MANAGE);
         SecurityUtils.requireApplicationAccess(applicationId);
         return ResponseEntity.ok(tenantRouteService.sync(applicationId, request));
+    }
+
+    @GetMapping("/routes")
+    public ResponseEntity<?> listRoutes(@RequestHeader("X-Application-Id") String applicationId) {
+        SecurityUtils.requireServicePermission(ServicePermission.MENUS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        return ResponseEntity.ok(tenantRouteService.list(applicationId));
+    }
+
+    @PostMapping("/from-routes")
+    public ResponseEntity<MenuResponse> createFromRoutes(
+        @RequestHeader("X-Application-Id") String applicationId,
+        @Valid @RequestBody MenuFromRoutesRequest request
+    ) {
+        SecurityUtils.requireServicePermission(ServicePermission.MENUS_MANAGE);
+        SecurityUtils.requireApplicationAccess(applicationId);
+        return ResponseEntity.ok(pageMenuService.createMenuFromRoutes(applicationId, request));
     }
 
     @PostMapping

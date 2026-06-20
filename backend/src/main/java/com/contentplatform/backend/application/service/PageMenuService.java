@@ -28,6 +28,7 @@ import com.contentplatform.backend.domain.value.TenantRouteStatus;
 import com.contentplatform.backend.interfaces.web.request.MenuItemLayoutRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuItemUpsertRequest;
 import com.contentplatform.backend.interfaces.web.request.MenuUpsertRequest;
+import com.contentplatform.backend.interfaces.web.request.MenuFromRoutesRequest;
 import com.contentplatform.backend.interfaces.web.request.PageUpsertRequest;
 import com.contentplatform.backend.interfaces.web.response.MenuContentCandidateResponse;
 import com.contentplatform.backend.interfaces.web.response.MenuItemResponse;
@@ -237,6 +238,55 @@ public class PageMenuService {
             now,
             now
         ));
+        return toMenuResponse(menu, true);
+    }
+
+    @Transactional
+    public MenuResponse createMenuFromRoutes(String applicationId, MenuFromRoutesRequest request) {
+        String languageCode = ContentLocale.normalizeOrDefault(request.getLanguageCode());
+        String code = trimRequired(request.getCode(), "code is required");
+        if (menuRepo.findByApplicationIdAndCodeAndLanguageCode(applicationId, code, languageCode).isPresent()) {
+            throw new ConflictException("A menu with this code and language already exists.");
+        }
+        List<TenantRouteEntity> routes = tenantRouteRepo
+            .findByApplicationIdAndStatusOrderBySourceAscRouteKeyAsc(applicationId, TenantRouteStatus.AVAILABLE);
+        if (routes.isEmpty()) {
+            throw new BadRequestException("No available tenant routes were found.");
+        }
+
+        Instant now = Instant.now();
+        MenuEntity menu = menuRepo.save(new MenuEntity(
+            UUID.randomUUID().toString(),
+            applicationId,
+            code,
+            trimRequired(request.getTitle(), "title is required"),
+            request.getLocation(),
+            languageCode,
+            request.getStatus(),
+            now,
+            now
+        ));
+        int sortOrder = 0;
+        for (TenantRouteEntity route : routes) {
+            MenuItemEntity item = new MenuItemEntity(
+                UUID.randomUUID().toString(),
+                menu.getId(),
+                null,
+                route.getTitles().getOrDefault(languageCode, route.getTitles().getOrDefault("en", route.getRouteKey())),
+                MenuItemType.TENANT_ROUTE,
+                route.getId(),
+                resolveTenantPath(route.getPathTemplate(), languageCode),
+                MenuItemTarget.SELF,
+                route.getIcon(),
+                route.getCssClass(),
+                sortOrder++,
+                true,
+                now,
+                now
+            );
+            item.setOwnership(route.getSource(), route.getRouteKey(), "TENANT");
+            itemRepo.save(item);
+        }
         return toMenuResponse(menu, true);
     }
 

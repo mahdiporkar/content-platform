@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,6 +7,7 @@ import { MenuItemTarget, MenuItemType, MenuLocation, MenuStatus } from '../commo
 import { MenuItemUpsertRequestDto } from '../dto/requests/menu-item-upsert-request.dto';
 import { MenuItemLayoutRequestDto } from '../dto/requests/menu-items-layout-request.dto';
 import { MenuUpsertRequestDto } from '../dto/requests/menu-upsert-request.dto';
+import { MenuFromRoutesRequestDto } from '../dto/requests/menu-from-routes-request.dto';
 import { MenuItemResponseDto, MenuResponseDto } from '../dto/responses/menu-response.dto';
 import { ApplicationEntity } from '../entities/application.entity';
 import { ArticleEntity } from '../entities/article.entity';
@@ -170,6 +171,57 @@ export class AdminMenuService {
       status: request.status,
     });
     return this.mapMenu(await this.menuRepo.save(menu), true);
+  }
+
+  async createFromTenantRoutes(
+    applicationId: string,
+    request: MenuFromRoutesRequestDto,
+  ): Promise<MenuResponseDto> {
+    const code = request.code.trim();
+    const existing = await this.menuRepo.findOne({
+      where: { applicationId, code, languageCode: request.languageCode },
+    });
+    if (existing) {
+      throw new ConflictException('A menu with this code and language already exists.');
+    }
+
+    const routes = await this.tenantRouteRepo.find({
+      where: { applicationId, status: TenantRouteStatus.AVAILABLE },
+      order: { source: 'ASC', routeKey: 'ASC' },
+    });
+    if (!routes.length) {
+      throw new BadRequestException('No available tenant routes were found.');
+    }
+
+    const menu = await this.menuRepo.save(this.menuRepo.create({
+      id: uuidv4(),
+      applicationId,
+      code,
+      title: request.title.trim(),
+      location: request.location,
+      languageCode: request.languageCode,
+      status: request.status,
+    }));
+
+    await this.itemRepo.save(routes.map((route, sortOrder) => this.itemRepo.create({
+      id: uuidv4(),
+      menuId: menu.id,
+      parentId: null,
+      title: route.titles[request.languageCode] ?? route.titles.en ?? route.routeKey,
+      itemType: MenuItemType.TENANT_ROUTE,
+      referenceId: route.id,
+      url: this.resolveTenantRoutePath(route.pathTemplate, request.languageCode),
+      target: MenuItemTarget.SELF,
+      icon: route.icon,
+      cssClass: route.cssClass,
+      sortOrder,
+      isVisible: true,
+      source: route.source,
+      sourceKey: route.routeKey,
+      managedBy: 'TENANT',
+    })));
+
+    return this.mapMenu(menu, true);
   }
 
   async update(id: string, request: MenuUpsertRequestDto): Promise<MenuResponseDto> {

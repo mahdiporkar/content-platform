@@ -23,6 +23,13 @@ export class TenantRouteService {
     return this.sync(application, request);
   }
 
+  async listByApplicationId(applicationId: string): Promise<TenantRouteEntity[]> {
+    return this.routeRepo.find({
+      where: { applicationId },
+      order: { source: 'ASC', routeKey: 'ASC' },
+    });
+  }
+
   async sync(application: ApplicationEntity, request: TenantRouteSyncRequestDto) {
     const source = request.source.trim();
     const keys = new Set<string>();

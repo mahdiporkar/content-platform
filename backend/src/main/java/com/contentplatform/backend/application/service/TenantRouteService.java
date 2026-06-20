@@ -59,6 +59,11 @@ public class TenantRouteService {
         return Map.of("applicationId", applicationId, "source", source, "synchronized", keys.size(),
             "unavailable", unavailable, "synchronizedAt", now.toString());
     }
+
+    public List<TenantRouteEntity> list(String applicationId) {
+        if (!applicationRepo.existsById(applicationId)) throw new BadRequestException("Application not found.");
+        return routeRepo.findByApplicationIdAndStatusOrderBySourceAscRouteKeyAsc(applicationId, TenantRouteStatus.AVAILABLE);
+    }
     private String required(String value, String message) { String result = trim(value); if (result == null) throw new BadRequestException(message); return result; }
     private String trim(String value) { if (value == null || value.trim().isEmpty()) return null; return value.trim(); }
 }
