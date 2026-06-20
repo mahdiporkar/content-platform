@@ -14,7 +14,7 @@ Multi-tenant content platform built with NestJS, PostgreSQL, and MinIO, with an 
 ## Runtime Services
 
 - Backend API: `http://localhost:3001`
-- Admin UI: `http://localhost:5173`
+- Admin UI: `http://localhost:3002`
 - Demo UI: `http://localhost:3003`
 - PostgreSQL: `localhost:5432`
 - MinIO API: `localhost:9000`
@@ -29,7 +29,7 @@ The platform is multi-tenant. Each tenant or consumer system is represented by a
 - Admin users sign in to the admin panel with a Bearer JWT.
 - Each admin user can be assigned to one or more application ids.
 - Non-super-admin users can only manage content for the application ids assigned to them.
-- Admin APIs receive `applicationId` in the request body, query string, or admin route where needed, and the backend checks it against the authenticated user's allowed applications.
+- Tenant-scoped Admin APIs receive the selected application through `X-Application-Id`; create/update payloads may also contain ownership fields where required. The backend checks the selected application against the authenticated user's access.
 - Content, media assets, collections, sitemap settings, analytics, and audit records are stored with the owning `applicationId`.
 
 ### Consumer Server Plane
@@ -186,11 +186,14 @@ GET /api/v1/admin/pages/{id}
 GET /api/v1/admin/pages?applicationId={applicationId}
 
 POST /api/v1/admin/menus
+POST /api/v1/admin/menus/from-routes
 PUT /api/v1/admin/menus/{id}
 PATCH /api/v1/admin/menus/{id}/status
 DELETE /api/v1/admin/menus/{id}
 GET /api/v1/admin/menus/{id}
-GET /api/v1/admin/menus?applicationId={applicationId}
+GET /api/v1/admin/menus
+GET /api/v1/admin/menus/routes
+PUT /api/v1/admin/menus/routes/sync
 POST /api/v1/admin/menus/{id}/items
 PUT /api/v1/admin/menus/{id}/items/layout
 PUT /api/v1/admin/menus/{id}/items/{itemId}
@@ -287,13 +290,74 @@ Or with Docker:
 ```bash
 docker compose up --build
 ```
-## Tenant Route Registry and Menu Synchronization
+## Complete Menu Management Guide
 
-Content Platform never seeds or hardcodes routes belonging to a real tenant. A tenant declares its code-defined routes, while the content administrator remains responsible for selecting routes and arranging the final menu.
+Content Platform separates **application routes** from **final menus**. This distinction keeps the platform multi-tenant and prevents tenant deployments from overwriting editorial navigation decisions.
 
-### Route manifest is not the final menu
+### Core concepts
 
-The manifest only describes routes implemented by tenant code. It does not define menu hierarchy, ordering, visibility, location, or status. Final menus remain database records managed through the CMS.
+- **Application / tenant**: the owner of routes, menus, pages, and content. It is identified by `applicationId`.
+- **Tenant route**: a route implemented in consumer application code, such as `/{locale}/about`.
+- **Route manifest**: the contract through which a tenant announces its code-defined routes.
+- **Menu**: a language-specific navigation container stored in Content Platform.
+- **Menu item**: an ordered entry inside a menu. Items may be nested using `parentId`.
+- **Delivery menu**: the final active and filtered menu returned to a consumer application.
+
+Routes and menus are different records. Synchronizing a manifest updates the route registry; it does not silently rewrite an existing menu.
+
+### Menu fields
+
+| Field | Meaning |
+| --- | --- |
+| `applicationId` | Tenant that owns the menu. Admin requests normally provide it through `X-Application-Id`. |
+| `code` | Stable technical identifier used by the consumer, for example `main-menu`. |
+| `title` | Human-readable admin label, for example `Main menu`. |
+| `languageCode` | Menu language: `fa`, `en`, `ar`, `zh`, or `ru`. |
+| `location` | Intended placement: `HEADER`, `FOOTER`, `SIDEBAR`, or `MOBILE`. |
+| `status` | `ACTIVE` menus are deliverable; `INACTIVE` menus are retained but not returned publicly. |
+
+The combination `applicationId + code + languageCode` must be unique. Treat `code` as an API contract: changing it requires updating the consumer request.
+
+Examples:
+
+```text
+main-menu
+footer-menu
+mobile-menu
+```
+
+```http
+GET /api/v1/content/menus/fa/main-menu
+```
+
+### Menu item types and ownership
+
+| Type | Purpose | Managed by |
+| --- | --- | --- |
+| `TENANT_ROUTE` | Route implemented by tenant code | `TENANT` |
+| `PAGE` | Dynamic CMS page | `CMS` |
+| `ARTICLE` | Published article | `CMS` |
+| `POST` | Published post | `CMS` |
+| `GALLERY` | Published gallery | `CMS` |
+| `CUSTOM_URL` | Internal manually entered URL | `ADMIN` |
+| `EXTERNAL_URL` | External link | `ADMIN` |
+| `GROUP` | Structural parent without a destination | `ADMIN` |
+
+Important item fields:
+
+- `referenceId`: referenced route or CMS entity id.
+- `url`: resolved destination.
+- `target`: `SELF` or `BLANK`.
+- `sortOrder`: sibling ordering.
+- `parentId`: optional parent for nested menus.
+- `isVisible`: admin-controlled visibility.
+- `source` and `sourceKey`: tenant route source and stable route key.
+- `managedBy`: `TENANT`, `CMS`, or `ADMIN`.
+- `dynamic`: indicates that the item is backed by registered or CMS-managed data.
+
+### Route manifest
+
+The manifest describes routes that exist in tenant code. It is not the final menu and does not define menu location, hierarchy, visibility, or activation.
 
 ```json
 {
@@ -301,65 +365,142 @@ The manifest only describes routes implemented by tenant code. It does not defin
   "replaceMissing": true,
   "routes": [
     {
+      "key": "home",
+      "path": "/{locale}",
+      "titles": {
+        "fa": "خانه",
+        "en": "Home"
+      },
+      "icon": "home",
+      "cssClass": "nav-home",
+      "metadata": {
+        "section": "primary"
+      }
+    },
+    {
       "key": "about",
       "path": "/{locale}/about",
       "titles": {
         "fa": "درباره ما",
         "en": "About"
-      },
-      "icon": "user",
-      "cssClass": "nav-about"
+      }
     }
   ]
 }
 ```
 
-`applicationId + source + key` is unique. Repeating the same request updates the existing route and never creates duplicates.
+Manifest rules:
 
-### Automated tenant synchronization
+- `source` identifies the producer, such as `magical-bank-web`.
+- `key` is stable within that source.
+- `path` may use `{locale}` or `{languageCode}` placeholders.
+- `titles` contains localized labels.
+- `icon`, `cssClass`, and `metadata` are optional.
+- `applicationId + source + key` is unique.
+- Repeating the same sync is idempotent and does not create duplicates.
+- With `replaceMissing: true`, omitted routes from the same source become `UNAVAILABLE`.
+- An unavailable route remains in history but is excluded from public menu delivery.
 
-1. Rotate a management token from the application editor or call:
-   `POST /api/v1/admin/applications/:id/management-token/rotate`
-2. Store the returned token only in a tenant backend, deployment environment, or CI secret.
-3. Send the manifest to:
+### Automatic synchronization by a tenant
+
+Create or rotate a management token:
+
+```http
+POST /api/v1/admin/applications/{id}/management-token/rotate
+```
+
+Store the returned token only in the tenant backend, deployment environment, or CI secret. Then submit the manifest:
 
 ```http
 PUT /api/v1/management/navigation/routes
-X-Application-Id: <application-id>
 Authorization: Bearer <management-token>
+X-Application-Id: <application-id>
 Content-Type: application/json
 ```
 
-The tenant may run this operation during deployment, startup, or immediately after route changes.
+Recommended synchronization times:
 
-### Manual synchronization from Admin
+- application deployment
+- backend startup using an idempotent operation
+- immediately after adding, removing, or renaming code-defined routes
+- a dedicated CI command such as `npm run sync-navigation`
 
-An administrator with `menus.manage` permission can open a menu and select **Manual route update**. The browser reads the selected local JSON file and sends its JSON body to:
+Never expose the management token through `NEXT_PUBLIC_*`, `VITE_*`, browser JavaScript, or committed manifest files.
+
+### Consumer environment variables for menu integration
+
+The Magical Bank API is an example consumer backend that both synchronizes its code-defined routes and retrieves the final menu. Its Docker Compose configuration uses:
+
+```yaml
+environment:
+  CONTENT_PLATFORM_API_BASE_URL: ${CONTENT_PLATFORM_API_BASE_URL:-http://content-platform-backend:3001}
+  CONTENT_PLATFORM_APPLICATION_ID: ${CONTENT_PLATFORM_APPLICATION_ID:-}
+  CONTENT_PLATFORM_API_TOKEN: ${CONTENT_PLATFORM_API_TOKEN:-}
+  CONTENT_PLATFORM_MANAGEMENT_TOKEN: ${CONTENT_PLATFORM_MANAGEMENT_TOKEN:-}
+  CONTENT_PLATFORM_MENU_CODE: ${CONTENT_PLATFORM_MENU_CODE:-main-menu}
+  SYNC_MENU_ON_START: ${SYNC_MENU_ON_START:-true}
+  MENU_MANIFEST_PATH: ${MENU_MANIFEST_PATH:-manifestmenu.json}
+```
+
+These variables belong to two separate flows:
+
+| Flow | Variables | Purpose |
+| --- | --- | --- |
+| Route synchronization | `CONTENT_PLATFORM_API_BASE_URL`, `CONTENT_PLATFORM_APPLICATION_ID`, `CONTENT_PLATFORM_MANAGEMENT_TOKEN`, `SYNC_MENU_ON_START`, `MENU_MANIFEST_PATH` | Sends code-defined routes to the route registry. |
+| Final menu delivery | `CONTENT_PLATFORM_API_BASE_URL`, `CONTENT_PLATFORM_APPLICATION_ID`, `CONTENT_PLATFORM_API_TOKEN`, `CONTENT_PLATFORM_MENU_CODE` | Retrieves the active menu selected and arranged by an administrator. |
+
+They do not all send a final menu structure. The manifest synchronization registers application routes; `CONTENT_PLATFORM_MENU_CODE` is only used later when reading the final menu.
+
+#### `CONTENT_PLATFORM_API_BASE_URL`
+
+Base URL used for both management and delivery requests.
+
+```bash
+CONTENT_PLATFORM_API_BASE_URL=http://content-platform-backend:3001
+```
+
+- Inside the same Docker network, use the Content Platform service name and internal port.
+- From a production server outside that network, use the externally reachable HTTPS URL.
+- Do not use `localhost` unless Content Platform runs inside the same container or process namespace.
+- Do not append `/api/v1`; the consumer implementation appends endpoint paths.
+
+#### `CONTENT_PLATFORM_APPLICATION_ID`
+
+Identifies the tenant whose routes are synchronized and whose final menu is fetched.
+
+```bash
+CONTENT_PLATFORM_APPLICATION_ID=7d58a2bb-caa3-400f-a433-d59d8556ad01
+```
+
+It is sent as `X-Application-Id` in both management and delivery requests. The management token and delivery token must belong to this same application. A mismatched application id and token causes authentication or authorization failure.
+
+#### `CONTENT_PLATFORM_MANAGEMENT_TOKEN`
+
+Server-side secret used only to modify the tenant route registry:
 
 ```http
-PUT /api/v1/admin/menus/routes/sync
-Authorization: Bearer <admin-jwt>
+PUT /api/v1/management/navigation/routes
+Authorization: Bearer <management-token>
 X-Application-Id: <application-id>
 ```
 
-The backend does not download a manifest URL. Therefore the synchronization flow does not introduce an SSRF fetch surface.
+Generate or rotate it through:
 
-After synchronization, the menu candidate table is refreshed. Registered routes are not automatically inserted into a menu.
+```http
+POST /api/v1/admin/applications/{id}/management-token/rotate
+```
 
-### Synchronization rules
+Important behavior:
 
-- New routes are added to the route registry.
-- Existing route titles, paths and metadata are updated.
-- Routes missing from the same source are marked `UNAVAILABLE` when `replaceMissing` is enabled.
-- Manual menu items are never deleted or overwritten.
-- Menu hierarchy, ordering, visibility and activation are never changed by route synchronization.
-- Published CMS pages and content are discovered directly by Content Platform and do not belong in the tenant manifest.
-- `TENANT_ROUTE`, CMS content, custom URLs and groups can be combined by an administrator in the same menu.
-- Delivery excludes unavailable tenant routes and unpublished CMS content.
+- It does not fetch content or menus.
+- It is not the application delivery token.
+- It must only exist in a backend, CI secret, Docker/CapRover environment, or secret manager.
+- If it or `CONTENT_PLATFORM_APPLICATION_ID` is empty, startup synchronization is skipped and a warning is logged.
+- Rotating it invalidates the previous management token, so the consumer environment must be updated.
 
-### Menu delivery
+#### `CONTENT_PLATFORM_API_TOKEN`
 
-The consumer receives the final active menu through:
+Server-side delivery secret used to read published content and the final active menu:
 
 ```http
 GET /api/v1/content/menus/{languageCode}/{code}
@@ -367,4 +508,313 @@ X-Application-Id: <application-id>
 X-Application-Token: <delivery-token>
 ```
 
-Management tokens and admin JWTs must never be exposed to browser visitors.
+It cannot synchronize routes. Keep it separate from `CONTENT_PLATFORM_MANAGEMENT_TOKEN` and never expose either token to visitor browsers.
+
+#### `CONTENT_PLATFORM_MENU_CODE`
+
+Stable code of the final menu fetched from Content Platform.
+
+```bash
+CONTENT_PLATFORM_MENU_CODE=main-menu
+```
+
+In the Magical Bank API, a request such as:
+
+```http
+GET /content/menus/fa
+```
+
+is proxied by the consumer backend to:
+
+```http
+GET /api/v1/content/menus/fa/main-menu
+```
+
+This variable:
+
+- does not control manifest synchronization
+- does not create a menu
+- must match the `code` of an existing `ACTIVE` menu for the requested language
+- may point different deployments to different menu contracts, such as `main-menu`, `mobile-menu`, or `footer-menu`
+
+Changing the code is a runtime configuration change, but the referenced menu must already exist in Content Platform.
+
+#### `SYNC_MENU_ON_START`
+
+Controls whether the consumer backend sends its route manifest during application startup.
+
+```bash
+SYNC_MENU_ON_START=true
+```
+
+Current Magical Bank implementation behavior:
+
+- the exact string `false` disables startup synchronization
+- `true`, an empty/unset value, or any other value does not disable it
+- synchronization runs from NestJS `onModuleInit`
+- missing application id or management token skips synchronization with a warning
+- an unreadable file, invalid JSON, authentication failure, network error, or rejected sync can fail module initialization and prevent a successful startup
+
+Production recommendations:
+
+- use `true` when every instance is allowed to perform the same idempotent sync
+- use `false` when synchronization is handled by CI, a release job, or a single designated instance
+- avoid unnecessary concurrent startup syncs when many replicas start together
+
+The name is historical: it synchronizes the **route manifest**, not the final menu layout.
+
+#### `MENU_MANIFEST_PATH`
+
+Filesystem path read by the consumer backend when route synchronization runs.
+
+```bash
+MENU_MANIFEST_PATH=manifestmenu.json
+```
+
+- A relative path is resolved from the process working directory.
+- In the Magical Bank production image, the Dockerfile copies `manifestmenu.json` to `/app/manifestmenu.json`, and the process working directory is `/app`.
+- An absolute path may be used when the manifest is mounted as a Docker volume or secret/config file.
+- Changing this variable only changes which file is read; it does not change the menu code or delivery endpoint.
+- If the file is baked into the Docker image, changing its contents requires rebuilding and redeploying the image.
+- If the file is mounted at runtime, its contents can be updated without rebuilding, but the service must synchronize again.
+
+Example with an absolute mounted path:
+
+```yaml
+environment:
+  MENU_MANIFEST_PATH: /app/config/manifestmenu.json
+volumes:
+  - ./manifestmenu.json:/app/config/manifestmenu.json:ro
+```
+
+#### Startup execution sequence
+
+The Magical Bank consumer implementation performs this sequence:
+
+```text
+Consumer API starts
+      |
+      v
+Is SYNC_MENU_ON_START exactly "false"?
+      | yes
+      +----> Skip route synchronization
+      |
+      no
+      v
+Are application id and management token configured?
+      | no
+      +----> Log warning and continue startup
+      |
+      yes
+      v
+Read MENU_MANIFEST_PATH and parse JSON
+      |
+      v
+PUT manifest to Content Platform management API
+      |
+      v
+Content Platform inserts/updates routes and marks missing routes unavailable
+```
+
+Fetching the final menu happens independently when the consumer handles a menu request:
+
+```text
+Consumer receives languageCode
+      |
+      v
+Uses CONTENT_PLATFORM_MENU_CODE
+      |
+      v
+GET active menu with application id + delivery token
+      |
+      v
+Returns final administrator-managed hierarchy to the web application
+```
+
+#### Docker Compose and CapRover example
+
+```bash
+CONTENT_PLATFORM_API_BASE_URL=https://content-api.example.com
+CONTENT_PLATFORM_APPLICATION_ID=<application-id>
+CONTENT_PLATFORM_API_TOKEN=<delivery-token>
+CONTENT_PLATFORM_MANAGEMENT_TOKEN=<management-token>
+CONTENT_PLATFORM_MENU_CODE=main-menu
+SYNC_MENU_ON_START=true
+MENU_MANIFEST_PATH=manifestmenu.json
+```
+
+Environment value changes do not alter a previously built manifest file. After changing runtime environment variables in CapRover, restart or redeploy the consumer app. Rebuild the image only when application code or a manifest copied into the image has changed.
+
+### Manual synchronization in Admin
+
+1. Select the target application in the admin sidebar.
+2. Open **Menus**.
+3. Click **Manual route update**.
+4. Select a local JSON manifest.
+5. Review synchronized and unavailable counts.
+6. Review the registered routes table.
+
+The browser parses the selected file and submits its JSON body to:
+
+```http
+PUT /api/v1/admin/menus/routes/sync
+Authorization: Bearer <admin-jwt>
+X-Application-Id: <application-id>
+```
+
+The backend never downloads a user-provided URL, so this workflow does not create an SSRF fetch surface.
+
+### Creating a menu from registered routes
+
+The **Create menu from routes** button provides a controlled shortcut:
+
+1. Select an application that has available routes.
+2. Open **Menus** and click **Create menu from routes**.
+3. Enter a stable `code`, a display `title`, language, location, and status.
+4. Confirm creation.
+
+The operation calls:
+
+```http
+POST /api/v1/admin/menus/from-routes
+Authorization: Bearer <admin-jwt>
+X-Application-Id: <application-id>
+Content-Type: application/json
+
+{
+  "code": "main-menu",
+  "title": "Main menu",
+  "languageCode": "en",
+  "location": "HEADER",
+  "status": "ACTIVE"
+}
+```
+
+Behavior:
+
+- A new menu is created.
+- Every `AVAILABLE` tenant route becomes a top-level `TENANT_ROUTE` item.
+- Titles and paths are resolved for the selected language.
+- Route icons and CSS classes are copied.
+- Items are ordered consistently by route source and key.
+- Existing menus and manual items are never overwritten.
+- An existing menu with the same application, code, and language causes a conflict response.
+- No menu is created when the application has no available routes.
+
+This button creates a useful initial menu. Administrators may then reorder, nest, hide, rename, add, or remove menu items.
+
+### Editing and maintaining a menu
+
+In the menu editor an administrator can:
+
+- add registered tenant routes
+- add published pages, articles, posts, and galleries
+- add custom or external URLs
+- create structural groups
+- change item titles, icons, CSS classes, targets, and visibility
+- arrange parent-child hierarchy and ordering
+- remove an item without deleting the underlying route or CMS content
+- activate or deactivate the menu
+- delete the complete menu and all its menu items
+
+Deleting a menu item does not delete its referenced route or content. Deleting a menu deletes only that menu structure. A later manifest sync also does not restore an item that an administrator intentionally removed from a menu.
+
+`POST /api/v1/admin/menus/{id}/sync-published` adds missing available route and published CMS candidates to an existing menu. It does not delete existing manual items.
+
+### Admin menu API
+
+All endpoints require an admin JWT, `menus.manage`, and access to the selected application.
+
+```http
+GET    /api/v1/admin/menus
+POST   /api/v1/admin/menus
+POST   /api/v1/admin/menus/from-routes
+GET    /api/v1/admin/menus/routes
+PUT    /api/v1/admin/menus/routes/sync
+GET    /api/v1/admin/menus/{id}
+PUT    /api/v1/admin/menus/{id}
+PATCH  /api/v1/admin/menus/{id}/status
+DELETE /api/v1/admin/menus/{id}
+
+POST   /api/v1/admin/menus/{id}/items
+PUT    /api/v1/admin/menus/{id}/items/{itemId}
+DELETE /api/v1/admin/menus/{id}/items/{itemId}
+PUT    /api/v1/admin/menus/{id}/items/layout
+
+GET    /api/v1/admin/menus/{id}/published-content
+POST   /api/v1/admin/menus/{id}/sync-published
+```
+
+### Menu delivery
+
+Fetch one active menu by its stable code:
+
+```http
+GET /api/v1/content/menus/{languageCode}/{code}
+X-Application-Id: <application-id>
+X-Application-Token: <delivery-token>
+```
+
+Fetch all active menus assigned to a location:
+
+```http
+GET /api/v1/content/menus/location/{languageCode}/{location}
+X-Application-Id: <application-id>
+X-Application-Token: <delivery-token>
+```
+
+Example server-side request:
+
+```ts
+const response = await fetch(
+  `${process.env.CONTENT_PLATFORM_API_BASE_URL}/api/v1/content/menus/fa/main-menu`,
+  {
+    headers: {
+      "X-Application-Id": process.env.CONTENT_PLATFORM_APPLICATION_ID!,
+      "X-Application-Token": process.env.CONTENT_PLATFORM_API_TOKEN!
+    },
+    cache: "no-store"
+  }
+);
+
+if (!response.ok) {
+  throw new Error(`Menu delivery failed: ${response.status}`);
+}
+
+const menu = await response.json();
+```
+
+Delivery behavior:
+
+- only `ACTIVE` menus are returned
+- hidden items are excluded
+- unavailable tenant routes are excluded
+- unpublished CMS content is excluded
+- tenant route placeholders are resolved for the requested language
+- hierarchy is returned through each item's `children`
+
+The delivery token belongs on the consumer server. Management tokens and admin JWTs must never be exposed to visitors.
+
+### Recommended end-to-end workflow
+
+```text
+Tenant route changes
+        |
+        v
+Manifest sync during deploy/startup
+        |
+        v
+Registered route inventory in Content Platform
+        |
+        v
+Create initial menu from routes or edit an existing menu
+        |
+        v
+Administrator arranges routes, CMS content, groups, and custom links
+        |
+        v
+Consumer backend fetches the active menu by language and code
+        |
+        v
+Consumer frontend renders the returned hierarchy
+```
