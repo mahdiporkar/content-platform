@@ -59,7 +59,7 @@ jobs:
           caprover deploy \
             --caproverUrl "${{ secrets.CAPROVER_URL }}" \
             --caproverPassword "${{ secrets.CAPROVER_PASSWORD }}" \
-            --appName "contentplatform-api" \
+            --appName "content-platform-api" \
             --tarFile contentplatform-api.tar.gz
 
       - name: Deploy CMS
