@@ -7,6 +7,16 @@ import { ValidationError } from 'class-validator';
 import { validateJwtSecret } from './common/jwt-secret';
 import { buildCorsConfiguration } from './common/cors-config';
 
+const processLogger = new Logger('Process');
+
+function logProcessError(event: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  processLogger.error(JSON.stringify({ event, message }), error instanceof Error ? error.stack : undefined);
+}
+
+process.on('unhandledRejection', (reason) => logProcessError('unhandledRejection', reason));
+process.on('uncaughtException', (error) => logProcessError('uncaughtException', error));
+
 function buildFieldErrors(errors: ValidationError[]) {
   return errors.flatMap((error) => {
     if (!error.constraints) {
