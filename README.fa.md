@@ -715,3 +715,91 @@ npm run dev:all
 ```bash
 docker compose up --build
 ```
+
+## سیستم SEO
+
+در Content Platform سئو بخشی از فرایند انتشار است، نه فقط تنظیمی در قالب سایت. اطلاعات SEO در پنل مدیریت نوشته می‌شود، از API تحویل محتوا برمی‌گردد و سایت مصرف‌کننده باید آن را در HTML اولیه رندر کند تا crawler بدون وابستگی به state سمت کلاینت بتواند صفحه را بخواند.
+
+### فیلدهای SEO
+
+Application، مقاله، پست، ویدیو، تصویر، گالری و صفحه می‌توانند metadata سئو داشته باشند. محتواهای عمومی از آبجکت `seo` استفاده می‌کنند:
+
+- `metaTitle`: عنوان پیشنهادی صفحه/نتیجه جستجو.
+- `metaDescription`: خلاصه پیشنهادی برای snippet و preview شبکه‌های اجتماعی.
+- `metaKeywords`: کلمات کلیدی تحریریه‌ای برای دسته‌بندی داخلی و مصرف‌کننده‌ها. رتبه‌بندی مدرن گوگل به meta keywords قدیمی متکی نیست.
+- `canonicalUrl`: URL اصلی و ترجیحی برای محتوایی که از چند مسیر قابل دسترسی است.
+- `noIndex`: نباید در sitemap قابل index بیاید و باید robots noindex تولید کند.
+- `noFollow`: باید robots nofollow تولید کند.
+- `ogTitle`، `ogDescription`، `ogImage`: تنظیمات Open Graph.
+- `twitterTitle`، `twitterDescription`، `twitterImage`: تنظیمات Twitter/X card.
+- `schemaJsonLd`: JSON-LD سفارشی برای structured data پیشرفته.
+
+صفحات فیلدهای `seoTitle`، `seoDescription` و `seoKeywords` دارند و سایت مصرف‌کننده باید آن‌ها را به همان مفاهیم title، description و keywords نگاشت کند.
+
+### قواعد تولید محتوا در پنل
+
+1. اول عنوان و توضیح انسانی و باکیفیت بنویسید.
+2. فقط وقتی عنوان جستجو باید با عنوان نمایشی فرق کند `metaTitle` را پر کنید.
+3. `metaDescription` باید کوتاه، دقیق و مفید باشد.
+4. `canonicalUrl` را فقط وقتی بگذارید که URL عمومی نهایی پایدار است.
+5. برای draft، نسخه‌های تکراری، صفحات کم‌محتوا و کمپین‌های موقت از `noIndex` استفاده کنید.
+6. `schemaJsonLd` باید JSON معتبر باشد و دقیقاً همان چیزی را توصیف کند که کاربر در صفحه می‌بیند.
+
+### الزامات سایت مصرف‌کننده
+
+سایت مصرف‌کننده درست باید این موارد را در HTML سروررندر شده تولید کند:
+
+- `<title>` و meta description.
+- canonical link.
+- robots index/follow.
+- Open Graph و Twitter card.
+- JSON-LD structured data.
+- `alt` معنادار برای تصاویر.
+
+مصرف‌کننده `magicalbank` اکنون SEO مقاله، داستان/پست، صفحه داینامیک، ویدیو و صفحه جزئیات گالری را رندر می‌کند. مصرف‌کننده `majidporkar` نیز SEO را از API proxy عبور می‌دهد و برای بلاگ metadata و JSON-LD تولید می‌کند.
+
+### Structured Data
+
+Content Platform هم schema تولیدی و هم `schemaJsonLd` سفارشی را پشتیبانی می‌کند:
+
+- صفحه مقاله/پست باید `Article` یا `BlogPosting` داشته باشد.
+- صفحه ویدیو باید `VideoObject` داشته باشد.
+- صفحه تصویر/گالری باید `ImageObject` داشته باشد.
+- صفحه داینامیک باید `WebPage` داشته باشد.
+
+schema تولیدی باید headline/name، description، تصویر یا thumbnail، URL canonical، تاریخ انتشار/تغییر در صورت وجود و URL رسانه برای تصویر/ویدیو را داشته باشد. schema سفارشی باید با محتوای قابل مشاهده صفحه یکی باشد؛ موتور جستجو ممکن است structured data ناقص، نادرست یا اغراق‌آمیز را نادیده بگیرد.
+
+### Sitemap و Indexability
+
+سیستم sitemap شامل settings، template، override، custom URL، خروجی XML عمومی و invalidate شدن cache بعد از publish/status change است. محتوایی که `noIndex` دارد در sitemap نمی‌آید. این مدل شبیه WordPress است: SEO نوشته می‌شود، محتوا publish می‌شود، sitemap عمومی ارائه می‌شود و صفحه عمومی اعتبارسنجی می‌شود.
+
+sitemap به کشف و crawl کمک می‌کند، اما تضمین index یا رتبه نیست. موتور جستجو همچنان crawlability، canonical، robots، کیفیت محتوا، لینک‌سازی داخلی، performance و سیگنال‌های بیرونی را بررسی می‌کند.
+
+### چک‌لیست اعتبارسنجی
+
+قبل از deploy:
+
+```bash
+npm run build
+npm test
+```
+
+برای URLهای عمومی:
+
+- با view-source یا curl بررسی کنید metadata و JSON-LD در HTML اولیه وجود دارد.
+- structured data را با Google Rich Results Test تست کنید.
+- canonical و robots metadata را بررسی کنید.
+- مطمئن شوید محتوای `noIndex` در sitemap XML نیست.
+- sitemap را در Google Search Console ثبت کنید.
+
+منابع رسمی:
+
+- Title links: https://developers.google.com/search/docs/appearance/title-link
+- Snippets و descriptions: https://developers.google.com/search/docs/appearance/snippet
+- Canonical URLs: https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls
+- Robots meta: https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
+- Structured data: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+- Article structured data: https://developers.google.com/search/docs/appearance/structured-data/article
+- Video structured data: https://developers.google.com/search/docs/appearance/structured-data/video
+- Image metadata: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
+- Sitemaps: https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview

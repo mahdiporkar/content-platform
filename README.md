@@ -818,3 +818,91 @@ Consumer backend fetches the active menu by language and code
         v
 Consumer frontend renders the returned hierarchy
 ```
+
+## SEO System
+
+Content Platform treats SEO as a publishing workflow, not as a theme-only concern. SEO data is authored in the admin panel, returned by delivery APIs, and must be rendered by consumer websites into the first HTML response so crawlers can read it without relying on client-side state.
+
+### SEO Fields
+
+Applications, articles, posts, videos, images, galleries, and pages can carry SEO metadata. Generic content uses the `seo` object:
+
+- `metaTitle`: search/page title candidate.
+- `metaDescription`: search snippet and social preview summary.
+- `metaKeywords`: editorial keywords for internal classification and consumer metadata. Modern Google ranking does not depend on the old keywords meta tag.
+- `canonicalUrl`: preferred public URL for duplicate or multi-route content.
+- `noIndex`: prevents indexable sitemap inclusion and should render `robots: noindex`.
+- `noFollow`: should render `robots: nofollow`.
+- `ogTitle`, `ogDescription`, `ogImage`: Open Graph overrides.
+- `twitterTitle`, `twitterDescription`, `twitterImage`: Twitter/X card overrides.
+- `schemaJsonLd`: custom JSON-LD for advanced structured data.
+
+Pages expose `seoTitle`, `seoDescription`, and `seoKeywords`; consumer sites should map them to the same concepts.
+
+### Admin Authoring Rules
+
+1. Write the human title and description first.
+2. Use `metaTitle` only when the search title should differ from the visible title.
+3. Keep `metaDescription` concise, accurate, and useful.
+4. Set `canonicalUrl` only when the final public URL is stable.
+5. Use `noIndex` for drafts, duplicate variants, thin campaign pages, or temporary pages.
+6. Add `schemaJsonLd` only when it is valid JSON-LD and matches visible content.
+
+### Consumer Requirements
+
+A correct consumer site must render these values into server-rendered HTML:
+
+- `<title>` and meta description.
+- canonical link.
+- robots index/follow controls.
+- Open Graph and Twitter card metadata.
+- JSON-LD structured data.
+- meaningful image `alt` text.
+
+The `magicalbank` consumer renders SEO for articles, stories/posts, dynamic pages, videos, and gallery detail pages. The `majidporkar` consumer passes SEO through its API proxy and renders blog metadata plus JSON-LD.
+
+### Structured Data
+
+Content Platform supports both generated schema and custom `schemaJsonLd`:
+
+- Article/post pages should render `Article` or `BlogPosting`.
+- Video pages should render `VideoObject`.
+- Gallery/image pages should render `ImageObject`.
+- Dynamic pages should render `WebPage`.
+
+Generated schema should include headline/name, description, image or thumbnail, canonical page URL, publish/modified dates when available, and media URLs for image/video content. Custom schema must describe content that is visible on the page; search engines may ignore inaccurate or incomplete structured data.
+
+### Sitemap and Indexability
+
+The sitemap system supports settings, templates, overrides, custom URLs, public XML output, and cache invalidation after publish/status changes. Content marked `noIndex` is excluded from sitemap generation. This gives a WordPress-like publishing flow: author SEO, publish content, expose sitemap XML, validate public pages.
+
+Sitemaps improve discovery, but they do not guarantee indexing or ranking. Search engines still evaluate crawlability, canonical consistency, robots rules, content quality, internal links, performance, and external signals.
+
+### Validation Checklist
+
+Before deployment:
+
+```bash
+npm run build
+npm test
+```
+
+For public URLs:
+
+- Use view-source or curl to confirm metadata and JSON-LD are in initial HTML.
+- Test structured data with Google Rich Results Test.
+- Inspect canonical and robots metadata.
+- Confirm `noIndex` content is absent from sitemap XML.
+- Submit sitemap URLs in Google Search Console.
+
+Official references:
+
+- Title links: https://developers.google.com/search/docs/appearance/title-link
+- Snippets and descriptions: https://developers.google.com/search/docs/appearance/snippet
+- Canonical URLs: https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls
+- Robots meta: https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
+- Structured data: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+- Article structured data: https://developers.google.com/search/docs/appearance/structured-data/article
+- Video structured data: https://developers.google.com/search/docs/appearance/structured-data/video
+- Image metadata: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
+- Sitemaps: https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview
