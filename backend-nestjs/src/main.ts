@@ -6,6 +6,7 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ValidationError } from 'class-validator';
 import { validateJwtSecret } from './common/jwt-secret';
 import { buildCorsConfiguration } from './common/cors-config';
+import { json, urlencoded } from 'express';
 
 const processLogger = new Logger('Process');
 
@@ -31,7 +32,9 @@ function buildFieldErrors(errors: ValidationError[]) {
 
 async function bootstrap() {
   validateJwtSecret(process.env);
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  app.use(json({ limit: '2mb' }));
+  app.use(urlencoded({ extended: false, limit: '2mb' }));
   const logger = new Logger('Bootstrap');
   const cors = buildCorsConfiguration(process.env);
 

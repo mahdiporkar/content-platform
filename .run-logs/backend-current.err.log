@@ -1,0 +1,140 @@
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۱, ۲۰:۵۱:۳۶ [31m  ERROR[39m [38;5;3m[HttpExceptionFilter] [39m[31m{"method":"POST","path":"/api/v1/auth/login","statusCode":400,"message":"Validation failed"}[39m
+BadRequestException: Validation failed
+    at ValidationPipe.exceptionFactory (E:\Project\github\content-platform\backend-nestjs\dist\main.js:39:39)
+    at ValidationPipe.transform (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\common\pipes\validation.pipe.js:74:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async resolveParamValue (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:148:23)
+    at async Promise.all (index 0)
+    at async pipesFn (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:151:13)
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:37:30
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۱, ۲۰:۵۱:۵۴ [31m  ERROR[39m [38;5;3m[HttpExceptionFilter] [39m[31m{"method":"POST","path":"/api/v1/auth/login","statusCode":401,"message":"Invalid credentials."}[39m
+UnauthorizedException: Invalid credentials.
+    at AuthService.login (E:\Project\github\content-platform\backend-nestjs\dist\services\auth.service.js:68:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async AuthController.login (E:\Project\github\content-platform\backend-nestjs\dist\controllers\auth.controller.js:34:30)
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-proxy.js:9:17
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۲:۰۰ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"Connection terminated unexpectedly"}[39m
+Error: Connection terminated unexpectedly
+    at Connection.<anonymous> (E:\Project\github\content-platform\backend-nestjs\node_modules\pg\lib\client.js:136:73)
+    at Object.onceWrapper (node:events:632:28)
+    at Connection.emit (node:events:518:28)
+    at Socket.<anonymous> (E:\Project\github\content-platform\backend-nestjs\node_modules\pg\lib\connection.js:62:12)
+    at Socket.emit (node:events:518:28)
+    at TCP.<anonymous> (node:net:351:12)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۲:۳۵ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"read ECONNRESET"}[39m
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۳:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۳:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۴:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۴:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۵:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۵:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۶:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۶:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۷:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۷:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۸:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۸:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۹:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۲۹:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۰:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۰:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۱:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۱:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۲:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۲:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۳:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۳:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۴:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۴:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۵:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۵:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۶:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۶:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۷:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۷:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۸:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۸:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۹:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۳۹:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۴۰:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۴۰:۳۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)
+[31m[Nest] 14868  - [39m۱۴۰۵/۰۵/۰۲, ۲:۴۱:۰۱ [31m  ERROR[39m [38;5;3m[Process] [39m[31m{"event":"unhandledRejection","message":"connect ECONNREFUSED 127.0.0.1:5432"}[39m
+Error: connect ECONNREFUSED 127.0.0.1:5432
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1634:16)

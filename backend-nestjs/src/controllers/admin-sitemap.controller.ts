@@ -13,6 +13,7 @@ import { SitemapTestUrlResponseDto } from '../dto/responses/sitemap-test-url-res
 import { SitemapOverrideUpsertRequestDto } from '../dto/requests/sitemap-override-upsert.dto';
 import { SitemapCustomUrlResponseDto } from '../dto/responses/sitemap-custom-url-response.dto';
 import { SitemapCustomUrlUpsertRequestDto } from '../dto/requests/sitemap-custom-url-upsert.dto';
+import { SitemapRoutesSyncDto } from '../dto/requests/sitemap-routes-sync.dto';
 
 @Controller('/api/v1/admin/sitemap')
 export class AdminSitemapController {
@@ -123,6 +124,16 @@ export class AdminSitemapController {
     const applicationId = this.access.getApplicationId(request);
     this.assertAccess(request, applicationId);
     return await this.sitemapService.createCustomUrl(applicationId, body);
+  }
+
+  @Put('routes/sync')
+  async syncRoutes(
+    @Req() request: Request,
+    @Body() body: SitemapRoutesSyncDto,
+  ): Promise<{ created: number; updated: number; deleted: number; total: number }> {
+    const applicationId = this.access.getApplicationId(request);
+    this.assertAccess(request, applicationId);
+    return await this.sitemapService.syncConsumerRoutes(applicationId, body);
   }
 
   @Put('custom-urls/:id')

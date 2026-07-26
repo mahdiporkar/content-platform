@@ -1,0 +1,33 @@
+
+> admin-mfe@0.1.0 dev
+> webpack serve --config webpack.config.cjs --mode development --port=8081
+
+assets by info 15.6 MiB [1m[32m[immutable][39m[22m
+  assets by chunk 6.21 MiB (id hint: vendors)
+    asset [1m[32mvendors-node_modules_ant-design_icons_es_icons_DeleteOutlined_js-node_modules_ant-design_icon-03a829.04e5464f05cca1b7d1cc.js[39m[22m 4.56 MiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (id hint: vendors)
+    asset [1m[32mvendors-node_modules_antd_es_col_index_js-node_modules_antd_es_row_index_js-node_modules_tipt-d61ebb.b2b057c6fa660d119565.js[39m[22m 1.44 MiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (id hint: vendors)
+    asset [1m[32mvendors-node_modules_ant-design_icons_es_icons_VideoCameraOutlined_js-node_modules_antd_es_up-f4b370.713400e2a5e139674dcf.js[39m[22m 216 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (id hint: vendors)
+  asset [1m[32mmain.d06e258e0809fcf4ac15.js[39m[22m 9.1 MiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m (name: main)
+  asset [1m[32msrc_app_tenant_tsx-src_components_MediaPickerModal_tsx-src_constants_locales_ts.c7f59ab65d8a111c8187.js[39m[22m 98.3 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m
+  asset [1m[32msrc_components_ContentEditor_tsx-src_utils_readingTime_ts.c422b0364512a1d3a229.js[39m[22m 62.6 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m
+  asset [1m[32msrc_remotes_VideoUploadForm_tsx.6219dd55579c264dd63b.js[39m[22m 33.9 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m
+  asset [1m[32msrc_remotes_ArticleEditorForm_tsx.6d32b3a1df556bd4c37e.js[39m[22m 30.9 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m
+  asset [1m[32msrc_remotes_PostEditorForm_tsx.548e051c2c0ba3a234d3.js[39m[22m 30.7 KiB [1m[32m[emitted][39m[22m [1m[32m[immutable][39m[22m
+asset [1m[32mremoteEntry.js[39m[22m 1.64 MiB [1m[32m[emitted][39m[22m (name: admin_mfe)
+asset [1m[32mindex.html[39m[22m 596 bytes [1m[32m[emitted][39m[22m
+orphan modules 3.13 MiB [1m[33m[orphan][39m[22m 1846 modules
+runtime modules 32.1 KiB 26 modules
+built modules 6.36 MiB (javascript) 168 bytes (share-init) 168 bytes (consume-shared) [1m[33m[built][39m[22m
+  modules by path [1m./node_modules/[39m[22m 5.92 MiB 1346 modules
+  modules by path [1m./src/[39m[22m 455 KiB 49 modules
+  provide-module modules 168 bytes
+    [1mprovide shared module (default) react-dom@18.3.1 = ./node_modules/reac...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1mprovide shared module (default) react-router-dom@6.30.2 = ./node_modules/react-r...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 2 modules
+  consume-shared-module modules 168 bytes
+    [1mconsume shared module (default) react/jsx-runtime@^18.2.0 (singleton) (fallback:...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1mconsume shared module (default) react@^18.2.0 (singleton) (fallback: ./node_modu...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1mconsume shared module (default) react-router-dom@^6.23.0 (singleton) (fallback: ...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1mconsume shared module (default) react-dom@^18.2.0 (singleton) (fallback: ./node_...(truncated)[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1mcontainer entry[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.104.1 compiled [1m[32msuccessfully[39m[22m in 14240 ms

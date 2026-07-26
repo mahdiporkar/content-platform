@@ -1,0 +1,178 @@
+
+> content-platform-nestjs@0.1.0 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m۱۵:۰۴:۴۷[0m] Starting compilation in watch mode...
+
+[[90m۱۵:۰۵:۲۴[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۷ [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۷ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +60ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۷ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +9ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۷ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmCoreModule dependencies initialized[39m[38;5;3m +2050ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +11ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +133ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +6ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminAuthController {/api/v1/admin/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/auth/logout, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminApplicationController {/api/v1/admin/applications}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id/token/rotate, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id/token/revoke, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id/management-token/rotate, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id/management-token/revoke, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/applications/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminCollectionController {/api/v1/admin/collections}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id/items, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id/items, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id/items/:itemId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/collections/:id/items/reorder, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminAppCollectionController {/api/v1/admin/app-collections}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId/items, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId/items, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId/items, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId/items/item/:itemId, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/app-collections/:collectionId/items/reorder, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminPostController {/api/v1/admin/posts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/posts, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/posts/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/posts/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/posts, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminArticleController {/api/v1/admin/articles}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/articles, POST} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/articles/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/articles/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/articles, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminPageController {/api/v1/admin/pages}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/pages, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/pages/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/pages/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/pages/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/pages, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminMenuController {/api/v1/admin/menus}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/routes/sync, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/routes, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/from-routes, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/published-content, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/sync-published, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/items, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/items/layout, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/items/:itemId, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/menus/:id/items/:itemId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminGalleryController {/api/v1/admin/galleries}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۳۹ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/galleries, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/galleries/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/galleries/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/galleries, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminVideoController {/api/v1/admin/videos}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/upload, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/create-from-asset, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id/usages, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id/restore, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/videos, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminImageController {/api/v1/admin/images}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/upload, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/create-from-asset, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id/usages, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id/restore, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images/:id/status, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/images, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminMediaController {/api/v1/admin/media}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/upload, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/references, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/variants, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/variants, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/variants/:variantId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/variants/:variantId, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/:id/purge, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminMediaLibraryController {/api/v1/admin/media/library}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/library, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/media/library/resolve, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminUserController {/api/v1/admin/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users/:id/sessions/rotate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/users/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminAnalyticsController {/api/v1/admin/analytics}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/analytics/top, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/analytics/timeline, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDeliveryContentController {/api/v1/content}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/posts, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/articles, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/videos, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/posts/:slug, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/articles/:slug, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/videos/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/gallery, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/gallery/:slug, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/collections/:slug, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/events/view, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/media/:mediaId/access, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicMediaController {/api/public/media}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/public/media/:mediaId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/public/media/:mediaId/resolve, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicSitemapController {/public/:tenant}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/:tenant/sitemap.xml, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/:tenant/sitemap-:type-:index.xml, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicPageMenuController {/api/v1/content}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/pages, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/pages/slugs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/pages/:languageCode/:slug, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/menus/location/:languageCode/:location, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/content/menus/:languageCode/:code, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminSitemapController {/api/v1/admin/sitemap}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/settings, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/settings, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/templates, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/templates/:contentType, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/preview, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/test-url, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/override/:contentType/:contentId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/custom-urls, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/custom-urls, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/custom-urls/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/admin/sitemap/custom-urls/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaGatewayController {/media}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:appId/*, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaController {/api/v1/media}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/media, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/media/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/media/:id/restore, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mManagementNavigationController {/api/v1/management/navigation}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/management/navigation/routes, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[SeedDataService] [39m[32mExisting applicationId: 18963ac6-cde7-41a8-a6db-9fbf4269dfc2[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[SeedDataService] [39m[32mAdmin user already exists.[39m
+[32m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۶:۴۰ [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +3ms[39m
+Backend listening on port 8080

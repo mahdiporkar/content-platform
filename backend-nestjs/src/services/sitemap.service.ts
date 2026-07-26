@@ -20,6 +20,7 @@ import { SitemapSettingsUpsertRequestDto } from '../dto/requests/sitemap-setting
 import { SitemapTemplateUpsertRequestDto } from '../dto/requests/sitemap-template-upsert.dto';
 import { SitemapOverrideUpsertRequestDto } from '../dto/requests/sitemap-override-upsert.dto';
 import { SitemapCustomUrlUpsertRequestDto } from '../dto/requests/sitemap-custom-url-upsert.dto';
+import { SitemapRoutesSyncDto } from '../dto/requests/sitemap-routes-sync.dto';
 import { SitemapSettingsResponseDto } from '../dto/responses/sitemap-settings-response.dto';
 import { SitemapTemplateResponseDto } from '../dto/responses/sitemap-template-response.dto';
 import { SitemapCustomUrlResponseDto } from '../dto/responses/sitemap-custom-url-response.dto';
@@ -181,6 +182,95 @@ export class SitemapService {
     const saved = await this.customUrlRepo.save(model);
     this.invalidateTenantCache(tenantId);
     return this.toCustomUrlResponse(saved);
+  }
+
+  async syncConsumerRoutes(
+    tenantId: string,
+    dto: SitemapRoutesSyncDto,
+  ): Promise<{ created: number; updated: number; deleted: number; total: number }> {
+    if (dto.baseUrl) {
+      const validatedBase = this.validateBaseUrl(dto.baseUrl);
+      if (!validatedBase.ok) throw new BadRequestException(validatedBase.error);
+      const settings = await this.getOrCreateSettings(tenantId);
+      settings.enabled = true;
+      settings.baseUrl = validatedBase.value;
+      await this.settingsRepo.save(settings);
+    }
+    const sourcePrefix = `sync:${dto.source}:`;
+    const desired = new Map(
+      dto.routes.map((route) => {
+        const normalizedPath = this.normalizeConsumerPath(route.path);
+        const identity = route.key?.trim() || normalizedPath;
+        return [identity, { ...route, path: normalizedPath }];
+      }),
+    );
+    if (desired.size !== dto.routes.length) {
+      throw new BadRequestException('Duplicate sitemap route key or path.');
+    }
+
+    return await this.customUrlRepo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(SitemapCustomUrlEntity);
+      const existing = await repo
+        .createQueryBuilder('url')
+        .where('url.tenantId = :tenantId', { tenantId })
+        .andWhere('url.notes LIKE :prefix', { prefix: `${sourcePrefix}%` })
+        .getMany();
+      const byIdentity = new Map(
+        existing.map((entry) => [entry.notes!.slice(sourcePrefix.length), entry]),
+      );
+      let created = 0;
+      let updated = 0;
+
+      for (const [identity, route] of desired) {
+        const entity =
+          byIdentity.get(identity) ??
+          repo.create({ tenantId, notes: `${sourcePrefix}${identity}` });
+        if (!entity.id) created += 1;
+        else updated += 1;
+        entity.pathOrUrl = route.path;
+        entity.enabled = true;
+        entity.lastmodMode = route.lastModified
+          ? SitemapLastmodMode.FIXED_DATE
+          : SitemapLastmodMode.NONE;
+        entity.lastmodValue = route.lastModified
+          ? this.parseConsumerDate(route.lastModified)
+          : null;
+        entity.changefreq = route.changefreq ?? null;
+        entity.priority =
+          route.priority === undefined ? null : route.priority.toFixed(1);
+        await repo.save(entity);
+        byIdentity.delete(identity);
+      }
+
+      const staleIds = [...byIdentity.values()].map((entry) => entry.id);
+      if (staleIds.length) await repo.delete(staleIds);
+      this.invalidateTenantCache(tenantId);
+      return {
+        created,
+        updated,
+        deleted: staleIds.length,
+        total: desired.size,
+      };
+    });
+  }
+
+  private normalizeConsumerPath(path: string): string {
+    const normalized = path.trim().replace(/\/{2,}/g, '/');
+    if (!normalized.startsWith('/') || normalized.startsWith('//')) {
+      throw new BadRequestException('Sitemap routes must be root-relative.');
+    }
+    if (normalized.includes('?') || normalized.includes('#')) {
+      throw new BadRequestException('Sitemap routes cannot contain query strings or fragments.');
+    }
+    return normalized.length > 1 ? normalized.replace(/\/$/, '') : normalized;
+  }
+
+  private parseConsumerDate(value: string): Date {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('lastModified must be a valid ISO date.');
+    }
+    return parsed;
   }
 
   async updateCustomUrl(

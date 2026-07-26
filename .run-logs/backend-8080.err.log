@@ -1,0 +1,20 @@
+[31m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۰۷:۲۳ [31m  ERROR[39m [38;5;3m[HttpExceptionFilter] [39m[31m{"method":"GET","path":"/","statusCode":404,"message":"Cannot GET /"}[39m
+NotFoundException: Cannot GET /
+    at callback (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handle [as handle_request] (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\layer.js:95:5)
+    at trim_prefix (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\index.js:328:13)
+    at E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\index.js:286:9
+    at Function.process_params (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\index.js:280:10)
+    at urlencodedParser (E:\Project\github\content-platform\backend-nestjs\node_modules\body-parser\lib\types\urlencoded.js:94:7)
+    at Layer.handle [as handle_request] (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\layer.js:95:5)
+    at trim_prefix (E:\Project\github\content-platform\backend-nestjs\node_modules\express\lib\router\index.js:328:13)
+[31m[Nest] 10348  - [39m۱۴۰۵/۰۵/۰۱, ۱۵:۱۰:۱۰ [31m  ERROR[39m [38;5;3m[HttpExceptionFilter] [39m[31m{"method":"GET","path":"/api/v1/content/posts?languageCode=fa","statusCode":401,"message":"Missing application id."}[39m
+UnauthorizedException: Missing application id.
+    at ApplicationTokenGuard.canActivate (E:\Project\github\content-platform\backend-nestjs\dist\auth\application-token.guard.js:41:19)
+    at GuardsConsumer.tryActivate (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canActivateFn (E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async E:\Project\github\content-platform\backend-nestjs\node_modules\@nestjs\core\router\router-proxy.js:9:17

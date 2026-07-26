@@ -1,0 +1,4 @@
+
+> admin-mfe@0.1.0 dev
+> webpack serve --config webpack.config.cjs --mode development --port 8081
+
