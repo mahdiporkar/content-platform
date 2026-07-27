@@ -145,6 +145,9 @@ export class AdminCollectionService {
     return {
       campaignKey: metadata.campaignKey?.trim() || undefined,
       analyticsKey: metadata.analyticsKey?.trim() || undefined,
+      defaultDisplayScopes: metadata.defaultDisplayScopes
+        ?.map((scope) => scope.trim())
+        .filter(Boolean),
     };
   }
 
@@ -243,6 +246,7 @@ export class AdminCollectionService {
       collection.id,
       collection.applicationId,
       collection.slug,
+      collection.locale === 'und' ? null : collection.locale,
       collection.title,
       collection.description ?? null,
       collection.allowedTypes ?? null,
@@ -487,6 +491,7 @@ export class AdminCollectionService {
       id: uuidv4(),
       applicationId,
       slug: slugValue,
+      locale: request.locale?.trim() || 'und',
       title,
       description: request.description?.trim() || null,
       allowedTypes: this.normalizeAllowedTypes(request.allowedTypes),
@@ -512,7 +517,7 @@ export class AdminCollectionService {
       return this.mapCollection(saved, 0);
     } catch (error: unknown) {
       if ((error as { code?: string })?.code === '23505') {
-        throw new BadRequestException('Collection slug must be unique per application.');
+        throw new BadRequestException('Collection slug must be unique per application and locale.');
       }
       throw error;
     }
@@ -533,6 +538,7 @@ export class AdminCollectionService {
       throw new BadRequestException('Slug is required.');
     }
     collection.slug = slugValue;
+    collection.locale = request.locale?.trim() || 'und';
     collection.title = title;
     collection.description = request.description?.trim() || null;
     collection.allowedTypes = this.normalizeAllowedTypes(request.allowedTypes);
@@ -556,7 +562,7 @@ export class AdminCollectionService {
       return this.mapCollection(saved, count);
     } catch (error: unknown) {
       if ((error as { code?: string })?.code === '23505') {
-        throw new BadRequestException('Collection slug must be unique per application.');
+        throw new BadRequestException('Collection slug must be unique per application and locale.');
       }
       throw error;
     }
@@ -612,6 +618,31 @@ export class AdminCollectionService {
         throw new BadRequestException('Content type is not allowed for this collection.');
       }
       await this.validateContentOwnership(applicationId, contentType, contentId);
+      if (
+        contentType === ContentType.VIDEO &&
+        collection.metadata?.defaultDisplayScopes?.length
+      ) {
+        const video = await this.videoRepo.findOne({
+          where: { id: contentId, applicationId },
+        });
+        if (video) {
+          const defaults = collection.metadata.defaultDisplayScopes;
+          const existing =
+            defaults.includes('educational-videos') &&
+            !defaults.includes('video-gallery')
+              ? (video.displayScopes ?? []).filter(
+                  (scope) => scope !== 'video-gallery',
+                )
+              : (video.displayScopes ?? []);
+          video.displayScopes = Array.from(
+            new Set([
+              ...existing,
+              ...defaults,
+            ]),
+          );
+          await this.videoRepo.save(video);
+        }
+      }
     } else {
       this.validateCustomDisplay(display);
     }

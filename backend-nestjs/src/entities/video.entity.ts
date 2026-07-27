@@ -1,7 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { ContentStatus } from '../common/content-status.enum';
 
 @Entity({ name: 'videos' })
+@Index('uq_videos_application_locale_slug', ['applicationId', 'locale', 'slug'], { unique: true })
+@Index('idx_videos_delivery_scopes', ['applicationId', 'locale', 'status', 'publishedAt'])
 export class VideoEntity {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id!: string;
@@ -12,6 +14,9 @@ export class VideoEntity {
   @Column({ type: 'varchar' })
   title!: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  slug!: string | null;
+
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
@@ -20,6 +25,9 @@ export class VideoEntity {
 
   @Column({ type: 'text', array: true, nullable: true })
   tags!: string[] | null;
+
+  @Column({ name: 'display_scopes', type: 'text', array: true, nullable: true })
+  displayScopes!: string[] | null;
 
   @Column({ type: 'jsonb', nullable: true })
   seo!: Record<string, unknown> | null;

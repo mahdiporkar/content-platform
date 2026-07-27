@@ -61,6 +61,7 @@ export type CollectionAudience = {
 export type CollectionMetadata = {
   campaignKey?: string;
   analyticsKey?: string;
+  defaultDisplayScopes?: string[];
 };
 
 export type CollectionItemDisplay = {

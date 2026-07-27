@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, LessThanOrEqual, Repository } from 'typeorm';
 import { ContentStatus } from '../common/content-status.enum';
 import { ContentType } from '../common/content-type.enum';
 import { ArticleEntity } from '../entities/article.entity';
@@ -220,7 +220,15 @@ export class DeliveryContentService {
   }
 
   async getCollection(application: ApplicationEntity, slug: string, locale?: string): Promise<DeliveryCollectionResponseDto> {
-    const collection = await this.collectionRepo.findOne({ where: { applicationId: application.id, slug } });
+    const collections = await this.collectionRepo.find({
+      where: { applicationId: application.id, slug },
+      order: { updatedAt: 'DESC' },
+    });
+    const requestedLocale = locale?.trim() || null;
+    const collection =
+      collections.find((entry) => entry.locale === requestedLocale) ??
+      collections.find((entry) => entry.locale === 'und') ??
+      null;
     if (!collection || !this.isPublicCollection(collection)) {
       throw new NotFoundException('Collection not found.');
     }
@@ -268,7 +276,14 @@ export class DeliveryContentService {
       });
     }
     if (grouped.video.length > 0) {
-      const videos = await this.videoRepo.find({ where: { id: In(grouped.video), status: ContentStatus.PUBLISHED } });
+      const videos = await this.videoRepo.find({
+        where: {
+          id: In(grouped.video),
+          applicationId: application.id,
+          status: ContentStatus.PUBLISHED,
+          publishedAt: LessThanOrEqual(new Date()),
+        },
+      });
       const sorted = grouped.video
         .map((id) => videos.find((entry) => entry.id === id))
         .filter(Boolean) as VideoEntity[];
@@ -337,6 +352,146 @@ export class DeliveryContentService {
       collection.metadata ?? null,
       mapped,
     );
+  }
+
+  async getCollectionItems(
+    application: ApplicationEntity,
+    slug: string,
+    locale: string,
+    page = 1,
+    pageSize = 12,
+  ): Promise<{
+    items: Array<Record<string, unknown>>;
+    pagination: {
+      page: number;
+      pageSize: number;
+      totalItems: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  }> {
+    const currentPage = Math.max(1, page);
+    const size = Math.min(24, Math.max(1, pageSize));
+    const collections = await this.collectionRepo.find({
+      where: { applicationId: application.id, slug },
+      order: { updatedAt: 'DESC' },
+    });
+    const collection =
+      collections.find((entry) => entry.locale === locale) ??
+      collections.find((entry) => entry.locale === 'und') ??
+      null;
+    if (!collection || !this.isPublicCollection(collection)) {
+      throw new NotFoundException('Collection not found.');
+    }
+    const now = new Date();
+    const itemQuery = this.collectionItemRepo
+      .createQueryBuilder('item')
+      .innerJoin(
+        VideoEntity,
+        'video',
+        'video.id = item.contentId AND video.applicationId = :applicationId',
+        { applicationId: application.id },
+      )
+      .where('item.collectionId = :collectionId', {
+        collectionId: collection.id,
+      })
+      .andWhere('item.contentType = :contentType', {
+        contentType: ContentType.VIDEO,
+      })
+      .andWhere('item.isActive = true')
+      .andWhere('(item.startsAt IS NULL OR item.startsAt <= :now)', { now })
+      .andWhere('(item.endsAt IS NULL OR item.endsAt > :now)', { now })
+      .andWhere('video.status = :status', {
+        status: ContentStatus.PUBLISHED,
+      })
+      .andWhere('video.publishedAt IS NOT NULL AND video.publishedAt <= :now', {
+        now,
+      })
+      .andWhere('video.locale = :locale', { locale })
+      .orderBy('item.position', 'ASC')
+      .skip((currentPage - 1) * size)
+      .take(size);
+    const [collectionItems, totalItems] = await itemQuery.getManyAndCount();
+    const videoIds = collectionItems
+      .map((item) => item.contentId)
+      .filter((id): id is string => Boolean(id));
+    const videos =
+      videoIds.length > 0
+        ? await this.videoRepo.find({
+            where: {
+              id: In(videoIds),
+              applicationId: application.id,
+              status: ContentStatus.PUBLISHED,
+            },
+          })
+        : [];
+    const itemByVideoId = new Map(
+      collectionItems.map((item) => [item.contentId, item]),
+    );
+    const videoById = new Map(videos.map((video) => [video.id, video]));
+    const mapped = videoIds
+      .map((id) => {
+        const video = videoById.get(id);
+        const item = itemByVideoId.get(id);
+        return video && item
+          ? this.withCollectionItem(this.mapVideo(application, video), item)
+          : null;
+      })
+      .filter((item): item is DeliveryContentResponseDto => Boolean(item));
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      items: mapped.map((item) => this.mapCollectionVideo(item)),
+      pagination: {
+        page: currentPage,
+        pageSize: size,
+        totalItems,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
+    };
+  }
+
+  async getCollectionVideoBySlug(
+    application: ApplicationEntity,
+    collectionSlug: string,
+    videoSlug: string,
+    locale: string,
+  ): Promise<Record<string, unknown>> {
+    const collection = await this.getCollection(
+      application,
+      collectionSlug,
+      locale,
+    );
+    const video = collection.items.find(
+      (item) =>
+        item.type === ContentType.VIDEO &&
+        item.slug === videoSlug &&
+        (!item.locale || item.locale === locale),
+    );
+    if (!video) {
+      throw new NotFoundException('Collection video not found.');
+    }
+    return this.mapCollectionVideo(video);
+  }
+
+  private mapCollectionVideo(
+    item: DeliveryContentResponseDto,
+  ): Record<string, unknown> {
+    return {
+      id: item.contentId,
+      title: item.title,
+      slug: item.slug,
+      shortDescription: item.description,
+      description: item.description,
+      posterUrl: item.posterUrl,
+      videoUrl: item.mediaUrl,
+      duration: item.durationSeconds,
+      publishedAt: item.publishedAt,
+      posterAlt: item.altText,
+      seo: item.seo,
+    };
   }
 
   private async listFallbackContent(
@@ -525,7 +680,11 @@ export class DeliveryContentService {
   ): Promise<[VideoEntity[], number]> {
     const qb = this.videoRepo.createQueryBuilder('video');
     qb.where('video.applicationId = :applicationId', { applicationId })
-      .andWhere('video.status = :status', { status: ContentStatus.PUBLISHED });
+      .andWhere('video.status = :status', { status: ContentStatus.PUBLISHED })
+      .andWhere('(video.publishedAt IS NULL OR video.publishedAt <= NOW())')
+      .andWhere(
+        "(video.displayScopes IS NULL OR cardinality(video.displayScopes) = 0 OR 'video-gallery' = ANY(video.displayScopes))",
+      );
     if (locale) {
       qb.andWhere('video.locale = :locale', { locale });
     }
@@ -662,7 +821,7 @@ export class DeliveryContentService {
       video.locale ?? null,
       video.tags ?? null,
       video.status,
-      null,
+      video.slug ?? null,
       video.publishedAt ? video.publishedAt.toISOString() : null,
       video.scheduledAt ? video.scheduledAt.toISOString() : null,
       video.viewCount ?? 0,

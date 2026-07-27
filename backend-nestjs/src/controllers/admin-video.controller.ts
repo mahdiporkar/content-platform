@@ -33,9 +33,12 @@ export class AdminVideoController {
     private readonly sitemapService: SitemapService,
   ) {}
 
-  private parseJson<T>(value: string | undefined): T | undefined {
+  private parseJson<T>(value: string | T | undefined): T | undefined {
     if (!value) {
       return undefined;
+    }
+    if (typeof value !== 'string') {
+      return value;
     }
     try {
       return JSON.parse(value) as T;
@@ -57,12 +60,15 @@ export class AdminVideoController {
     @Body('gallery') galleryRaw?: string,
     @Body('locale') locale?: string,
     @Body('scheduledAt') scheduledAt?: string,
+    @Body('slug') slug?: string,
+    @Body('displayScopes') displayScopesRaw?: string,
   ): Promise<VideoResponseDto> {
     const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
     const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
+    const displayScopes = this.parseJson<string[]>(displayScopesRaw);
     const created = await this.videoService.upload(
       file,
       title,
@@ -74,6 +80,8 @@ export class AdminVideoController {
       gallery,
       locale,
       scheduledAt,
+      slug,
+      displayScopes,
     );
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
@@ -91,12 +99,15 @@ export class AdminVideoController {
     @Body('gallery') galleryRaw?: string,
     @Body('locale') locale?: string,
     @Body('scheduledAt') scheduledAt?: string,
+    @Body('slug') slug?: string,
+    @Body('displayScopes') displayScopesRaw?: string,
   ): Promise<VideoResponseDto> {
     const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
     const tags = this.parseJson<string[]>(tagsRaw);
     const seo = this.parseJson<Record<string, unknown>>(seoRaw);
     const gallery = this.parseJson<Record<string, unknown>[]>(galleryRaw);
+    const displayScopes = this.parseJson<string[]>(displayScopesRaw);
     const created = await this.videoService.createFromAsset(
       assetId,
       title,
@@ -108,6 +119,8 @@ export class AdminVideoController {
       gallery,
       locale,
       scheduledAt,
+      slug,
+      displayScopes,
     );
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;

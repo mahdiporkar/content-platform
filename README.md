@@ -906,3 +906,50 @@ Official references:
 - Video structured data: https://developers.google.com/search/docs/appearance/structured-data/video
 - Image metadata: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
 - Sitemaps: https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview
+# Localized educational-video collections
+
+Content Platform supports educational-video collections without duplicating
+media. A video references its single Media Library object and can be placed in
+one or more localized collections.
+
+Collections are uniquely identified by `applicationId + slug + locale`.
+Consequently, the same stable slug can be used for Persian, English and Arabic:
+
+```text
+educational-videos
+```
+
+The delivery server resolves the collection matching the requested `locale`
+and falls back to the language-neutral (`und`) collection when available.
+
+Videos use explicit display scopes:
+
+```json
+["educational-videos"]
+```
+
+The public video gallery includes `video-gallery`. Legacy videos with no scope
+remain visible for backward compatibility. Adding a video to a collection
+whose `metadata.defaultDisplayScopes` is `["educational-videos"]` applies the
+educational scope and removes the default gallery scope; editors may add it
+again when the video should appear in both places.
+
+Public delivery endpoints:
+
+```http
+GET /api/v1/content/collections/:collectionKey/items?locale=fa&page=1&pageSize=12
+GET /api/v1/content/collections/:collectionKey/items/:videoSlug?locale=fa
+```
+
+Both endpoints require the existing application ID/token headers. Responses
+are restricted to the authenticated application, published content, active
+collection items, valid schedules and the requested locale.
+
+Deployment:
+
+```bash
+cd backend-nestjs
+npm run migration:run
+npm test
+npm run build
+```

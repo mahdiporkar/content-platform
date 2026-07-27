@@ -11,6 +11,10 @@ export class VideoUpdateRequestDto {
 
   @IsOptional()
   @IsString()
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()
@@ -42,6 +46,11 @@ export class VideoUpdateRequestDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  displayScopes?: string[];
 
   @IsOptional()
   @ValidateNested()

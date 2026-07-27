@@ -1,5 +1,6 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Min } from 'class-validator';
 import { ContentType } from '../../common/content-type.enum';
+import { SUPPORTED_CONTENT_LOCALES } from '../../common/content-locale.constants';
 import {
   CollectionAudience,
   CollectionFallback,
@@ -17,6 +18,11 @@ export class CollectionUpsertRequestDto {
   @IsOptional()
   @IsString()
   slug!: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(SUPPORTED_CONTENT_LOCALES)
+  locale?: string;
 
   @IsNotEmpty()
   title!: string;

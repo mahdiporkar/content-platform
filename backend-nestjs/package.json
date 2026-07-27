@@ -6,8 +6,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "build": "nest build",
+    "migration:run": "ts-node --transpile-only scripts/run-migrations.ts",
     "start:prod": "node dist/main.js",
-    "test": "ts-node test/security-hardening.test.ts && ts-node test/page-menu-management.test.ts"
+    "test": "ts-node test/security-hardening.test.ts && ts-node test/page-menu-management.test.ts && ts-node test/educational-videos.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

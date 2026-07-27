@@ -135,6 +135,42 @@ export class DeliveryContentController {
     return await this.deliveryService.getCollection(application, slug, locale);
   }
 
+  @Get('collections/:slug/items')
+  async getCollectionItemsFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('slug') slug: string,
+    @Query('locale') locale = 'fa',
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '12',
+  ) {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getCollectionItems(
+      application,
+      slug,
+      locale,
+      Number(page),
+      Number(pageSize),
+    );
+  }
+
+  @Get('collections/:slug/items/:videoSlug')
+  async getCollectionVideoFromHeaders(
+    @Req() request: Request & { application?: ApplicationEntity },
+    @Param('slug') slug: string,
+    @Param('videoSlug') videoSlug: string,
+    @Query('locale') locale = 'fa',
+  ): Promise<Record<string, unknown>> {
+    const application = this.getApplication(request);
+    this.enforceDeliveryDomainPolicy(application, request);
+    return await this.deliveryService.getCollectionVideoBySlug(
+      application,
+      slug,
+      videoSlug,
+      locale,
+    );
+  }
+
   @Post('events/view')
   async trackViewFromHeaders(
     @Req() httpRequest: Request & { application?: ApplicationEntity },

@@ -125,10 +125,11 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
   const [fallbackEnabled, setFallbackEnabled] = useState(state?.collection?.fallback?.enabled ?? false);
   const [fallbackSource, setFallbackSource] = useState<"latest" | "popular">(state?.collection?.fallback?.source ?? "latest");
   const [fallbackLimit, setFallbackLimit] = useState<number>(state?.collection?.fallback?.limit ?? 10);
-  const [audienceLocale, setAudienceLocale] = useState(state?.collection?.audience?.locale ?? "");
+  const [audienceLocale, setAudienceLocale] = useState(state?.collection?.locale ?? state?.collection?.audience?.locale ?? "");
   const [audienceSegment, setAudienceSegment] = useState(state?.collection?.audience?.segment ?? "");
   const [campaignKey, setCampaignKey] = useState(state?.collection?.metadata?.campaignKey ?? "");
   const [analyticsKey, setAnalyticsKey] = useState(state?.collection?.metadata?.analyticsKey ?? "");
+  const [defaultDisplayScopes, setDefaultDisplayScopes] = useState<string[]>(state?.collection?.metadata?.defaultDisplayScopes ?? []);
   const [items, setItems] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -194,10 +195,11 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
         setFallbackEnabled(collection.fallback?.enabled ?? false);
         setFallbackSource(collection.fallback?.source ?? "latest");
         setFallbackLimit(collection.fallback?.limit ?? 10);
-        setAudienceLocale(collection.audience?.locale ?? "");
+        setAudienceLocale(collection.locale ?? collection.audience?.locale ?? "");
         setAudienceSegment(collection.audience?.segment ?? "");
         setCampaignKey(collection.metadata?.campaignKey ?? "");
         setAnalyticsKey(collection.metadata?.analyticsKey ?? "");
+        setDefaultDisplayScopes(collection.metadata?.defaultDisplayScopes ?? []);
         setItems(itemResponse.data.sort((a, b) => a.position - b.position));
       } finally {
         setLoading(false);
@@ -223,6 +225,7 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
       const payload = {
         title: title.trim(),
         slug: slug.trim() || undefined,
+        locale: audienceLocale.trim() || undefined,
         description: description.trim() || undefined,
         allowedTypes: allowedTypes.length > 0 ? allowedTypes : undefined,
         maxItems: maxItems ? Number(maxItems) : undefined,
@@ -247,9 +250,10 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           locale: audienceLocale.trim() || undefined,
           segment: audienceSegment.trim() || undefined
         } : undefined,
-        metadata: campaignKey || analyticsKey ? {
+        metadata: campaignKey || analyticsKey || defaultDisplayScopes.length > 0 ? {
           campaignKey: campaignKey.trim() || undefined,
-          analyticsKey: analyticsKey.trim() || undefined
+          analyticsKey: analyticsKey.trim() || undefined,
+          defaultDisplayScopes: defaultDisplayScopes.length > 0 ? defaultDisplayScopes : undefined
         } : undefined
       };
       if (mode === "create") {
@@ -625,6 +629,19 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
           <Form.Item label={t("common.slug")}>
             <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title if empty" />
           </Form.Item>
+          <Form.Item label="Collection language">
+            <Select
+              allowClear
+              value={audienceLocale || undefined}
+              onChange={(value) => setAudienceLocale(value ?? "")}
+              options={[
+                { value: "fa", label: "فارسی" },
+                { value: "en", label: "English" },
+                { value: "ar", label: "العربية" }
+              ]}
+              placeholder="Language-neutral fallback"
+            />
+          </Form.Item>
           <Form.Item label={t("common.description")}>
             <Input.TextArea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} />
           </Form.Item>
@@ -684,9 +701,6 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             <Form.Item label="Placement Section">
               <Input value={placementSection} onChange={(event) => setPlacementSection(event.target.value)} placeholder="hero" />
             </Form.Item>
-            <Form.Item label="Audience Locale">
-              <Input value={audienceLocale} onChange={(event) => setAudienceLocale(event.target.value)} placeholder="fa" />
-            </Form.Item>
             <Form.Item label="Audience Segment">
               <Input value={audienceSegment} onChange={(event) => setAudienceSegment(event.target.value)} placeholder="guest" />
             </Form.Item>
@@ -715,6 +729,18 @@ export const CollectionEditorPage = ({ mode }: { mode: Mode }) => {
             </Form.Item>
             <Form.Item label="Analytics Key">
               <Input value={analyticsKey} onChange={(event) => setAnalyticsKey(event.target.value)} />
+            </Form.Item>
+            <Form.Item label="Default display scopes">
+              <Select
+                mode="tags"
+                value={defaultDisplayScopes}
+                onChange={setDefaultDisplayScopes}
+                tokenSeparators={[","]}
+                options={[
+                  { value: "educational-videos", label: "Educational videos" },
+                  { value: "video-gallery", label: "Video gallery" }
+                ]}
+              />
             </Form.Item>
           </Space>
           <Space>

@@ -10,7 +10,7 @@ import {
 } from '../common/collection-types';
 
 @Entity({ name: 'collections' })
-@Index(['applicationId', 'slug'], { unique: true })
+@Index('uq_collections_application_slug_locale', ['applicationId', 'slug', 'locale'], { unique: true })
 export class CollectionEntity {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id!: string;
@@ -20,6 +20,9 @@ export class CollectionEntity {
 
   @Column({ type: 'varchar' })
   slug!: string;
+
+  @Column({ type: 'varchar', length: 5, default: 'und' })
+  locale!: string;
 
   @Column({ type: 'varchar' })
   title!: string;

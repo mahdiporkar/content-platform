@@ -36,6 +36,7 @@ type VariantDraft = {
 export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) => {
   const { t, v } = useI18n();
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ContentStatus>("DRAFT");
   const [locale, setLocale] = useState<ContentLocale>(DEFAULT_CONTENT_LOCALE);
@@ -43,6 +44,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [displayScopes, setDisplayScopes] = useState<string[]>(["video-gallery"]);
   const [seo, setSeo] = useState<SeoMeta>({});
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -103,10 +105,12 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         const payload = new FormData();
         payload.append("file", file);
         payload.append("title", title);
+        if (slug.trim()) payload.append("slug", slug.trim());
         payload.append("description", description);
         payload.append("applicationId", applicationId);
         payload.append("status", status);
         payload.append("locale", locale);
+        payload.append("displayScopes", JSON.stringify(displayScopes));
         if (status === "SCHEDULED" && scheduledAtIso) {
           payload.append("scheduledAt", scheduledAtIso);
         }
@@ -127,12 +131,14 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         const response = await client.post<{ objectKey: string }>("/api/v1/admin/videos/create-from-asset", {
           assetId: selectedVideoAsset.id,
           title,
+          slug: slug.trim() || undefined,
           description,
           applicationId,
           status,
           locale,
           scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
           tags,
+          displayScopes,
           seo,
           gallery
         });
@@ -208,6 +214,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       <Form layout="vertical" style={{ maxWidth: 600 }}>
         <Form.Item label={t("common.title")} required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
+        </Form.Item>
+        <Form.Item label="Slug">
+          <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title" />
         </Form.Item>
         <Form.Item label={t("common.description")}>
           <Input.TextArea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
@@ -286,6 +295,18 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
               onChange={(value) => setTags(value)}
               tokenSeparators={[","]}
               placeholder={t("field.tags")}
+            />
+          </Form.Item>
+          <Form.Item label="Display scopes">
+            <Select
+              mode="tags"
+              value={displayScopes}
+              onChange={setDisplayScopes}
+              tokenSeparators={[","]}
+              options={[
+                { value: "educational-videos", label: "Educational videos" },
+                { value: "video-gallery", label: "Video gallery" }
+              ]}
             />
           </Form.Item>
         </Card>

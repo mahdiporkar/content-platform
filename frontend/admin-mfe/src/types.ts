@@ -210,9 +210,11 @@ export type Video = {
   id: string;
   applicationId: string;
   title: string;
+  slug?: string | null;
   description?: string | null;
   locale?: string | null;
   tags?: string[] | null;
+  displayScopes?: string[] | null;
   seo?: SeoMeta | null;
   gallery?: GalleryImage[] | null;
   status: ContentStatus;
@@ -347,6 +349,7 @@ export type Collection = {
   id: string;
   applicationId: string;
   slug: string;
+  locale?: string | null;
   title: string;
   description?: string | null;
   allowedTypes?: string[] | null;
@@ -375,6 +378,7 @@ export type Collection = {
   metadata?: {
     campaignKey?: string;
     analyticsKey?: string;
+    defaultDisplayScopes?: string[];
   } | null;
   createdBy?: string | null;
   updatedBy?: string | null;

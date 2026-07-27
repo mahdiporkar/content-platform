@@ -24,11 +24,13 @@ export const VideoEditorPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<Video | null>(existingVideo ?? null);
   const [title, setTitle] = useState(existingVideo?.title ?? "");
+  const [slug, setSlug] = useState(existingVideo?.slug ?? "");
   const [description, setDescription] = useState(existingVideo?.description ?? "");
   const [status, setStatus] = useState<ContentStatus>(existingVideo?.status ?? "DRAFT");
   const [locale, setLocale] = useState<ContentLocale>((existingVideo?.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
   const [scheduledAt, setScheduledAt] = useState<Dayjs | null>(existingVideo?.scheduledAt ? dayjs(existingVideo.scheduledAt) : null);
   const [tags, setTags] = useState<string[]>(existingVideo?.tags ?? []);
+  const [displayScopes, setDisplayScopes] = useState<string[]>(existingVideo?.displayScopes ?? ["video-gallery"]);
   const [seo, setSeo] = useState<SeoMeta>(existingVideo?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(existingVideo?.gallery ?? []);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -60,11 +62,13 @@ export const VideoEditorPage = () => {
   const applyVideo = (next: Video) => {
     setVideo(next);
     setTitle(next.title);
+    setSlug(next.slug ?? "");
     setDescription(next.description ?? "");
     setStatus(next.status);
     setLocale((next.locale as ContentLocale) ?? DEFAULT_CONTENT_LOCALE);
     setScheduledAt(next.scheduledAt ? dayjs(next.scheduledAt) : null);
     setTags(next.tags ?? []);
+    setDisplayScopes(next.displayScopes ?? ["video-gallery"]);
     setSeo(next.seo ?? {});
     setGallery(next.gallery ?? []);
   };
@@ -119,11 +123,13 @@ export const VideoEditorPage = () => {
 
       const response = await client.put<Video>(`/api/v1/admin/videos/${id}`, {
         title: title.trim(),
+        slug: slug.trim() || undefined,
         description: description.trim() || undefined,
         status,
         locale,
         scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
         tags,
+        displayScopes,
         seo,
         gallery: normalizedGallery
       });
@@ -169,6 +175,9 @@ export const VideoEditorPage = () => {
           <Form.Item label={t("common.title")} required>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
           </Form.Item>
+          <Form.Item label="Slug">
+            <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title" />
+          </Form.Item>
           <Form.Item label={t("common.description")}>
             <Input.TextArea
               value={description}
@@ -208,6 +217,18 @@ export const VideoEditorPage = () => {
                 onChange={(value) => setTags(value)}
                 tokenSeparators={[","]}
                 placeholder={t("field.tags")}
+              />
+            </Form.Item>
+            <Form.Item label="Display scopes">
+              <Select
+                mode="tags"
+                value={displayScopes}
+                onChange={setDisplayScopes}
+                tokenSeparators={[","]}
+                options={[
+                  { value: "educational-videos", label: "Educational videos" },
+                  { value: "video-gallery", label: "Video gallery" }
+                ]}
               />
             </Form.Item>
           </Card>

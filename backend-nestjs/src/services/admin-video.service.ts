@@ -39,9 +39,11 @@ export class AdminVideoService {
       video.id,
       video.applicationId,
       video.title,
+      video.slug ?? null,
       video.description,
       video.locale ?? null,
       video.tags ?? null,
+      video.displayScopes ?? null,
       video.seo ?? null,
       video.gallery ?? null,
       video.status,
@@ -72,6 +74,23 @@ export class AdminVideoService {
     return normalized.length > 0 ? normalized : null;
   }
 
+  private normalizeScopes(scopes?: string[]): string[] {
+    const normalized = (scopes ?? ['video-gallery'])
+      .map((scope) => scope.trim())
+      .filter(Boolean);
+    return Array.from(new Set(normalized));
+  }
+
+  private slugify(value: string): string {
+    return value
+      .normalize('NFKD')
+      .toLowerCase()
+      .trim()
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 180);
+  }
+
   private async syncVideoMediaReference(video: VideoEntity): Promise<void> {
     await this.mediaReferenceService.syncContentReferences({
       applicationId: video.applicationId,
@@ -95,6 +114,8 @@ export class AdminVideoService {
     gallery?: Record<string, unknown>[],
     locale?: string,
     scheduledAt?: string,
+    slug?: string,
+    displayScopes?: string[],
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -116,9 +137,11 @@ export class AdminVideoService {
       id: uuidv4(),
       applicationId,
       title: title.trim(),
+      slug: slug?.trim() || this.slugify(title),
       description: description?.trim() || null,
       locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
+      displayScopes: this.normalizeScopes(displayScopes),
       seo: seo ?? null,
       gallery: gallery ?? null,
       status,
@@ -145,6 +168,8 @@ export class AdminVideoService {
     gallery?: Record<string, unknown>[],
     locale?: string,
     scheduledAt?: string,
+    slug?: string,
+    displayScopes?: string[],
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -163,9 +188,11 @@ export class AdminVideoService {
       id: uuidv4(),
       applicationId,
       title: title.trim(),
+      slug: slug?.trim() || this.slugify(title),
       description: description?.trim() || null,
       locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
+      displayScopes: this.normalizeScopes(displayScopes),
       seo: seo ?? null,
       gallery: gallery ?? null,
       status,
@@ -255,6 +282,7 @@ export class AdminVideoService {
     }
     const publication = resolvePublicationFields(request.status, request.scheduledAt, video.publishedAt);
     video.title = request.title.trim();
+    video.slug = request.slug?.trim() || video.slug || this.slugify(request.title);
     video.description = request.description?.trim() || null;
     video.locale = normalizeContentLocale(request.locale);
     video.posterKey = request.posterKey?.trim() || null;
@@ -263,6 +291,10 @@ export class AdminVideoService {
     video.height = request.height ?? null;
     video.altText = request.altText?.trim() || null;
     video.tags = this.normalizeTags(request.tags);
+    video.displayScopes =
+      request.displayScopes === undefined
+        ? (video.displayScopes ?? ['video-gallery'])
+        : this.normalizeScopes(request.displayScopes);
     video.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
     video.gallery = request.gallery
       ? (request.gallery as unknown as Record<string, unknown>[])

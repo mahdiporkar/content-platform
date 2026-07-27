@@ -803,3 +803,55 @@ npm test
 - Video structured data: https://developers.google.com/search/docs/appearance/structured-data/video
 - Image metadata: https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata
 - Sitemaps: https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview
+# کالکشن چندزبانه ویدیوهای آموزشی
+
+پلتفرم محتوا بدون ذخیره یا آپلود دوباره فایل، از کالکشن اختصاصی ویدیوهای
+آموزشی پشتیبانی می‌کند. هر Video فقط به یک فایل در Media Library اشاره می‌کند
+و می‌تواند در یک یا چند کالکشن قرار گیرد.
+
+هویت یکتای کالکشن از ترکیب زیر ساخته می‌شود:
+
+```text
+applicationId + slug + locale
+```
+
+بنابراین برای نسخه‌های فارسی، انگلیسی و عربی می‌توان از slug ثابت زیر استفاده
+کرد:
+
+```text
+educational-videos
+```
+
+سرور با پارامتر `locale` کالکشن همان زبان را انتخاب می‌کند و اگر نسخه زبان
+وجود نداشته باشد، به کالکشن بدون زبان (`und`) برمی‌گردد.
+
+محل نمایش ویدیو با `displayScopes` کنترل می‌شود:
+
+```json
+["educational-videos"]
+```
+
+گالری عمومی فقط scope برابر `video-gallery` را نمایش می‌دهد. برای سازگاری،
+ویدیوهای قدیمی که هنوز scope ندارند نیز گالری محسوب می‌شوند. افزودن ویدیو به
+کالکشنی با `metadata.defaultDisplayScopes = ["educational-videos"]` scope
+آموزشی را اعمال و scope پیش‌فرض گالری را حذف می‌کند؛ مدیر می‌تواند بعداً هر دو
+scope را انتخاب کند.
+
+Endpointهای عمومی:
+
+```http
+GET /api/v1/content/collections/:collectionKey/items?locale=fa&page=1&pageSize=12
+GET /api/v1/content/collections/:collectionKey/items/:videoSlug?locale=fa
+```
+
+Headerهای Application ID و Application Token همچنان الزامی‌اند و داده‌ها بر
+اساس برنامه، زبان، وضعیت انتشار، فعال‌بودن آیتم و زمان‌بندی محدود می‌شوند.
+
+راه‌اندازی:
+
+```bash
+cd backend-nestjs
+npm run migration:run
+npm test
+npm run build
+```

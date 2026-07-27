@@ -12,6 +12,7 @@ export class CollectionResponseDto {
     public id: string,
     public applicationId: string,
     public slug: string,
+    public locale: string | null,
     public title: string,
     public description: string | null,
     public allowedTypes: string[] | null,
