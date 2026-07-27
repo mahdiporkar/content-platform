@@ -109,6 +109,14 @@ export const VideoEditorPage = () => {
     setSaving(true);
     setError(null);
     try {
+      const normalizedGallery = gallery
+        .map((item) => ({
+          url: item.url.trim(),
+          alt: item.alt?.trim() || undefined,
+          caption: item.caption?.trim() || undefined
+        }))
+        .filter((item) => item.url.length > 0);
+
       const response = await client.put<Video>(`/api/v1/admin/videos/${id}`, {
         title: title.trim(),
         description: description.trim() || undefined,
@@ -117,7 +125,7 @@ export const VideoEditorPage = () => {
         scheduledAt: status === "SCHEDULED" ? scheduledAtIso : undefined,
         tags,
         seo,
-        gallery
+        gallery: normalizedGallery
       });
       applyVideo(response.data);
       navigate("/videos");
