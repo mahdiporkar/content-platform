@@ -224,6 +224,71 @@ export class AdminMenuService {
     return this.mapMenu(menu, true);
   }
 
+  async ensureFromTenantRoutes(
+    applicationId: string,
+    request: MenuFromRoutesRequestDto,
+  ): Promise<MenuResponseDto> {
+    const existing = await this.menuRepo.findOne({
+      where: {
+        applicationId,
+        code: request.code.trim(),
+        languageCode: request.languageCode,
+      },
+    });
+    if (!existing) {
+      return this.createFromTenantRoutes(applicationId, request);
+    }
+    existing.title = request.title.trim();
+    existing.location = request.location;
+    existing.status = request.status;
+    await this.menuRepo.save(existing);
+
+    const routes = await this.tenantRouteRepo.find({
+      where: { applicationId, status: TenantRouteStatus.AVAILABLE },
+      order: { source: 'ASC', routeKey: 'ASC' },
+    });
+    const items = await this.itemRepo.find({ where: { menuId: existing.id } });
+    const tenantItems = new Map(
+      items
+        .filter((item) => item.managedBy === 'TENANT')
+        .map((item) => [`${item.source}:${item.sourceKey}`, item]),
+    );
+    for (const [sortOrder, route] of routes.entries()) {
+      const key = `${route.source}:${route.routeKey}`;
+      const item =
+        tenantItems.get(key) ??
+        this.itemRepo.create({
+          id: uuidv4(),
+          menuId: existing.id,
+          parentId: null,
+          itemType: MenuItemType.TENANT_ROUTE,
+          referenceId: route.id,
+          target: MenuItemTarget.SELF,
+          isVisible: true,
+          managedBy: 'TENANT',
+        });
+      item.title =
+        route.titles[request.languageCode] ??
+        route.titles.en ??
+        route.routeKey;
+      item.referenceId = route.id;
+      item.url = this.resolveTenantRoutePath(
+        route.pathTemplate,
+        request.languageCode,
+      );
+      item.icon = route.icon;
+      item.cssClass = route.cssClass;
+      item.sortOrder = sortOrder;
+      item.source = route.source;
+      item.sourceKey = route.routeKey;
+      await this.itemRepo.save(item);
+      tenantItems.delete(key);
+    }
+    const stale = [...tenantItems.values()].map((item) => item.id);
+    if (stale.length) await this.itemRepo.delete(stale);
+    return this.mapMenu(existing, true);
+  }
+
   async update(id: string, request: MenuUpsertRequestDto): Promise<MenuResponseDto> {
     const menu = await this.menuRepo.findOne({ where: { id } });
     if (!menu) {

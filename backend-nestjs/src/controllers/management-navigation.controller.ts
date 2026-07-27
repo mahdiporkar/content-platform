@@ -6,6 +6,8 @@ import { SitemapRoutesSyncDto } from '../dto/requests/sitemap-routes-sync.dto';
 import { ApplicationEntity } from '../entities/application.entity';
 import { TenantRouteService } from '../services/tenant-route.service';
 import { SitemapService } from '../services/sitemap.service';
+import { AdminMenuService } from '../services/admin-menu.service';
+import { MenuFromRoutesRequestDto } from '../dto/requests/menu-from-routes-request.dto';
 
 @Controller('/api/v1/management/navigation')
 @UseGuards(ManagementTokenGuard)
@@ -13,6 +15,7 @@ export class ManagementNavigationController {
   constructor(
     private readonly routeService: TenantRouteService,
     private readonly sitemapService: SitemapService,
+    private readonly menuService: AdminMenuService,
   ) {}
 
   @Put('routes')
@@ -28,5 +31,14 @@ export class ManagementNavigationController {
   ) {
     const application = (request as Request & { application: ApplicationEntity }).application;
     return this.sitemapService.syncConsumerRoutes(application.id, body);
+  }
+
+  @Put('menu')
+  async ensureMenu(
+    @Req() request: Request,
+    @Body() body: MenuFromRoutesRequestDto,
+  ) {
+    const application = (request as Request & { application: ApplicationEntity }).application;
+    return this.menuService.ensureFromTenantRoutes(application.id, body);
   }
 }
