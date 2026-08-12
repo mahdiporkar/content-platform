@@ -444,6 +444,8 @@ environment:
 
 These variables belong to two separate flows:
 
+> **Required token separation:** `CONTENT_PLATFORM_MANAGEMENT_TOKEN` is required for route/menu manifest synchronization. The ordinary `CONTENT_PLATFORM_API_TOKEN` is a delivery token and is used only to retrieve published articles, gallery items, videos, and the final menu; it cannot perform synchronization.
+
 | Flow | Variables | Purpose |
 | --- | --- | --- |
 | Route synchronization | `CONTENT_PLATFORM_API_BASE_URL`, `CONTENT_PLATFORM_APPLICATION_ID`, `CONTENT_PLATFORM_MANAGEMENT_TOKEN`, `SYNC_MENU_ON_START`, `MENU_MANIFEST_PATH` | Sends code-defined routes to the route registry. |
@@ -517,6 +519,26 @@ Stable code of the final menu fetched from Content Platform.
 ```bash
 CONTENT_PLATFORM_MENU_CODE=main-menu
 ```
+
+This value is **not received from Content Platform**. It is configured by the consumer application's backend (for example in Docker or CapRover) and tells that backend which Content Platform menu code to request.
+
+To create the matching menu in Content Platform:
+
+1. Select the consumer application in the Content Platform admin panel.
+2. Open **Menus**.
+3. Choose **New menu** or **Create menu from routes**.
+4. Enter `main-menu` in the menu **Code** field.
+5. Create and publish a Persian menu with language `fa`, location `HEADER`, and code `main-menu`.
+6. Create and publish an English menu with language `en`, location `HEADER`, and the same code `main-menu`.
+
+The consumer can then fetch them through:
+
+```http
+GET /api/v1/content/menus/fa/main-menu
+GET /api/v1/content/menus/en/main-menu
+```
+
+The environment value and the menu's `code` field must match exactly. For example, if the menus are created with code `header-menu`, configure `CONTENT_PLATFORM_MENU_CODE=header-menu` in the consumer backend.
 
 In the Magical Bank API, a request such as:
 

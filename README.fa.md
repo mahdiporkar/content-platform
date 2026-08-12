@@ -325,6 +325,8 @@ environment:
 
 این متغیرها به دو جریان جدا تعلق دارند:
 
+> **تفکیک ضروری توکن‌ها:** متغیر `CONTENT_PLATFORM_MANAGEMENT_TOKEN` برای همگام‌سازی manifest مسیرها و منو ضروری است. توکن عادی `CONTENT_PLATFORM_API_TOKEN` یک delivery token است و فقط برای دریافت مقالات منتشرشده، گالری، ویدئوها و منوی نهایی استفاده می‌شود؛ این توکن امکان sync را ندارد.
+
 | جریان | متغیرها | کاربرد |
 | --- | --- | --- |
 | همگام‌سازی Routeها | `CONTENT_PLATFORM_API_BASE_URL`، `CONTENT_PLATFORM_APPLICATION_ID`، `CONTENT_PLATFORM_MANAGEMENT_TOKEN`، `SYNC_MENU_ON_START` و `MENU_MANIFEST_PATH` | Routeهای کدنویسی‌شده را به رجیستری Routeها ارسال می‌کند. |
@@ -398,6 +400,26 @@ X-Application-Token: <delivery-token>
 ```bash
 CONTENT_PLATFORM_MENU_CODE=main-menu
 ```
+
+این مقدار **از Content Platform دریافت نمی‌شود**؛ بلکه در Environment بک‌اند پروژه مصرف‌کننده، برای مثال در Docker یا CapRover، تعریف می‌شود و به بک‌اند می‌گوید منویی با چه `code`ای را از Content Platform درخواست کند.
+
+برای ساخت منوی متناظر در Content Platform:
+
+1. در پنل مدیریت Content Platform، اپلیکیشن پروژه مصرف‌کننده را انتخاب کنید.
+2. وارد بخش **منوها** شوید.
+3. **منوی جدید** یا **ساخت منو از Routeها** را انتخاب کنید.
+4. در فیلد **کد منو** مقدار `main-menu` را وارد کنید.
+5. یک منوی فارسی با زبان `fa`، محل `HEADER` و کد `main-menu` بسازید و منتشر کنید.
+6. یک منوی انگلیسی با زبان `en`، محل `HEADER` و همان کد `main-menu` بسازید و منتشر کنید.
+
+پس از آن پروژه مصرف‌کننده منوها را از این endpointها دریافت می‌کند:
+
+```http
+GET /api/v1/content/menus/fa/main-menu
+GET /api/v1/content/menus/en/main-menu
+```
+
+مقدار Environment باید دقیقاً با فیلد `code` منوی ساخته‌شده برابر باشد. برای مثال اگر کد منو `header-menu` است، در بک‌اند مصرف‌کننده نیز باید `CONTENT_PLATFORM_MENU_CODE=header-menu` تنظیم شود.
 
 در Magical Bank API درخواستی مانند:
 
