@@ -28,6 +28,7 @@ import {
 import client from "../api/client";
 import { Application } from "../types";
 import { type SupportedLocale, useI18n } from "../i18n";
+import { demoSiteUrl } from "../config/env";
 
 const { Sider, Content, Header } = Layout;
 
@@ -51,6 +52,13 @@ export const AppLayout = () => {
   const handleLogout = () => {
     authStore.clearToken();
     window.location.href = "/login";
+  };
+
+  const openDemoPreview = () => {
+    const deliveryToken = localStorage.getItem("content-platform-demo-application-token");
+    if (!applicationId || !deliveryToken) return;
+    const fragment = new URLSearchParams({ applicationId, token: deliveryToken }).toString();
+    window.open(`${demoSiteUrl}/demo/connect#${fragment}`, "_blank", "noopener,noreferrer");
   };
 
   useEffect(() => {
@@ -188,6 +196,9 @@ export const AppLayout = () => {
               <Typography.Text type="secondary">{t("app.notSet")}</Typography.Text>
             )}
           </Typography.Text>
+          {localStorage.getItem("content-platform-demo-application-token") && (
+            <Button type="primary" onClick={openDemoPreview}>View live site ↗</Button>
+          )}
         </Header>
         <Content className="content">
           <Outlet />

@@ -18,7 +18,7 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path || request.url;
-    if (request.method === 'OPTIONS' || path === '/api/v1/auth/login' || this.isPublicPath(path)) {
+    if (request.method === 'OPTIONS' || path === '/api/v1/auth/login' || path === '/api/v1/demo/sessions' || this.isPublicPath(path)) {
       return true;
     }
 

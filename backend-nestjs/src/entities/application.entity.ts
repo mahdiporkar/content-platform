@@ -82,6 +82,9 @@ export class ApplicationEntity {
   @Column({ type: 'jsonb', nullable: true })
   seo!: Record<string, unknown> | null;
 
+  @Column({ name: 'demo_expires_at', type: 'timestamptz', nullable: true })
+  demoExpiresAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

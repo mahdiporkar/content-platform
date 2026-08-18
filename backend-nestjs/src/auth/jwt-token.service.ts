@@ -20,6 +20,10 @@ export class JwtTokenService {
     return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn });
   }
 
+  signWithExpiry(payload: JwtPayload, expiresIn: jwt.SignOptions['expiresIn']): string {
+    return jwt.sign(payload, this.secret, { expiresIn });
+  }
+
   verify(token: string): JwtPayload {
     return jwt.verify(token, this.secret) as JwtPayload;
   }

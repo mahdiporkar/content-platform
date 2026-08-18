@@ -33,6 +33,20 @@ npm --prefix backend-nestjs run migration:run
 npm run dev:all
 ```
 
+## حالت دموی تعاملی
+
+در یک سرور اختصاصی دمو، `DEMO_MODE=true` را تنظیم کنید. بازدیدکننده در صفحه ورود پنل نام Application را وارد می‌کند و بدون رمز مشترک یک Workspace ایزوله می‌سازد. حساب ساخته‌شده همه‌ی مجوزهای مدیریت محتوا را دارد، اما فقط به همان Application دسترسی دارد و نمی‌تواند مستاجرهای پلتفرم را ایجاد یا حذف کند.
+
+بعد از انتشار محتوا، دکمه‌ی **View live site** اطلاعات تحویل را از طریق fragment مرورگر منتقل می‌کند، فوراً آن را از نوار آدرس حذف می‌کند و در cookieهای HTTP-only قرار می‌دهد. Workspace بعد از `DEMO_SESSION_TTL_HOURS` منقضی می‌شود و هر IP حداکثر سه Workspace در ساعت می‌سازد.
+
+```env
+DEMO_MODE=true
+VITE_DEMO_MODE=true
+DEMO_SESSION_TTL_HOURS=12
+VITE_DEMO_SITE_URL=https://demo.example.com
+ADMIN_PUBLIC_URL=https://studio.example.com
+```
+
 ## تحویل امن
 
 اطلاعات دسترسی فقط روی سرور مصرف‌کننده می‌ماند. توکن اپلیکیشن را در کد مرورگر قرار ندهید.

@@ -33,6 +33,20 @@ npm --prefix backend-nestjs run migration:run
 npm run dev:all
 ```
 
+## وضع العرض التفاعلي
+
+فعّل `DEMO_MODE=true` في خادم مخصص للعرض. يسمي الزائر التطبيق في شاشة دخول الاستوديو ويحصل على مساحة عمل معزولة من دون كلمة مرور مشتركة. يملك الحساب صلاحيات إدارة المحتوى كلها، لكنه لا يصل إلا إلى تطبيقه ولا يستطيع إنشاء مستأجري المنصة أو حذفهم.
+
+بعد النشر، ينقل زر **View live site** بيانات التوزيع عبر fragment في المتصفح، ويحذفها فوراً من شريط العنوان ويحفظها في ملفات HTTP-only. تنتهي المساحة بعد `DEMO_SESSION_TTL_HOURS`، ويقتصر الإنشاء على ثلاث مساحات لكل IP في الساعة.
+
+```env
+DEMO_MODE=true
+VITE_DEMO_MODE=true
+DEMO_SESSION_TTL_HOURS=12
+VITE_DEMO_SITE_URL=https://demo.example.com
+ADMIN_PUBLIC_URL=https://studio.example.com
+```
+
 ## التوزيع الآمن
 
 تبقى بيانات الاعتماد على خادم المستهلك. لا تعرض رمز التطبيق في شيفرة المتصفح.

@@ -33,6 +33,22 @@ npm --prefix backend-nestjs run migration:run
 npm run dev:all
 ```
 
+## Interactive demo mode
+
+Set `DEMO_MODE=true` on a dedicated demo deployment. On the Admin Studio login screen, visitors can name an application and create an isolated workspace without a shared password. The generated editor account has every content permission but can access only that application and cannot create or delete platform tenants.
+
+After publishing content, **View live site** transfers the delivery credentials through a URL fragment, immediately removes them from the address bar and stores them in HTTP-only cookies. Workspaces expire after `DEMO_SESSION_TTL_HOURS` (12 by default), and creation is limited to three workspaces per IP per hour.
+
+Configure the public URLs:
+
+```env
+DEMO_MODE=true
+VITE_DEMO_MODE=true
+DEMO_SESSION_TTL_HOURS=12
+VITE_DEMO_SITE_URL=https://demo.example.com
+ADMIN_PUBLIC_URL=https://studio.example.com
+```
+
 ## Secure delivery
 
 Consumer credentials stay on the consumer server. Never expose the application token in browser code.

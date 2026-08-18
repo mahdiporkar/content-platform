@@ -15,6 +15,7 @@ import {
 import client from "../../api/client";
 import { authStore } from "../../app/auth";
 import { type SupportedLocale, useI18n } from "../../i18n";
+import { demoModeEnabled } from "../../config/env";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoWorkspace, setDemoWorkspace] = useState("");
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -36,6 +39,27 @@ export const LoginPage = () => {
       setError(t("login.error"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoStart = async () => {
+    if (demoWorkspace.trim().length < 2) return;
+    setDemoLoading(true);
+    setError(null);
+    try {
+      const response = await client.post("/api/v1/demo/sessions", {
+        workspaceName: demoWorkspace.trim(),
+        locale
+      });
+      authStore.setToken(response.data.token);
+      localStorage.setItem("content-platform-application-id", response.data.applicationId);
+      localStorage.setItem("content-platform-demo-application-token", response.data.applicationToken);
+      localStorage.setItem("content-platform-demo-expires-at", response.data.expiresAt);
+      navigate("/posts");
+    } catch {
+      setError("Unable to create a demo workspace. Please try again later.");
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -165,6 +189,21 @@ export const LoginPage = () => {
                 {loading ? t("login.loading") : t("login.submit")}
               </Button>
             </Form>
+
+            {demoModeEnabled && <div className="demo-login">
+              <div className="demo-login__divider"><span>OR TRY THE LIVE DEMO</span></div>
+              <Alert type="info" showIcon message="Create an isolated workspace" description="Test posts, articles, media, collections, SEO and analytics. The workspace expires automatically." />
+              <Input
+                value={demoWorkspace}
+                onChange={(event) => setDemoWorkspace(event.target.value)}
+                placeholder="Your application name"
+                size="large"
+                maxLength={60}
+              />
+              <Button type="default" size="large" block loading={demoLoading} disabled={demoWorkspace.trim().length < 2} onClick={handleDemoStart}>
+                Create workspace & enter demo
+              </Button>
+            </div>}
 
             <span className="login-copyright">{t("login.footer")}</span>
           </div>

@@ -91,6 +91,8 @@ import { TenantRouteEntity } from './entities/tenant-route.entity';
 import { ManagementNavigationController } from './controllers/management-navigation.controller';
 import { ManagementTokenGuard } from './auth/management-token.guard';
 import { TenantRouteService } from './services/tenant-route.service';
+import { DemoSessionController } from './controllers/demo-session.controller';
+import { DemoSessionService } from './services/demo-session.service';
 
 @Module({
   imports: [
@@ -198,6 +200,7 @@ import { TenantRouteService } from './services/tenant-route.service';
     MediaGatewayController,
     MediaController,
     ManagementNavigationController,
+    DemoSessionController,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -238,6 +241,7 @@ import { TenantRouteService } from './services/tenant-route.service';
     MediaLifecycleService,
     { provide: 'STORAGE_PROVIDER', useExisting: MinioStorageProvider },
     ScheduledPublisherService,
+    DemoSessionService,
     TenantRouteService,
   ],
 })

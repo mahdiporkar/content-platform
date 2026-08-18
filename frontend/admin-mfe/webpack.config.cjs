@@ -90,6 +90,12 @@ module.exports = {
       ),
       "import.meta.env.API_PROXY_TARGET": JSON.stringify(
         process.env.API_PROXY_TARGET || resolveProxyTarget()
+      ),
+      "import.meta.env.VITE_DEMO_SITE_URL": JSON.stringify(
+        process.env.VITE_DEMO_SITE_URL || "http://localhost:3003"
+      ),
+      "import.meta.env.VITE_DEMO_MODE": JSON.stringify(
+        process.env.VITE_DEMO_MODE || "false"
       )
     })
   ]

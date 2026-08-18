@@ -9,6 +9,17 @@
 
 ![Content Platform live demo](docs/assets/content-platform-demo.png)
 
+## Interactive live demo
+
+The public demo is a complete sandbox, not a static mockup. A visitor names an application, receives an isolated workspace, creates and publishes posts, articles, pages, media, galleries and collections, then opens the consumer site to see the result immediately.
+
+1. Open the Admin Studio and choose **Create workspace & enter demo**.
+2. Name the application; no shared password or super-admin access is provided.
+3. Create localized content and publish it.
+4. Select **View live site** to securely connect the consumer preview.
+
+Demo workspaces expire automatically. Creation is rate-limited and every session is restricted to its own tenant. Enable this feature only on a dedicated demo installation with `DEMO_MODE=true`.
+
 Multi-tenant content platform built with NestJS, PostgreSQL, and MinIO, with an Admin panel (React) and demo consumer app (Next.js).
 
 [Live demo setup](docs/en/README.md#deployment) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
