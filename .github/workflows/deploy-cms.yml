@@ -7,6 +7,7 @@ on:
     paths:
       - "backend-nestjs/**"
       - "frontend/admin-mfe/**"
+      - "frontend/demo-next/**"
       - "captain-definition"
       - ".github/workflows/deploy-cms.yml"
   workflow_dispatch:
@@ -28,6 +29,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "api=true" >> "$GITHUB_OUTPUT"
             echo "cms=true" >> "$GITHUB_OUTPUT"
+            echo "demo=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -47,6 +49,12 @@ jobs:
             echo "cms=true" >> "$GITHUB_OUTPUT"
           else
             echo "cms=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if echo "$changed_files" | grep -Eq '^(frontend/demo-next/|\.github/workflows/deploy-cms\.yml$)'; then
+            echo "demo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "demo=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install CapRover CLI
@@ -71,3 +79,13 @@ jobs:
             --caproverPassword "${{ secrets.CAPROVER_PASSWORD }}" \
             --appName "cms" \
             --tarFile cms.tar.gz
+
+      - name: Deploy Live Demo
+        if: steps.changes.outputs.demo == 'true'
+        run: |
+          tar -czf demo.tar.gz -C frontend/demo-next .
+          caprover deploy \
+            --caproverUrl "${{ secrets.CAPROVER_URL }}" \
+            --caproverPassword "${{ secrets.CAPROVER_PASSWORD }}" \
+            --appName "content-platform-demo" \
+            --tarFile demo.tar.gz

@@ -4,8 +4,14 @@ import Link from "next/link";
 import SiteNav from "./site-nav";
 
 export const metadata: Metadata = {
-  title: "Content Platform Demo",
-  description: "Public demo website for the multi-tenant content platform."
+  title: "Content Platform — One engine, every experience",
+  description: "Live multilingual showcase for the open-source, multi-tenant and API-first Content Platform.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003"),
+  openGraph: {
+    title: "Content Platform",
+    description: "Create, govern and deliver content to every digital experience.",
+    type: "website"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

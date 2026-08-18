@@ -1,8 +1,17 @@
-# content-platform
+# Content Platform
+
+> Open-source, multi-tenant and API-first content infrastructure for every digital experience.
+
+[![Quality checks](https://github.com/mahdiporkar/content-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mahdiporkar/content-platform/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-not%20declared-lightgrey)](#license)
+
+**Documentation:** [English](docs/en/README.md) · [فارسی](docs/fa/README.md) · [العربية](docs/ar/README.md)
+
+![Content Platform live demo](docs/assets/content-platform-demo.png)
 
 Multi-tenant content platform built with NestJS, PostgreSQL, and MinIO, with an Admin panel (React) and demo consumer app (Next.js).
 
-[فارسی](README.fa.md)
+[Live demo setup](docs/en/README.md#deployment) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ![Architecture Diagram](./docs/architecture.png)
 
