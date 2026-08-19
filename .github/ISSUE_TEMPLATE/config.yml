@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mahdiporkar/content-platform/security/advisories/new
+    about: Report security problems privately. Do not open a public issue.
+  - name: Documentation
+    url: https://github.com/mahdiporkar/content-platform/tree/main/docs
+    about: Read the English, Persian and Arabic guides before opening a question.
+

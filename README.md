@@ -7,9 +7,11 @@
 
 **Documentation:** [English](docs/en/README.md) · [فارسی](docs/fa/README.md) · [العربية](docs/ar/README.md)
 
-![Content Platform live demo](docs/assets/content-platform-demo.png)
+[![Content Platform live demo](docs/assets/content-platform-demo.png)](https://mahdiporkar.github.io/content-platform/)
 
 ## Interactive live demo
+
+**[Open the professional live demo →](https://mahdiporkar.github.io/content-platform/)**
 
 The public demo is a complete sandbox, not a static mockup. A visitor names an application, receives an isolated workspace, creates and publishes posts, articles, pages, media, galleries and collections, then opens the consumer site to see the result immediately.
 
@@ -22,7 +24,7 @@ Demo workspaces expire automatically. Creation is rate-limited and every session
 
 Multi-tenant content platform built with NestJS, PostgreSQL, and MinIO, with an Admin panel (React) and demo consumer app (Next.js).
 
-[Live demo setup](docs/en/README.md#deployment) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Live demo](https://mahdiporkar.github.io/content-platform/) · [Deployment setup](docs/en/README.md#deployment) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ![Architecture Diagram](./docs/architecture.png)
 

@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend-nestjs
+    schedule: { interval: weekly }
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /frontend/admin-mfe
+    schedule: { interval: weekly }
+    groups:
+      admin-minor-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /frontend/demo-next
+    schedule: { interval: weekly }
+    groups:
+      demo-minor-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+
