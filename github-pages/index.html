@@ -1,77 +1,56 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Interactive product tour for Content Platform — open-source, multi-tenant content infrastructure.">
-  <meta name="theme-color" content="#071b2b">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Interactive multilingual product tour for Content Platform."><meta name="theme-color" content="#071b2b">
   <title>Content Platform — Live Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tour.css">
 </head>
 <body>
   <header class="nav shell">
-    <a class="brand" href="#top"><span>CP</span>Content Platform</a>
-    <nav><a href="#platform">Platform</a><a href="#workflow">Workflow</a><a href="#architecture">Architecture</a></nav>
-    <a class="nav-cta" href="https://github.com/mahdiporkar/content-platform">View on GitHub ↗</a>
+    <a class="brand" href="#top"><span>CP</span><b>Content Platform</b></a>
+    <nav><a href="#platform" data-i18n="nav.platform">Platform</a><a href="#tour" data-i18n="nav.tour">Product tour</a><a href="#workflow" data-i18n="nav.workflow">Workflow</a></nav>
+    <div class="language-switcher" aria-label="Language"><button class="active" data-lang="en">EN</button><button data-lang="fa">فا</button><button data-lang="ar">ع</button></div>
+    <a class="nav-cta" href="https://github.com/mahdiporkar/content-platform">GitHub ↗</a>
   </header>
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
-        <div class="eyebrow"><i></i> Open source · API first · Multi-tenant</div>
-        <h1>Content that moves<br><em>at your speed.</em></h1>
-        <p>One secure control plane to create, govern and deliver multilingual stories, media and digital experiences—without locking your frontend to a template.</p>
-        <div class="actions"><a class="button primary" href="#platform">Explore the product ↓</a><a class="button secondary" href="https://github.com/mahdiporkar/content-platform#quick-start">Start building ↗</a></div>
-        <div class="proof"><div><b>8</b><span>Content modules</span></div><div><b>3</b><span>Locales ready</span></div><div><b>100%</b><span>Tenant isolation</span></div></div>
+        <div class="eyebrow"><i></i><span data-i18n="hero.eyebrow">Open source · API first · Multi-tenant</span></div>
+        <h1 data-i18n-html="hero.title">Content that moves<br><em>at your speed.</em></h1>
+        <p data-i18n="hero.lead">Create, govern and deliver multilingual stories, media and digital experiences from one secure platform.</p>
+        <div class="actions"><a class="button primary" href="#tour" data-i18n="hero.explore">Explore the live product ↓</a><a class="button secondary" href="https://github.com/mahdiporkar/content-platform#quick-start" data-i18n="hero.start">Start building ↗</a></div>
+        <div class="proof"><div><b>8</b><span data-i18n="stats.modules">Content modules</span></div><div><b>3</b><span data-i18n="stats.locales">Locales ready</span></div><div><b>100%</b><span data-i18n="stats.tenant">Tenant isolation</span></div></div>
       </div>
-      <div class="console" aria-label="Interactive dashboard preview">
-        <div class="console-top"><div class="traffic"><i></i><i></i><i></i></div><span>studio.contentplatform.dev</span><b>Live preview</b></div>
-        <div class="console-body">
-          <aside>
-            <div class="console-logo">C</div>
-            <button class="side-item active" data-view="overview"><i>⌂</i><span>Overview</span></button>
-            <button class="side-item" data-view="content"><i>▤</i><span>Content</span></button>
-            <button class="side-item" data-view="media"><i>◫</i><span>Media</span></button>
-            <button class="side-item" data-view="analytics"><i>↗</i><span>Analytics</span></button>
-            <div class="avatar">MP</div>
-          </aside>
-          <section class="workspace">
-            <div class="workspace-head"><div><small>ACME Editorial</small><h2 id="view-title">Good morning, Mahdi.</h2></div><button>+ New content</button></div>
-            <div id="overview" class="view active">
-              <div class="metrics"><article><span>Published</span><b>1,284</b><em>↑ 12.4%</em></article><article><span>Scheduled</span><b>48</b><em>Next 7 days</em></article><article><span>Total views</span><b>82.6k</b><em>↑ 18.2%</em></article></div>
-              <div class="chart-card"><div><b>Content performance</b><span>Last 7 days</span></div><div class="chart"><i style="--h:34%"></i><i style="--h:48%"></i><i style="--h:42%"></i><i style="--h:68%"></i><i style="--h:57%"></i><i style="--h:79%"></i><i style="--h:72%"></i><i style="--h:94%"></i></div></div>
-            </div>
-            <div id="content" class="view"><div class="table-head"><b>Recent content</b><span>12 items</span></div><div class="content-row"><i class="thumb coral"></i><div><b>Designing for calm technology</b><span>Article · English</span></div><em>Published</em></div><div class="content-row"><i class="thumb teal"></i><div><b>راهنمای طراحی محصول</b><span>Post · فارسی</span></div><em>Scheduled</em></div><div class="content-row"><i class="thumb gold"></i><div><b>Summer campaign</b><span>Collection · English</span></div><em>Draft</em></div></div>
-            <div id="media" class="view"><div class="table-head"><b>Media library</b><span>248 assets</span></div><div class="media-grid"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-            <div id="analytics" class="view"><div class="analytics-hero"><span>Audience this month</span><b>268,410</b><em>+24.8% from last month</em></div><div class="line-chart"><svg viewBox="0 0 500 150" role="img" aria-label="Rising audience chart"><path d="M0 130 C70 115 80 82 145 94 S235 126 285 67 S390 72 500 13"></path></svg></div></div>
-          </section>
-        </div>
+      <div class="console">
+        <div class="console-top"><div class="traffic"><i></i><i></i><i></i></div><span>studio.contentplatform.dev</span><b data-i18n="console.live">Live preview</b></div>
+        <div class="console-body"><aside><div class="console-logo">C</div><button class="side-item active" data-view="overview"><i>⌂</i><span data-i18n="console.overview">Overview</span></button><button class="side-item" data-view="content"><i>▤</i><span data-i18n="console.content">Content</span></button><button class="side-item" data-view="media"><i>◫</i><span data-i18n="console.media">Media</span></button><button class="side-item" data-view="analytics"><i>↗</i><span data-i18n="console.analytics">Analytics</span></button><div class="avatar">MP</div></aside>
+          <section class="workspace"><div class="workspace-head"><div><small>ACME Editorial</small><h2 id="view-title">Good morning, Mahdi.</h2></div><button data-i18n="console.new">+ New content</button></div>
+            <div id="overview" class="view active"><div class="metrics"><article><span data-i18n="console.published">Published</span><b>1,284</b><em>↑ 12.4%</em></article><article><span data-i18n="console.scheduled">Scheduled</span><b>48</b><em>7 days</em></article><article><span data-i18n="console.views">Total views</span><b>82.6k</b><em>↑ 18.2%</em></article></div><div class="chart-card"><div><b data-i18n="console.performance">Content performance</b><span>7 days</span></div><div class="chart"><i style="--h:34%"></i><i style="--h:48%"></i><i style="--h:42%"></i><i style="--h:68%"></i><i style="--h:57%"></i><i style="--h:79%"></i><i style="--h:72%"></i><i style="--h:94%"></i></div></div></div>
+            <div id="content" class="view"><div class="table-head"><b>Recent content</b><span>12</span></div><div class="content-row"><i class="thumb coral"></i><div><b>Designing for calm technology</b><span>Article · English</span></div><em>Published</em></div><div class="content-row"><i class="thumb teal"></i><div><b>راهنمای طراحی محصول</b><span>Post · فارسی</span></div><em>Scheduled</em></div><div class="content-row"><i class="thumb gold"></i><div><b>حملة الصيف</b><span>Collection · العربية</span></div><em>Draft</em></div></div>
+            <div id="media" class="view"><div class="table-head"><b data-i18n="console.library">Media library</b><span>248</span></div><div class="media-grid"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div id="analytics" class="view"><div class="analytics-hero"><span data-i18n="console.audience">Audience this month</span><b>268,410</b><em>+24.8%</em></div><div class="line-chart"><svg viewBox="0 0 500 150"><path d="M0 130 C70 115 80 82 145 94 S235 126 285 67 S390 72 500 13"></path></svg></div></div>
+          </section></div>
       </div>
     </section>
-    <section class="marquee"><div>ARTICLES <i>✦</i> POSTS <i>✦</i> PAGES <i>✦</i> MEDIA <i>✦</i> COLLECTIONS <i>✦</i> GALLERIES <i>✦</i> VIDEO <i>✦</i> ANALYTICS</div></section>
-    <section class="section shell" id="platform">
-      <div class="section-intro reveal"><span>01 / PLATFORM</span><h2>Everything your content operation needs.</h2><p>From first draft to final delivery, every part of the publishing lifecycle lives in one coherent system.</p></div>
-      <div class="feature-grid"><article class="reveal"><span>01</span><i>✦</i><h3>Structured content</h3><p>Model posts, articles, pages and reusable collections with rich metadata and localization.</p></article><article class="reveal"><span>02</span><i>◫</i><h3>Media intelligence</h3><p>Generate responsive variants, track references and keep every asset safe throughout its lifecycle.</p></article><article class="reveal"><span>03</span><i>◎</i><h3>True multi-tenancy</h3><p>Isolate teams, applications, domains, tokens and content through tenant-aware access control.</p></article><article class="reveal"><span>04</span><i>↗</i><h3>Delivery at scale</h3><p>Power web, mobile and any digital surface with predictable REST APIs and secure delivery tokens.</p></article></div>
-    </section>
-    <section class="workflow" id="workflow"><div class="shell workflow-grid"><div><span class="label">02 / WORKFLOW</span><h2>One clear path from idea to every screen.</h2></div><ol><li class="reveal"><span>01</span><div><b>Compose</b><p>Create structured, localized content.</p></div></li><li class="reveal"><span>02</span><div><b>Curate</b><p>Arrange campaigns and collections.</p></div></li><li class="reveal"><span>03</span><div><b>Govern</b><p>Control roles, schedules and audits.</p></div></li><li class="reveal"><span>04</span><div><b>Deliver</b><p>Power every experience with fast APIs.</p></div></li></ol></div></section>
-    <section class="architecture shell" id="architecture">
-      <div class="api-copy reveal"><span>03 / ARCHITECTURE</span><h2>Headless by design.<br>Limitless by default.</h2><p>Bring your own frontend. Content Platform handles editorial workflows, tenancy, media, SEO, analytics and secure delivery behind a clean API.</p><a href="https://github.com/mahdiporkar/content-platform/blob/main/docs/architecture/README.md">Explore the architecture ↗</a></div>
-      <div class="code reveal"><div><i></i><i></i><i></i><span>delivery-api.ts</span></div><pre><em>GET</em> /api/v1/content
+    <section class="marquee"><div>APPLICATIONS <i>✦</i> PAGES <i>✦</i> MENUS <i>✦</i> POSTS <i>✦</i> GALLERIES <i>✦</i> VIDEO <i>✦</i> COLLECTIONS <i>✦</i> DISPLAY TYPES</div></section>
+    <section class="section shell" id="platform"><div class="section-intro reveal"><span data-i18n="platform.label">01 / PLATFORM</span><h2 data-i18n="platform.title">Everything your content operation needs.</h2><p data-i18n="platform.lead">A complete workspace for structured publishing, media, navigation and delivery.</p></div><div class="feature-grid"><article class="reveal"><span>01</span><i>✦</i><h3 data-i18n="features.content.title">Structured content</h3><p data-i18n="features.content.body">Create posts, articles and pages with localization, drafts and scheduling.</p></article><article class="reveal"><span>02</span><i>◫</i><h3 data-i18n="features.media.title">Media intelligence</h3><p data-i18n="features.media.body">Manage images, galleries and video with reusable assets.</p></article><article class="reveal"><span>03</span><i>◎</i><h3 data-i18n="features.tenant.title">True multi-tenancy</h3><p data-i18n="features.tenant.body">Isolate applications, teams, domains, tokens and content.</p></article><article class="reveal"><span>04</span><i>↗</i><h3 data-i18n="features.delivery.title">Flexible presentation</h3><p data-i18n="features.delivery.body">Build menus and collections, then choose slider, grid, hero or list display.</p></article></div></section>
+    <section class="product-tour" id="tour"><div class="shell"><div class="tour-heading reveal"><div><span class="label" data-i18n="tour.label">02 / INTERACTIVE PRODUCT TOUR</span><h2 data-i18n="tour.title">See every publishing tool in action.</h2></div><p data-i18n="tour.lead">Choose a module to preview the workflow your content team will use.</p></div><div class="tour-layout">
+      <div class="tour-tabs" role="tablist"><button class="tour-tab active" data-module="applications"><i>⌘</i><span data-i18n="modules.applications">Applications</span><b>›</b></button><button class="tour-tab" data-module="pages"><i>▧</i><span data-i18n="modules.pages">Pages</span><b>›</b></button><button class="tour-tab" data-module="menus"><i>☷</i><span data-i18n="modules.menus">Menus</span><b>›</b></button><button class="tour-tab" data-module="posts"><i>✎</i><span data-i18n="modules.posts">Posts</span><b>›</b></button><button class="tour-tab" data-module="galleries"><i>▦</i><span data-i18n="modules.galleries">Galleries</span><b>›</b></button><button class="tour-tab" data-module="videos"><i>▶</i><span data-i18n="modules.videos">Videos</span><b>›</b></button><button class="tour-tab" data-module="collections"><i>◆</i><span data-i18n="modules.collections">Collections</span><b>›</b></button><button class="tour-tab" data-module="display"><i>⊞</i><span data-i18n="modules.display">Display types</span><b>›</b></button></div>
+      <div class="tour-screen reveal"><div class="tour-browser"><i></i><i></i><i></i><span>admin / <b id="tour-path">applications</b></span></div><div class="tour-toolbar"><div><small id="tour-kicker">WORKSPACE</small><h3 id="tour-title">Applications</h3><p id="tour-description">Create isolated applications and configure delivery access.</p></div><button id="tour-action">+ New application</button></div><div class="tour-canvas" id="tour-canvas"></div></div>
+    </div></div></section>
+    <section class="workflow" id="workflow"><div class="shell workflow-grid"><div><span class="label" data-i18n="workflow.label">03 / WORKFLOW</span><h2 data-i18n="workflow.title">One clear path from idea to every screen.</h2></div><ol><li class="reveal"><span>01</span><div><b data-i18n="workflow.compose">Compose</b><p data-i18n="workflow.composeBody">Create structured, localized content.</p></div></li><li class="reveal"><span>02</span><div><b data-i18n="workflow.curate">Curate</b><p data-i18n="workflow.curateBody">Arrange menus, campaigns and collections.</p></div></li><li class="reveal"><span>03</span><div><b data-i18n="workflow.govern">Govern</b><p data-i18n="workflow.governBody">Control roles, schedules and audits.</p></div></li><li class="reveal"><span>04</span><div><b data-i18n="workflow.deliver">Deliver</b><p data-i18n="workflow.deliverBody">Power every experience with fast APIs.</p></div></li></ol></div></section>
+    <section class="architecture shell"><div class="api-copy reveal"><span data-i18n="api.label">04 / ARCHITECTURE</span><h2 data-i18n-html="api.title">Headless by design.<br>Limitless by default.</h2><p data-i18n="api.body">Bring your own frontend. The platform handles workflows, tenancy, media, SEO and delivery.</p><a href="https://github.com/mahdiporkar/content-platform/blob/main/docs/architecture/README.md" data-i18n="api.link">Explore the architecture ↗</a></div><div class="code reveal"><div><i></i><i></i><i></i><span>delivery-api.ts</span></div><pre><em>GET</em> /api/v1/content
 
 <span>X-Application-Id:</span> acme-web
 <span>X-Application-Token:</span> ••••••••••
 
-{
-  <b>"status"</b>: <strong>"published"</strong>,
-  <b>"locale"</b>: <strong>"en"</strong>,
-  <b>"items"</b>: [ ... ]
-}</pre></div>
-    </section>
-    <section class="closing"><div class="shell"><span>READY TO BUILD?</span><h2>Your content deserves<br>better infrastructure.</h2><div class="actions"><a class="button light" href="https://github.com/mahdiporkar/content-platform">View repository ↗</a><a class="button outline" href="https://github.com/mahdiporkar/content-platform#quick-start">Read the docs</a></div></div></section>
+{ <b>"status"</b>: <strong>"published"</strong>, <b>"locale"</b>: <strong>"fa"</strong> }</pre></div></section>
+    <section class="closing"><div class="shell"><span data-i18n="closing.label">READY TO BUILD?</span><h2 data-i18n-html="closing.title">Your content deserves<br>better infrastructure.</h2><div class="actions"><a class="button light" href="https://github.com/mahdiporkar/content-platform" data-i18n="closing.repo">View repository ↗</a><a class="button outline" href="https://github.com/mahdiporkar/content-platform#quick-start" data-i18n="closing.docs">Read the docs</a></div></div></section>
   </main>
-  <footer class="shell"><a class="brand" href="#top"><span>CP</span>Content Platform</a><p>Open-source content infrastructure for modern teams.</p><div><a href="https://github.com/mahdiporkar/content-platform">GitHub</a><a href="https://github.com/mahdiporkar/content-platform/blob/main/ROADMAP.md">Roadmap</a><a href="https://github.com/mahdiporkar/content-platform/blob/main/SECURITY.md">Security</a></div></footer>
+  <footer class="shell"><a class="brand" href="#top"><span>CP</span><b>Content Platform</b></a><p data-i18n="footer">Open-source content infrastructure for modern teams.</p><div><a href="https://github.com/mahdiporkar/content-platform">GitHub</a><a href="https://github.com/mahdiporkar/content-platform/blob/main/ROADMAP.md">Roadmap</a><a href="https://github.com/mahdiporkar/content-platform/blob/main/SECURITY.md">Security</a></div></footer>
   <script src="app.js"></script>
-</body>
-</html>
+</body></html>
