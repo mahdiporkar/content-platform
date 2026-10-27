@@ -1,3 +1,5 @@
+import { VideoMediaFields, type VideoMediaValue } from './VideoMediaFields';
+import axios from 'axios';
 import React, { useRef, useState } from "react";
 import { Alert, Button, Card, DatePicker, Form, Input, Select, Space, Typography, Upload } from "antd";
 import type { UploadFile } from "antd";
@@ -53,6 +55,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
   const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
   const [selectedVideoAsset, setSelectedVideoAsset] = useState<MediaAsset | null>(null);
   const [variants, setVariants] = useState<VariantDraft[]>([]);
+  const [media, setMedia] = useState<VideoMediaValue>({});
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
@@ -88,6 +91,10 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       setError("Choose a video file to upload.");
       return;
     }
+    if (!title.trim()) { setError('????? ????? ?????? ??? / Title is required.'); return; }
+    if ((status === 'PUBLISHED' || status === 'SCHEDULED') && (!media.posterKey || !description.trim())) {
+      setError('???? ??????? ????? ? ??????? ????? ?? ???? ???? / A poster and description are required to publish.'); return;
+    }
     const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
     if (status === "SCHEDULED" && !scheduledAtIso) {
       setError(locale === "fa" ? "زمان انتشار را انتخاب کنید." : "Please select publish datetime.");
@@ -105,6 +112,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         const payload = new FormData();
         payload.append("file", file);
         payload.append("title", title);
+        for (const [key, value] of Object.entries(media)) {
+          if (value !== undefined && value !== null) payload.append(key, String(value));
+        }
         if (slug.trim()) payload.append("slug", slug.trim());
         payload.append("description", description);
         payload.append("applicationId", applicationId);
@@ -129,6 +139,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         createdObjectKey = response.data.objectKey;
       } else if (selectedVideoAsset) {
         const response = await client.post<{ objectKey: string }>("/api/v1/admin/videos/create-from-asset", {
+          ...media,
           assetId: selectedVideoAsset.id,
           title,
           slug: slug.trim() || undefined,
@@ -171,7 +182,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       setVariants([]);
       onSuccess?.();
     } catch (err) {
-      setError("Upload failed. Check fields/variant duplicates and try again.");
+      setError(axios.isAxiosError(err) && typeof err.response?.data?.message === 'string' ? err.response.data.message : 'Upload failed. Check fields and try again.');
     } finally {
       setUploading(false);
     }
@@ -215,7 +226,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         <Form.Item label={t("common.title")} required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
         </Form.Item>
-        <Form.Item label="Slug">
+        <Form.Item label="Slug" help="????? ?? ????? ????? ?????? ? ?? ?? ?????? ???? ??????? / Published slugs stay unchanged.">
           <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title" />
         </Form.Item>
         <Form.Item label={t("common.description")}>
@@ -287,6 +298,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
             </Card>
           )}
         </Form.Item>
+        <VideoMediaFields applicationId={applicationId} value={media} onChange={setMedia} />
         <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
           <Form.Item label={t("field.tags")}>
             <Select

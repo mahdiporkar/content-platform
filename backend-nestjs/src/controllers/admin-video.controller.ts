@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -43,7 +44,7 @@ export class AdminVideoController {
     try {
       return JSON.parse(value) as T;
     } catch {
-      return undefined;
+      throw new BadRequestException('Invalid JSON field.');
     }
   }
 
@@ -62,6 +63,11 @@ export class AdminVideoController {
     @Body('scheduledAt') scheduledAt?: string,
     @Body('slug') slug?: string,
     @Body('displayScopes') displayScopesRaw?: string,
+    @Body('posterKey') posterKey?: string,
+    @Body('durationSeconds') durationSeconds?: string | number,
+    @Body('altText') altText?: string,
+    @Body('width') width?: string | number,
+    @Body('height') height?: string | number,
   ): Promise<VideoResponseDto> {
     const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
@@ -82,6 +88,7 @@ export class AdminVideoController {
       scheduledAt,
       slug,
       displayScopes,
+      { posterKey, durationSeconds, altText, width, height },
     );
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;
@@ -101,6 +108,11 @@ export class AdminVideoController {
     @Body('scheduledAt') scheduledAt?: string,
     @Body('slug') slug?: string,
     @Body('displayScopes') displayScopesRaw?: string,
+    @Body('posterKey') posterKey?: string,
+    @Body('durationSeconds') durationSeconds?: string | number,
+    @Body('altText') altText?: string,
+    @Body('width') width?: string | number,
+    @Body('height') height?: string | number,
   ): Promise<VideoResponseDto> {
     const applicationId = this.access.getApplicationId(request);
     this.access.assertServiceAccess(request, ServicePermission.VIDEOS_MANAGE, applicationId);
@@ -121,6 +133,7 @@ export class AdminVideoController {
       scheduledAt,
       slug,
       displayScopes,
+      { posterKey, durationSeconds, altText, width, height },
     );
     await this.sitemapService.invalidateTenantCacheIfOnPublish(created.applicationId);
     return created;

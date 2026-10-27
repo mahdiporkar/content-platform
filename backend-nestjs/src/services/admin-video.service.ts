@@ -4,6 +4,7 @@ import { IsNull, Not, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ChangeStatusRequestDto } from '../dto/requests/change-status-request.dto';
 import { VideoUpdateRequestDto } from '../dto/requests/video-update-request.dto';
+import { videoSlug, videoSeo, videoMedia, VideoMediaFields } from '../common/video-metadata';
 import { ContentStatus } from '../common/content-status.enum';
 import { VideoResponseDto } from '../dto/responses/video-response.dto';
 import { PageResponseDto } from '../dto/page-response.dto';
@@ -81,14 +82,33 @@ export class AdminVideoService {
     return Array.from(new Set(normalized));
   }
 
-  private slugify(value: string): string {
-    return value
-      .normalize('NFKD')
-      .toLowerCase()
-      .trim()
-      .replace(/[^\p{L}\p{N}]+/gu, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 180);
+  private assertPublishable(status: ContentStatus, description: string | null | undefined, posterKey: string | null) {
+    if (!Object.values(ContentStatus).includes(status)) throw new BadRequestException('Invalid video status.');
+    if ([ContentStatus.PUBLISHED, ContentStatus.SCHEDULED].includes(status) && (!posterKey || !description?.trim())) {
+      throw new BadRequestException('A poster image and description are required before publishing a video.');
+    }
+  }
+
+  private async saveVideo(video: VideoEntity): Promise<VideoEntity> {
+    try { return await this.videoRepo.save(video); }
+    catch (error) {
+      if ((error as { code?: string }).code === '23505') throw new ConflictException('This video slug already exists for this language.');
+      throw error;
+    }
+  }
+
+  private async prepareMetadata(applicationId: string, locale: string | undefined, slug: string, media: VideoMediaFields, seo?: Record<string, unknown> | null, id?: string) {
+    const normalizedSlug = videoSlug(slug);
+    const existing = await this.videoRepo.findOne({ where: { applicationId, locale: normalizeContentLocale(locale), slug: normalizedSlug } });
+    if (existing && existing.id !== id) throw new ConflictException('This video slug already exists for this language. Choose another slug.');
+    const fields = videoMedia(media);
+    if (fields.posterKey) {
+      const asset = await this.mediaReferenceService.findAssetByObjectKey(applicationId, fields.posterKey);
+      if (!asset || asset.kind !== MediaAssetKind.IMAGE || asset.state !== MediaAssetState.ACTIVE) {
+        throw new BadRequestException('Choose an active poster image from this application.');
+      }
+    }
+    return { ...fields, slug: normalizedSlug, seo: videoSeo(seo) };
   }
 
   private async syncVideoMediaReference(video: VideoEntity): Promise<void> {
@@ -96,9 +116,9 @@ export class AdminVideoService {
       applicationId: video.applicationId,
       refType: MediaReferenceType.VIDEO,
       refId: video.id,
-      bannerKey: null,
+      bannerKey: video.posterKey,
       bannerUrl: null,
-      galleryUrls: [],
+      galleryUrls: [video.seo?.ogImage, video.seo?.twitterImage, ...(video.gallery ?? []).map(image => image.url)].filter((url): url is string => typeof url === 'string'),
       content: video.objectKey,
     });
   }
@@ -116,6 +136,7 @@ export class AdminVideoService {
     scheduledAt?: string,
     slug?: string,
     displayScopes?: string[],
+    media: VideoMediaFields = {},
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -123,6 +144,8 @@ export class AdminVideoService {
     if (locale && !isSupportedContentLocale(locale)) {
       throw new BadRequestException('Locale is not supported.');
     }
+    const metadata = await this.prepareMetadata(applicationId, locale, slug?.trim() || title, media, seo);
+    this.assertPublishable(status, description, metadata.posterKey);
     const publication = resolvePublicationFields(status, scheduledAt);
     const upload = await this.minioService.upload(applicationId, 'video', file);
     await this.mediaLibraryService.registerAsset({
@@ -137,12 +160,11 @@ export class AdminVideoService {
       id: uuidv4(),
       applicationId,
       title: title.trim(),
-      slug: slug?.trim() || this.slugify(title),
+      ...metadata,
       description: description?.trim() || null,
       locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
       displayScopes: this.normalizeScopes(displayScopes),
-      seo: seo ?? null,
       gallery: gallery ?? null,
       status,
       publishedAt: publication.publishedAt,
@@ -151,7 +173,7 @@ export class AdminVideoService {
       contentType: upload.contentType,
       sizeBytes: upload.sizeBytes,
     });
-    const saved = await this.videoRepo.save(video);
+    const saved = await this.saveVideo(video);
     await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
@@ -170,6 +192,7 @@ export class AdminVideoService {
     scheduledAt?: string,
     slug?: string,
     displayScopes?: string[],
+    media: VideoMediaFields = {},
   ): Promise<VideoResponseDto> {
     if (!title?.trim()) {
       throw new BadRequestException('Title is required.');
@@ -183,17 +206,18 @@ export class AdminVideoService {
       throw new BadRequestException('Selected asset is not a video.');
     }
 
+    const metadata = await this.prepareMetadata(applicationId, locale, slug?.trim() || title, media, seo);
+    this.assertPublishable(status, description, metadata.posterKey);
     const publication = resolvePublicationFields(status, scheduledAt);
     const video = this.videoRepo.create({
       id: uuidv4(),
       applicationId,
       title: title.trim(),
-      slug: slug?.trim() || this.slugify(title),
+      ...metadata,
       description: description?.trim() || null,
       locale: normalizeContentLocale(locale),
       tags: this.normalizeTags(tags),
       displayScopes: this.normalizeScopes(displayScopes),
-      seo: seo ?? null,
       gallery: gallery ?? null,
       status,
       publishedAt: publication.publishedAt,
@@ -202,7 +226,7 @@ export class AdminVideoService {
       contentType: asset.contentType,
       sizeBytes: asset.sizeBytes,
     });
-    const saved = await this.videoRepo.save(video);
+    const saved = await this.saveVideo(video);
     await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
@@ -216,10 +240,11 @@ export class AdminVideoService {
     if (video.deletedAt) {
       throw new ConflictException('Deleted video cannot change status. Restore it first.');
     }
+    this.assertPublishable(request.status, video.description, video.posterKey);
     video.status = request.status;
-    video.publishedAt = request.status === ContentStatus.PUBLISHED ? new Date() : null;
+    video.publishedAt = request.status === ContentStatus.PUBLISHED ? (video.publishedAt ?? new Date()) : video.publishedAt;
     video.scheduledAt = null;
-    const saved = await this.videoRepo.save(video);
+    const saved = await this.saveVideo(video);
     await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
@@ -255,7 +280,7 @@ export class AdminVideoService {
       throw new ConflictException('Cannot restore video because the file has been physically deleted.');
     }
     video.deletedAt = null;
-    const saved = await this.videoRepo.save(video);
+    const saved = await this.saveVideo(video);
     await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);
@@ -280,29 +305,37 @@ export class AdminVideoService {
     if (!video) {
       throw new NotFoundException('Video not found.');
     }
+    if (video.deletedAt) throw new ConflictException('Restore the video before editing it.');
+    const slug = videoSlug(request.slug?.trim() || video.slug || request.title);
+    if (video.publishedAt && video.slug && slug !== video.slug) {
+      throw new ConflictException('A published video slug cannot be changed because existing links would break.');
+    }
+    const metadata = await this.prepareMetadata(video.applicationId, request.locale ?? video.locale ?? undefined, slug, {
+      posterKey: request.posterKey === undefined ? video.posterKey : request.posterKey,
+      durationSeconds: request.durationSeconds === undefined ? video.durationSeconds : request.durationSeconds,
+      width: request.width === undefined ? video.width : request.width,
+      height: request.height === undefined ? video.height : request.height,
+      altText: request.altText === undefined ? video.altText : request.altText,
+    }, request.seo === undefined ? video.seo : request.seo as Record<string, unknown>, id);
+    this.assertPublishable(request.status, request.description, metadata.posterKey);
     const publication = resolvePublicationFields(request.status, request.scheduledAt, video.publishedAt);
     video.title = request.title.trim();
-    video.slug = request.slug?.trim() || video.slug || this.slugify(request.title);
+    Object.assign(video, metadata);
     video.description = request.description?.trim() || null;
-    video.locale = normalizeContentLocale(request.locale);
-    video.posterKey = request.posterKey?.trim() || null;
-    video.durationSeconds = request.durationSeconds ?? null;
-    video.width = request.width ?? null;
-    video.height = request.height ?? null;
-    video.altText = request.altText?.trim() || null;
+    video.locale = normalizeContentLocale(request.locale ?? video.locale ?? undefined);
     video.tags = this.normalizeTags(request.tags);
     video.displayScopes =
       request.displayScopes === undefined
         ? (video.displayScopes ?? ['video-gallery'])
         : this.normalizeScopes(request.displayScopes);
-    video.seo = request.seo ? (request.seo as Record<string, unknown>) : null;
+
     video.gallery = request.gallery
       ? (request.gallery as unknown as Record<string, unknown>[])
       : null;
     video.status = request.status;
-    video.publishedAt = publication.publishedAt;
+    video.publishedAt = publication.publishedAt ?? video.publishedAt;
     video.scheduledAt = publication.scheduledAt;
-    const saved = await this.videoRepo.save(video);
+    const saved = await this.saveVideo(video);
     await this.syncVideoMediaReference(saved);
     const application = await this.applicationRepo.findOne({ where: { id: saved.applicationId } });
     return this.mapVideo(saved, application);

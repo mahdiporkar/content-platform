@@ -96,10 +96,11 @@ export class DeliveryContentController {
   async getVideoByIdFromHeaders(
     @Req() request: Request & { application?: ApplicationEntity },
     @Param('id') id: string,
+    @Query('locale') locale?: string,
   ): Promise<DeliveryContentResponseDto> {
     const application = this.getApplication(request);
     this.enforceDeliveryDomainPolicy(application, request);
-    return await this.deliveryService.getVideoById(application, id);
+    return await this.deliveryService.getVideoById(application, id, locale);
   }
 
   @Get('gallery')

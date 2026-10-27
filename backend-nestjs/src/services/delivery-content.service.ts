@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThanOrEqual, Repository } from 'typeorm';
+import { In, IsNull, LessThanOrEqual, Repository } from 'typeorm';
 import { ContentStatus } from '../common/content-status.enum';
 import { ContentType } from '../common/content-type.enum';
 import { ArticleEntity } from '../entities/article.entity';
@@ -279,6 +279,7 @@ export class DeliveryContentService {
       const videos = await this.videoRepo.find({
         where: {
           id: In(grouped.video),
+          deletedAt: IsNull(),
           applicationId: application.id,
           status: ContentStatus.PUBLISHED,
           publishedAt: LessThanOrEqual(new Date()),
@@ -409,6 +410,7 @@ export class DeliveryContentService {
         now,
       })
       .andWhere('video.locale = :locale', { locale })
+      .andWhere('video.deletedAt IS NULL')
       .orderBy('item.position', 'ASC')
       .skip((currentPage - 1) * size)
       .take(size);
@@ -551,9 +553,12 @@ export class DeliveryContentService {
     return this.mapArticle(application, article);
   }
 
-  async getVideoById(application: ApplicationEntity, id: string): Promise<DeliveryContentResponseDto> {
+  async getVideoById(application: ApplicationEntity, id: string, locale?: string): Promise<DeliveryContentResponseDto> {
     const video = await this.videoRepo.findOne({
-      where: { applicationId: application.id, id, status: ContentStatus.PUBLISHED },
+      where: [
+        { applicationId: application.id, id, ...(locale ? { locale } : {}), status: ContentStatus.PUBLISHED, deletedAt: IsNull(), publishedAt: LessThanOrEqual(new Date()) },
+        { applicationId: application.id, slug: id, ...(locale ? { locale } : {}), status: ContentStatus.PUBLISHED, deletedAt: IsNull(), publishedAt: LessThanOrEqual(new Date()) },
+      ],
     });
     if (!video) {
       throw new NotFoundException('Video not found.');
@@ -681,6 +686,7 @@ export class DeliveryContentService {
     const qb = this.videoRepo.createQueryBuilder('video');
     qb.where('video.applicationId = :applicationId', { applicationId })
       .andWhere('video.status = :status', { status: ContentStatus.PUBLISHED })
+      .andWhere('video.deletedAt IS NULL')
       .andWhere('(video.publishedAt IS NULL OR video.publishedAt <= NOW())')
       .andWhere(
         "(video.displayScopes IS NULL OR cardinality(video.displayScopes) = 0 OR 'video-gallery' = ANY(video.displayScopes))",

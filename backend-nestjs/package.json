@@ -8,7 +8,7 @@
     "build": "nest build",
     "migration:run": "ts-node --transpile-only scripts/run-migrations.ts",
     "start:prod": "node dist/main.js",
-    "test": "ts-node test/security-hardening.test.ts && ts-node test/page-menu-management.test.ts && ts-node test/educational-videos.test.ts"
+    "test": "ts-node test/security-hardening.test.ts && ts-node test/page-menu-management.test.ts && ts-node test/educational-videos.test.ts && ts-node test/video-metadata.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

@@ -1,3 +1,5 @@
+import { VideoMediaFields, type VideoMediaValue } from './VideoMediaFields';
+import axios from 'axios';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, DatePicker, Form, Input, Select, Space, Typography } from "antd";
@@ -33,6 +35,7 @@ export const VideoEditorPage = () => {
   const [displayScopes, setDisplayScopes] = useState<string[]>(existingVideo?.displayScopes ?? ["video-gallery"]);
   const [seo, setSeo] = useState<SeoMeta>(existingVideo?.seo ?? {});
   const [gallery, setGallery] = useState<GalleryImage[]>(existingVideo?.gallery ?? []);
+  const [media, setMedia] = useState<VideoMediaValue>({ posterKey: existingVideo?.posterKey, altText: existingVideo?.altText, durationSeconds: existingVideo?.durationSeconds, width: existingVideo?.width, height: existingVideo?.height });
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const updateSeo = (key: keyof SeoMeta, value: string | boolean | string[]) => {
@@ -61,6 +64,7 @@ export const VideoEditorPage = () => {
 
   const applyVideo = (next: Video) => {
     setVideo(next);
+    setMedia({ posterKey: next.posterKey, altText: next.altText, durationSeconds: next.durationSeconds, width: next.width, height: next.height });
     setTitle(next.title);
     setSlug(next.slug ?? "");
     setDescription(next.description ?? "");
@@ -101,6 +105,10 @@ export const VideoEditorPage = () => {
       setError("Title is required.");
       return;
     }
+    if (!title.trim()) { setError('????? ????? ?????? ??? / Title is required.'); return; }
+    if ((status === 'PUBLISHED' || status === 'SCHEDULED') && (!media.posterKey || !description.trim())) {
+      setError('???? ??????? ????? ? ??????? ????? ?? ???? ???? / A poster and description are required to publish.'); return;
+    }
     const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
     if (status === "SCHEDULED" && !scheduledAtIso) {
       setError(locale === "fa" ? "زمان انتشار را انتخاب کنید." : "Please select publish datetime.");
@@ -122,6 +130,7 @@ export const VideoEditorPage = () => {
         .filter((item) => item.url.length > 0);
 
       const response = await client.put<Video>(`/api/v1/admin/videos/${id}`, {
+        ...media,
         title: title.trim(),
         slug: slug.trim() || undefined,
         description: description.trim() || undefined,
@@ -136,7 +145,7 @@ export const VideoEditorPage = () => {
       applyVideo(response.data);
       navigate("/videos");
     } catch (err) {
-      setError("Failed to update video. Check the fields and try again.");
+      setError(axios.isAxiosError(err) && typeof err.response?.data?.message === 'string' ? err.response.data.message : 'Failed to update video.');
     } finally {
       setSaving(false);
     }
@@ -175,7 +184,7 @@ export const VideoEditorPage = () => {
           <Form.Item label={t("common.title")} required>
             <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
           </Form.Item>
-          <Form.Item label="Slug">
+          <Form.Item label="Slug" help="????? ?? ????? ????? ?????? ? ?? ?? ?????? ???? ??????? / Published slugs stay unchanged.">
             <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title" />
           </Form.Item>
           <Form.Item label={t("common.description")}>
@@ -209,7 +218,8 @@ export const VideoEditorPage = () => {
               />
             </Form.Item>
           )}
-          <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
+          <VideoMediaFields applicationId={video?.applicationId ?? ""} value={media} onChange={setMedia} />
+        <Card size="small" title="Tags & Categories" style={{ marginBottom: 16 }}>
             <Form.Item label={t("field.tags")}>
               <Select
                 mode="tags"
@@ -373,7 +383,7 @@ export const VideoEditorPage = () => {
 
           {previewUrl && (
             <Form.Item label="Preview">
-              <video src={previewUrl} controls style={{ width: "100%", borderRadius: 8 }} />
+              <video src={previewUrl} poster={media.posterKey ? `${previewUrl.split("/media/")[0]}/media/${media.posterKey}` : undefined} controls style={{ width: "100%", borderRadius: 8 }} />
             </Form.Item>
           )}
 

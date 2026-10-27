@@ -39,14 +39,14 @@ const video = {
   locale: 'en',
   tags: null,
   displayScopes: ['educational-videos'],
-  seo: null,
+  seo: { metaTitle: 'Search title', ogImage: 'https://media.example/poster.jpg', noFollow: true },
   gallery: null,
   status: ContentStatus.PUBLISHED,
   publishedAt: now,
   scheduledAt: null,
   viewCount: 0,
   objectKey: 'app-1/video.mp4',
-  posterKey: null,
+  posterKey: 'app-1/poster.jpg',
   durationSeconds: 120,
   width: null,
   height: null,
@@ -132,7 +132,7 @@ const service = new DeliveryContentService(
         : [],
   } as never,
   {} as never,
-  { buildMediaUrl: () => 'https://media.example/video.mp4' } as never,
+  { buildMediaUrl: (_application: unknown, key: string) => `https://media.example/${key.split('/').pop()}` } as never,
   {} as never,
 );
 
@@ -147,6 +147,8 @@ async function run() {
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].slug, 'eye-care');
   assert.equal(result.items[0].videoUrl, 'https://media.example/video.mp4');
+  assert.equal(result.items[0].posterUrl, 'https://media.example/poster.jpg');
+  assert.deepEqual(result.items[0].seo, video.seo);
   assert.equal(result.pagination.pageSize, 24);
 
   const detail = await service.getCollectionVideoBySlug(
@@ -156,6 +158,8 @@ async function run() {
     'en',
   );
   assert.equal(detail.id, 'video-en');
+  assert.equal(detail.posterUrl, 'https://media.example/poster.jpg');
+  assert.deepEqual(detail.seo, video.seo);
 }
 
 run()
