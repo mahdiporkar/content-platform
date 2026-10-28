@@ -91,9 +91,9 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
       setError("Choose a video file to upload.");
       return;
     }
-    if (!title.trim()) { setError('????? ????? ?????? ??? / Title is required.'); return; }
+    if (!title.trim()) { setError('عنوان ویدیو الزامی است / Title is required.'); return; }
     if ((status === 'PUBLISHED' || status === 'SCHEDULED') && (!media.posterKey || !description.trim())) {
-      setError('???? ??????? ????? ? ??????? ????? ?? ???? ???? / A poster and description are required to publish.'); return;
+      setError('برای انتشار، پوستر و توضیحات ویدیو را وارد کنید / A poster and description are required to publish.'); return;
     }
     const scheduledAtIso = status === "SCHEDULED" && scheduledAt ? scheduledAt.toDate().toISOString() : null;
     if (status === "SCHEDULED" && !scheduledAtIso) {
@@ -226,7 +226,7 @@ export const VideoUploadForm = ({ applicationId, onSuccess, onCancel }: Props) =
         <Form.Item label={t("common.title")} required>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} size="large" />
         </Form.Item>
-        <Form.Item label="Slug" help="????? ?? ????? ????? ?????? ? ?? ?? ?????? ???? ??????? / Published slugs stay unchanged.">
+        <Form.Item label="Slug" help="اسلاگ از عنوان ساخته می‌شود و پس از انتشار ثابت می‌ماند / Published slugs stay unchanged.">
           <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Auto from title" />
         </Form.Item>
         <Form.Item label={t("common.description")}>

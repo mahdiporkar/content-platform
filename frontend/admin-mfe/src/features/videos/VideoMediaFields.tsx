@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { Alert, Button, Card, Form, Input, InputNumber, Space } from 'antd';
+import { Alert, Button, Card, Form, Image, Input, InputNumber, Space } from 'antd';
 import { uploadMedia } from '../../api/media';
 import { MediaPickerModal } from '../../components/MediaPickerModal';
+import { apiBaseUrl } from '../../config/env';
 
 export type VideoMediaValue = {
   posterKey?: string | null;
@@ -29,7 +30,13 @@ export function VideoMediaFields({ applicationId, value, onChange }: {
         <Button onClick={() => setPicker(true)}>انتخاب از فایل‌ها / Choose image</Button>
         {value.posterKey && <Button onClick={() => onChange({ ...value, posterKey: null })}>حذف پوستر / Remove</Button>}
       </Space>
-      {value.posterKey && <div style={{ overflowWrap: 'anywhere', marginTop: 8 }}>{value.posterKey}</div>}
+      {value.posterKey && <div style={{ marginTop: 12 }}>
+        <Image
+          src={`${apiBaseUrl.replace(/\/$/, '')}/media/${value.posterKey.split('/').map(encodeURIComponent).join('/')}`}
+          alt={value.altText || 'پوستر ویدیو / Video poster'}
+          style={{ width: '100%', maxWidth: 320, maxHeight: 220, objectFit: 'contain', borderRadius: 8 }}
+        />
+      </div>}
       <input ref={input} hidden type="file" accept="image/*" onChange={async event => {
         const file = event.target.files?.[0];
         if (!file) return;
